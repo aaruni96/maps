@@ -27,10 +27,10 @@ parser.add_argument('-d', '--deploy', dest='DEPLOY', action='store_true',
                     default=False, help="deploy mode, for installing environments (default)")
 parser.add_argument('-p', '--package', dest='PACKAGE', action='store_true',
                     default=False, help="package mode for defining and publishing new environments")
-parser.add_argument('-v', '--verbose', dest='VERBOSE', action='store_true',
-                    help="enable verbose output")
 parser.add_argument('-s', '--sandbox', dest="LOCATION",
                     help="Start a sandbox at location")
+parser.add_argument('-v', '--verbose', dest='VERBOSE', action='store_true',
+                    help="enable verbose output")
 args = parser.parse_args()
 
 print(args)
