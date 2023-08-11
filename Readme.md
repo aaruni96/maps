@@ -8,8 +8,21 @@ MaPS, short for MaRDI Packaging System is the working name for the software syst
 
 ### Packaging Software
 
-In this mode, the user can commit arbitrary trees into an ostree repo, and then publish them. The trees contain everything required by the application to run, as the resulting package will be run inside a user namespace sandbox. The packager is responsible for providing a correct tree, although, we can provide a "default" tree (based on the debian docker image) to begin with. Proposed syntax is something like `maps --package --initialize /path/to/new/tree` .
+In this mode, the user can commit arbitrary trees into an ostree repo, and then publish them. The trees contain everything required by the application to run, as the resulting package will be run inside a user namespace sandbox. The packager is responsible for providing a correct tree, although, we provide a "default" tree (based on the debian docker image) to begin with.
 
+```bash
+# Initialise a new tree from a minimal debian base
+maps.py --package --initialize /path/to/new/tree
+
+# Start a bash session inside a sandbox
+maps.py --package --sandbox /path/to/new/tree
+
+# Commit the tree into ostree repository
+maps.py --package --commit /path/to/new/tree me.myname.myapplication/sysarch/version
+```
+#### ToDo
+
+ - [ ] Submit `me.myname.myapplication/sysarch/version` to a global, official repository for publishing.
 
 ### Deploying Software
 
