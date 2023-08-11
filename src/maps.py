@@ -25,8 +25,8 @@ parser.add_argument('-c', '--commit', dest='COMMIT', nargs=2, metavar=("TREE", "
                     default=False, help="Commit TREE to BRANCH in REPO")
 parser.add_argument('-i', '--initialize', dest='DIR',
                     help="initialize DIR with a good base tree")
-parser.add_argument('-d', '--deploy', dest='DEPLOY', action='store_true',
-                    default=False, help="deploy mode, for installing environments (default)")
+parser.add_argument('-d', '--deploy', dest='DEPLOY', action='store',
+                    default=False, help="deploy mode, for installing environments")
 parser.add_argument('-p', '--package', dest='PACKAGE', action='store_true',
                     default=False, help="package mode for defining and publishing new environments")
 parser.add_argument('-r', '--repo', dest='REPO',
@@ -37,10 +37,25 @@ parser.add_argument('-v', '--verbose', dest='VERBOSE', action='store_true',
                     help="enable verbose output")
 args = parser.parse_args()
 
-# Some sanity checks and defaults
+# Some sanity checks
 if len(sys.argv) == 1:
     parser.print_help()
     sys.exit(1)
+if not args.PACKAGE:
+    if args.DEPLOY is False:
+        raise AssertionError("This is an impossible case, I think?")
+    if args.DIR is not None:
+        raise AssertionError("Can only initialize a dir in package mode!")
+    if args.LOCATION is not None:
+        raise AssertionError("As of now, sandboxing is only supported as a part of packaging.")
+    if args.COMMIT is not False:
+        raise AssertionError("Can only commit to repo in package mode!")
+else:
+    if args.DEPLOY is not False:
+        raise AssertionError("Cannot open in package mode and deploy mode simultaneously! "
+                             "Please check arguments!")
+
+# Globals
 if args.REPO is None:
     if os.getenv('XDG_DATA_HOME') is not None:
         DATA = os.getenv('XDG_DATA_HOME')
@@ -54,28 +69,33 @@ repo = repopath.split('/')[-1]
 repopath = '/'.join(repopath.split('/')[0:-1])
 # make sure the directories right under repo are present
 subprocess.run(["mkdir", "-p", "-v", f"{'/'.join(repopath.split('/')[0:-1])}"], check=True)
+fd = os.open(repopath, os.O_RDONLY)
+repo = OSTree.Repo.create_at(fd, repo,
+                             OSTree.RepoMode(OSTREE_REPO_MODE_BARE_USER), None, None)
+repo.open(None)
 
-if not args.PACKAGE:
-    args.DEPLOY = True
-    if args.DIR is not None:
-        raise AssertionError("Can only initialize a dir in package mode!")
-    if args.LOCATION is not None:
-        raise AssertionError("As of now, sandboxing is only supported as a part of packaging.")
-    if args.COMMIT is not None:
-        raise AssertionError("Can only commit to repo in package mode!")
+# Deploy Mode
 
-if args.PACKAGE:
-    if args.DEPLOY:
-        raise AssertionError("Cannot open in package mode and deploy mode simultaneously!"
-                             "Please check arguments!")
+# Right now, we only checkout things from the local ostree repo
+# Later, we also need to check from a trusted remote, if not found in the local repo
+if args.DEPLOY is not False:
+    DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{args.DEPLOY}"
+    PDATADIR = '/'.join(DATADIR.split('/')[0:-1])
+    subprocess.run(f"mkdir -pv {PDATADIR}".split(), check=True)
+    ret = subprocess.run(f"mkdir -v {DATADIR}".split(), check=False)
+    subprocess.run(f"mkdir -pv {DATADIR}/rwfs".split(), check=False)
+    subprocess.run(f"mkdir -pv {DATADIR}/live".split(), check=False)
+    if ret.returncode != 0:
+        raise AssertionError("Error: Could not create directory. "
+                             "Path already exists, or other unknown error")
+    refhash = repo.list_refs()[1][args.DEPLOY]
+    tfd = os.open(DATADIR, os.O_RDONLY)
+    repo.checkout_at(None, tfd, "rofs", refhash, None)
+    print(f"Success... {args.DEPLOY} is now ready to use!")
+
+# Package Mode
+else:
     if args.DIR is not None:
-        # step 1 : checkout repo to tmp
-        # step 2 : copy (reflink=auto) tmp to DIR
-        # step 3 : delete tmp
-        fd = os.open(repopath, os.O_RDONLY)
-        repo = OSTree.Repo.create_at(fd, repo,
-                                     OSTree.RepoMode(OSTREE_REPO_MODE_BARE_USER), None, None)
-        repo.open(None)
         refhash = repo.list_refs()[1]['base/x86_64/debian']
         with tempfile.TemporaryDirectory() as tmpdir:
             tfd = os.open(tmpdir, os.O_RDONLY)
@@ -96,11 +116,6 @@ if args.PACKAGE:
             print(f"Sandbox exited with return code {rstatus.returncode}")
     if args.COMMIT is not False:
         # we are given TREE and BRANCH. All we have to do is commit TREE to BRANCH
-        # what happens if we are updating a branch? Is that even possible?
-        fd = os.open(repopath, os.O_RDONLY)
-        repo = OSTree.Repo.create_at(fd, repo,
-                                     OSTree.RepoMode(OSTREE_REPO_MODE_BARE_USER), None, None)
-        repo.open(None)
         repo.prepare_transaction()
         mutree = OSTree.MutableTree.new()
         mfd = os.open('/'.join(args.COMMIT[0].split('/')[0:-1]), os.O_RDONLY)
