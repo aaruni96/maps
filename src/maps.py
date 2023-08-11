@@ -29,8 +29,10 @@ parser.add_argument('-d', '--deploy', dest='DEPLOY', action='store',
                     default=False, help="deploy mode, for installing environments")
 parser.add_argument('-p', '--package', dest='PACKAGE', action='store_true',
                     default=False, help="package mode for defining and publishing new environments")
-parser.add_argument('-r', '--repo', dest='REPO',
+parser.add_argument('--repo', dest='REPO',
                     help="Repository to use")
+parser.add_argument('-r', '--run', dest='RUN', action='store',
+                    default=False, help="Repository to use")
 parser.add_argument('-s', '--sandbox', dest='LOCATION',
                     help="Start a sandbox at LOCATION")
 parser.add_argument('-v', '--verbose', dest='VERBOSE', action='store_true',
@@ -41,7 +43,7 @@ args = parser.parse_args()
 if len(sys.argv) == 1:
     parser.print_help()
     sys.exit(1)
-if not args.PACKAGE:
+if not args.PACKAGE and args.RUN is False:
     if args.DEPLOY is False:
         raise AssertionError("This is an impossible case, I think?")
     if args.DIR is not None:
@@ -74,16 +76,38 @@ repo = OSTree.Repo.create_at(fd, repo,
                              OSTree.RepoMode(OSTREE_REPO_MODE_BARE_USER), None, None)
 repo.open(None)
 
-# Deploy Mode
+# Run mode
+if args.RUN is not False:
+    # check if the path exists
+    DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{args.RUN}"
+    PDATADIR = '/'.join(DATADIR.split('/')[0:-1])
+    if not os.path.isdir(DATADIR):
+        raise AssertionError(f"Data directory does not exist. Is {args.RUN} installed ?")
+    # setup live directory
+    subprocess.run(["fuse-overlayfs", "-o", f"lowerdir={DATADIR}/rofs", "-o",
+                    f"upperdir={DATADIR}/rwfs", "-o", f"workdir={DATADIR}/tmpfs",
+                    f"{DATADIR}/live"], check=True)
 
-# Right now, we only checkout things from the local ostree repo
-# Later, we also need to check from a trusted remote, if not found in the local repo
-if args.DEPLOY is not False:
+    # launch sandbox
+    print(f"Launching {args.RUN}...")
+    rstatus = subprocess.run([BWRAP, "--no-int-term", "--unshare-user", "--unshare-pid",
+                              "--bind", f"{DATADIR}/live", "/", "--proc", "/proc", "--dev", "/dev",
+                              "--uid", "0", "--gid", "0", "bash"], check=False)
+
+    # when the sandbox exits, cleanup
+    # can this fail? how do we handle that scenario?
+    subprocess.run(["fusermount", "-u", f"{DATADIR}/live"], check=False)
+
+# Deploy Mode
+elif args.DEPLOY is not False:
+    # Right now, we only checkout things from the local ostree repo
+    # Later, we also need to check from a trusted remote, if not found in the local repo
     DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{args.DEPLOY}"
     PDATADIR = '/'.join(DATADIR.split('/')[0:-1])
     subprocess.run(f"mkdir -pv {PDATADIR}".split(), check=True)
     ret = subprocess.run(f"mkdir -v {DATADIR}".split(), check=False)
     subprocess.run(f"mkdir -pv {DATADIR}/rwfs".split(), check=False)
+    subprocess.run(f"mkdir -pv {DATADIR}/tmpfs".split(), check=False)
     subprocess.run(f"mkdir -pv {DATADIR}/live".split(), check=False)
     if ret.returncode != 0:
         raise AssertionError("Error: Could not create directory. "
