@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-"""This module does blahblahblah"""
+"""This module provides package management functionality for MaRDI"""
 import os
 import sys
 import subprocess
@@ -11,15 +11,15 @@ from gi.repository import OSTree
 
 VERSION = '0.1-alpha'
 BWRAP = '/home/akaushik/Programs/git/Github/bubblewrap/bwrap'
+OSTREE_REPO_MODE_BARE_USER = 2
 
 # Define a CLI
 parser = argparse.ArgumentParser(
     prog='maps',
-    description=(
-        "maps - MaRDI Packaging System : "
-        "Provides a unified interface for packaging and deploying software environments."
-        ),
-    )
+    description=("maps - MaRDI Packaging System : "
+                 "Provides a unified interface for packaging and deploying software environments."
+                 ),
+)
 parser.add_argument('--version', action='version', version=VERSION)
 parser.add_argument('-c', '--commit', dest='COMMIT', nargs=2, metavar=("TREE", "BRANCH"),
                     default=False, help="Commit TREE to BRANCH in REPO")
@@ -40,7 +40,7 @@ args = parser.parse_args()
 # Some sanity checks and defaults
 if len(sys.argv) == 1:
     parser.print_help()
-    exit(1)
+    sys.exit(1)
 if args.REPO is None:
     if os.getenv('XDG_DATA_HOME') is not None:
         DATA = os.getenv('XDG_DATA_HOME')
@@ -73,7 +73,8 @@ if args.PACKAGE:
         # step 2 : copy (reflink=auto) tmp to DIR
         # step 3 : delete tmp
         fd = os.open(repopath, os.O_RDONLY)
-        repo = OSTree.Repo.open_at(fd, repo, None)
+        repo = OSTree.Repo.create_at(fd, repo,
+                                     OSTree.RepoMode(OSTREE_REPO_MODE_BARE_USER), None, None)
         repo.open(None)
         refhash = repo.list_refs()[1]['base/x86_64/debian']
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -89,15 +90,16 @@ if args.PACKAGE:
         # its the user's responsibility to ensure the tree is good
         print(f"Launching a sandbox in {args.LOCATION}...")
         rstatus = subprocess.run([BWRAP, "--no-int-term", "--unshare-user", "--unshare-pid",
-                        "--bind", args.LOCATION, "/", "--proc", "/proc", "--dev", "/dev",
-                        "--uid", "0", "--gid", "0", "bash"])
+                                  "--bind", args.LOCATION, "/", "--proc", "/proc", "--dev", "/dev",
+                                  "--uid", "0", "--gid", "0", "bash"], check=False)
         if rstatus.returncode != 0:
             print(f"Sandbox exited with return code {rstatus.returncode}")
     if args.COMMIT is not False:
         # we are given TREE and BRANCH. All we have to do is commit TREE to BRANCH
         # what happens if we are updating a branch? Is that even possible?
         fd = os.open(repopath, os.O_RDONLY)
-        repo = OSTree.Repo.open_at(fd, repo, None)
+        repo = OSTree.Repo.create_at(fd, repo,
+                                     OSTree.RepoMode(OSTREE_REPO_MODE_BARE_USER), None, None)
         repo.open(None)
         repo.prepare_transaction()
         mutree = OSTree.MutableTree.new()

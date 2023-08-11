@@ -27,4 +27,12 @@ Among other things, we depend on ostree, bubblewrap, and overlayfs-fuse.
 
 ## Installing
 
-## Building
+## Style Practices
+
+All code must conform to these settings of pylint and flake8
+
+```bash
+pylint -d C0413,C0103 src/maps.py
+flake8 --max-line-length 100 --ignore=E402 src/maps.py
+```
+
