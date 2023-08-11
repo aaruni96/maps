@@ -21,6 +21,8 @@ parser = argparse.ArgumentParser(
         ),
     )
 parser.add_argument('--version', action='version', version=VERSION)
+parser.add_argument('-c', '--commit', dest='COMMIT', nargs=2, metavar=("TREE", "BRANCH"),
+                    default=False, help="Commit TREE to BRANCH in REPO")
 parser.add_argument('-i', '--initialize', dest='DIR',
                     help="initialize DIR with a good base tree")
 parser.add_argument('-d', '--deploy', dest='DEPLOY', action='store_true',
@@ -59,8 +61,8 @@ if not args.PACKAGE:
         raise AssertionError("Can only initialize a dir in package mode!")
     if args.LOCATION is not None:
         raise AssertionError("As of now, sandboxing is only supported as a part of packaging.")
-    if args.TREE is not None:
-        raise AssertionError("Can only publish a tree in package mode!")
+    if args.COMMIT is not None:
+        raise AssertionError("Can only commit to repo in package mode!")
 
 if args.PACKAGE:
     if args.DEPLOY:
@@ -91,3 +93,20 @@ if args.PACKAGE:
                         "--uid", "0", "--gid", "0", "bash"])
         if rstatus.returncode != 0:
             print(f"Sandbox exited with return code {rstatus.returncode}")
+    if args.COMMIT is not False:
+        # we are given TREE and BRANCH. All we have to do is commit TREE to BRANCH
+        # what happens if we are updating a branch? Is that even possible?
+        fd = os.open(repopath, os.O_RDONLY)
+        repo = OSTree.Repo.open_at(fd, repo, None)
+        repo.open(None)
+        repo.prepare_transaction()
+        mutree = OSTree.MutableTree.new()
+        mfd = os.open('/'.join(args.COMMIT[0].split('/')[0:-1]), os.O_RDONLY)
+        repo.write_dfd_to_mtree(mfd, args.COMMIT[0].split('/')[-1], mutree, None, None)
+        mfile = repo.write_mtree(mutree, None)
+        mcommit = repo.write_commit(None, None, None, None, mfile[1], None)
+        print(mcommit[1])
+        repo.transaction_set_ref(None, args.COMMIT[1], mcommit[1])
+        repo.commit_transaction(None)
+        status, refs = repo.list_refs()
+        print(list(refs.keys()))
