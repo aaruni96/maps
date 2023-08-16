@@ -7,7 +7,7 @@ import tempfile
 import argparse
 import gi
 gi.require_version("OSTree", "1.0")
-from gi.repository import OSTree
+from gi.repository import OSTree, GLib
 
 VERSION = '0.1-alpha'
 BWRAP = '/home/akaushik/Programs/git/Github/bubblewrap/bwrap'
@@ -70,11 +70,15 @@ else:
 repo = repopath.split('/')[-1]
 repopath = '/'.join(repopath.split('/')[0:-1])
 # make sure the directories right under repo are present
-subprocess.run(["mkdir", "-p", "-v", f"{'/'.join(repopath.split('/')[0:-1])}"], check=True)
+subprocess.run(["mkdir", "-p", "-v", f"{'/'.join(repopath.split('/'))}"], check=True)
 fd = os.open(repopath, os.O_RDONLY)
 repo = OSTree.Repo.create_at(fd, repo,
                              OSTree.RepoMode(OSTREE_REPO_MODE_BARE_USER), None, None)
 repo.open(None)
+# Configure a good known remote, if not already present
+if (not repo.remote_list()) or "NameOfRemote" not in repo.remote_list():
+    repo.remote_add("NameOfRemote", "http://maunzerle:81",
+                    GLib.Variant('a{sv}', {"gpg-verify": GLib.Variant('b', False)}), None)
 
 # Run mode
 if args.RUN is not False:
@@ -120,7 +124,13 @@ elif args.DEPLOY is not False:
 # Package Mode
 else:
     if args.DIR is not None:
-        refhash = repo.list_refs()[1]['base/x86_64/debian']
+        refhash = ''
+        if 'base/x86_64/debian' not in list(repo.list_refs()[1].keys()):
+            # import base to local repo
+            refhash = repo.remote_list_refs("NameOfRemote")[1]['base/x86_64/debian']
+            repo.pull("NameOfRemote", [refhash], OSTree.RepoPullFlags(4), None, None)
+        else:
+            refhash = repo.list_refs()[1]['base/x86_64/debian']
         with tempfile.TemporaryDirectory() as tmpdir:
             tfd = os.open(tmpdir, os.O_RDONLY)
             repo.checkout_at(None, tfd, "ostree", refhash, None)
