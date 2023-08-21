@@ -38,6 +38,8 @@ def addCLI():
                         "and publishing new environments")
     parser.add_argument('--repo', dest='REPO',
                         help="Repository to use")
+    parser.add_argument('--reset', dest='RESET', action='store_true',
+                        default=False, help="Reset the runtime")
     parser.add_argument('-r', '--run', dest='RUN', action='store',
                         default=False, help="Repository to use")
     parser.add_argument('-s', '--sandbox', dest='LOCATION',
@@ -105,6 +107,9 @@ def mode_run(args):
     DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{args.RUN}"
     if not os.path.isdir(DATADIR):
         raise AssertionError(f"Data directory does not exist. Is {args.RUN} installed ?")
+    # check if reset is requested
+    if args.RESET:
+        return subprocess.run(f"rm -rf {DATADIR}/live/*".split(), check=True)
     # setup live directory
     subprocess.run(["fuse-overlayfs", "-o", f"lowerdir={DATADIR}/rofs", "-o",
                     f"upperdir={DATADIR}/rwfs", "-o", f"workdir={DATADIR}/tmpfs",
