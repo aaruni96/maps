@@ -27,10 +27,12 @@ def addCLI():
     parser.add_argument('--version', action='version', version=VERSION)
     parser.add_argument('-c', '--commit', dest='COMMIT', nargs=2, metavar=("TREE", "BRANCH"),
                         default=False, help="Commit TREE to BRANCH in REPO")
-    parser.add_argument('-i', '--initialize', dest='DIR',
-                        help="initialize DIR with a good base tree")
     parser.add_argument('-d', '--deploy', dest='DEPLOY', action='store',
                         default=False, help="deploy mode, for installing environments")
+    parser.add_argument('-i', '--initialize', dest='DIR',
+                        help="initialize DIR with a good base tree")
+    parser.add_argument('-l', '--list', dest='LIST', action='store_true',
+                         default=False, help="List available environments")
     parser.add_argument('-p', '--package', dest='PACKAGE', action='store_true',
                         default=False, help="package mode for defining "
                         "and publishing new environments")
@@ -45,6 +47,26 @@ def addCLI():
     return parser
 
 
+def sanity_checks(parser, args):
+    """Some simply sanity checks, before the program proceeds"""
+    if len(sys.argv) == 1:
+        parser.print_help()
+        sys.exit(1)
+    if not args.PACKAGE and args.RUN is False and args.LIST is False:
+        if args.DEPLOY is False:
+            raise AssertionError("This is an impossible case, I think?")
+        if args.DIR is not None:
+            raise AssertionError("Can only initialize a dir in package mode!")
+        if args.LOCATION is not None:
+            raise AssertionError("As of now, sandboxing is only supported as a part of packaging.")
+        if args.COMMIT is not False:
+            raise AssertionError("Can only commit to repo in package mode!")
+    else:
+        if args.DEPLOY is not False:
+            raise AssertionError("Cannot open in package mode and deploy mode simultaneously! "
+                                 "Please check arguments!")
+
+
 # if the directory does not exist, assume we're doing a first run, go through initialization
 def program_init(repopath):
     """Function verifies requirements, and initializes the working directories"""
@@ -54,6 +76,25 @@ def program_init(repopath):
     # step 2 : create the directory, so the function is not called again
     subprocess.run(f"mkdir -pv {'/'.join(repopath.split('/'))}".split(), check=True)
 
+
+def make_remote_ref_list(repo):
+    if repo.remote_list() is not None:
+        remote_repos = [reponame for reponame in repo.remote_list()]
+    else:
+        remote_repos = []
+    remote_refs = []
+    for remote in remote_repos:
+        remote_refs.extend(list(repo.remote_list_refs(remote)[1].keys()))
+    return remote_refs
+
+
+def mode_list(repo):
+    refs = list(repo.list_refs()[1].keys())
+    remote_refs = make_remote_ref_list(repo)
+    refs.extend(remote_refs)
+    print(f"Available refs are :")
+    for ref in sorted(refs):
+        print(f"\t - {ref}")
 
 def mode_run(args):
     """Function to execute a published environment"""
@@ -142,26 +183,6 @@ def mode_package(repo, args):
         print(list(refs.keys()))
 
 
-def sanity_checks(parser, args):
-    """Some simply sanity checks, before the program proceeds"""
-    if len(sys.argv) == 1:
-        parser.print_help()
-        sys.exit(1)
-    if not args.PACKAGE and args.RUN is False:
-        if args.DEPLOY is False:
-            raise AssertionError("This is an impossible case, I think?")
-        if args.DIR is not None:
-            raise AssertionError("Can only initialize a dir in package mode!")
-        if args.LOCATION is not None:
-            raise AssertionError("As of now, sandboxing is only supported as a part of packaging.")
-        if args.COMMIT is not False:
-            raise AssertionError("Can only commit to repo in package mode!")
-    else:
-        if args.DEPLOY is not False:
-            raise AssertionError("Cannot open in package mode and deploy mode simultaneously! "
-                                 "Please check arguments!")
-
-
 # Main function
 def main():
     """Main function"""
@@ -198,7 +219,9 @@ def main():
                         GLib.Variant('a{sv}', {"gpg-verify": GLib.Variant('b', False)}), None)
 
     # Run mode
-    if args.RUN is not False:
+    if args.LIST is not False:
+        mode_list(repo)
+    elif args.RUN is not False:
         mode_run(args)
     # Deploy mode
     elif args.DEPLOY is not False:
