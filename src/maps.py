@@ -109,7 +109,8 @@ def mode_run(args):
         raise AssertionError(f"Data directory does not exist. Is {args.RUN} installed ?")
     # check if reset is requested
     if args.RESET:
-        return subprocess.run(f"rm -rf {DATADIR}/live/*".split(), check=True)
+        subprocess.run(f"rm -rf {DATADIR}/live/*".split(), check=True)
+        return
     # setup live directory
     subprocess.run(["fuse-overlayfs", "-o", f"lowerdir={DATADIR}/rofs", "-o",
                     f"upperdir={DATADIR}/rwfs", "-o", f"workdir={DATADIR}/tmpfs",
@@ -153,14 +154,17 @@ def mode_deploy(repo, args):
     repo.checkout_at(None, tfd, "rofs", refhash, None)
     print(f"Success... {args.DEPLOY} is now ready to use!")
 
+
 def blank_options():
+    """Return an OSTree.RepoCheckoutAtOptions object,
+    with all (most) options blanked out explicitly """
     opts = OSTree.RepoCheckoutAtOptions()
     opts.bareuseronly_dirs = False
     # opts.devino_to_csum_cache =
     opts.enable_fsync = False
     opts.enable_uncompressed_cache = False
-    # opts.filter = 
-    # opts.filter_user_data = 
+    # opts.filter =
+    # opts.filter_user_data =
     opts.force_copy = False
     opts.force_copy_zerosized = False
     opts.mode = OSTree.RepoCheckoutMode(0)
@@ -168,7 +172,7 @@ def blank_options():
     opts.overwrite_mode = OSTree.RepoCheckoutOverwriteMode(0)
     opts.process_passthrough_whiteouts = False
     opts.process_whiteouts = False
-    opts.sepolicy
+    # opts.sepolicy
     opts.sepolicy_prefix = ''
     # opts.subpath = ''
     # opts.unused_bools = []
