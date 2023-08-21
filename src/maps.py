@@ -122,8 +122,15 @@ def mode_run(args):
 # Deploy Mode
 def mode_deploy(repo, args):
     """Function to deploy from repo to local disk"""
-    # Right now, we only checkout things from the local ostree repo
-    # Later, we also need to check from a trusted remote, if not found in the local repo
+    if args.DEPLOY in repo.list_refs()[1]:
+        refhash = repo.list_refs()[1][args.DEPLOY]
+    elif args.DEPLOY in make_remote_ref_list(repo):
+        # Assuming, for now, that we only have one remote named "NameOfRemote"
+        refhash = repo.remote_list_refs("NameOfRemote")[1][args.DEPLOY]
+        repo.pull("NameOfRemote", [refhash], OSTree.RepoPullFlags(4), None, None)
+    else:
+        print("Error: environment not found! Use list mode --list to view available environments.")
+        exit(1)
     DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{args.DEPLOY}"
     PDATADIR = '/'.join(DATADIR.split('/')[0:-1])
     subprocess.run(f"mkdir -pv {PDATADIR}".split(), check=True)
@@ -134,7 +141,6 @@ def mode_deploy(repo, args):
     if ret.returncode != 0:
         raise AssertionError("Error: Could not create directory. "
                              "Path already exists, or other unknown error")
-    refhash = repo.list_refs()[1][args.DEPLOY]
     tfd = os.open(DATADIR, os.O_RDONLY)
     repo.checkout_at(None, tfd, "rofs", refhash, None)
     print(f"Success... {args.DEPLOY} is now ready to use!")
