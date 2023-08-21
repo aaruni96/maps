@@ -38,6 +38,24 @@ We deploy software in `$HOME/.var/maps/app-id/`, in directories `live`, `rofs`, 
 
 Among other things, we depend on ostree, bubblewrap, and overlayfs-fuse.
 
+MaPS needs the following things installed already. `pygobject` can be installed in a venv using `pip`.
+
+1. `libcairo2-dev`
+1. `gcc`
+1. `python3-dev`
+1. `libgirepository1.0-dev`
+1. `libostree-dev`
+1. `fuse-overlayfs`
+1. `pygobject`
+
+For DPKG users, this simply means
+
+```bash
+sudo apt install libcairo2-dev gcc python3-dev libgirepository1.0-dev libostree-dev fuse-overlayfs
+```
+
+For users of other package managers, the exact package names might differ.
+
 ## Installing
 
 ## Style Practices
