@@ -58,19 +58,27 @@ else:
                              "Please check arguments!")
 
 # Globals
+if os.getenv('XDG_DATA_HOME') is not None:
+    data = os.getenv('XDG_DATA_HOME')
+else:
+    # this will crash if HOME is not set. How likely?
+    data = f"{os.getenv('HOME')}/.local/share"
+data = f"{data}/org.mardi.maps"
 if args.REPO is None:
-    if os.getenv('XDG_DATA_HOME') is not None:
-        DATA = os.getenv('XDG_DATA_HOME')
-    else:
-        # this will crash if HOME is not set. How likely?
-        DATA = f"{os.getenv('HOME')}/.local/share"
-    repopath = f"{DATA}/org.mardi.maps/ostree/repo"
+    repopath = f"{data}/ostree/repo"
 else:
     repopath = args.REPO
 repo = repopath.split('/')[-1]
 repopath = '/'.join(repopath.split('/')[0:-1])
-# make sure the directories right under repo are present
-subprocess.run(["mkdir", "-p", "-v", f"{'/'.join(repopath.split('/'))}"], check=True)
+
+# if the directory does not exist, assume we're doing a first run, go through initialization
+if not os.path.isdir(repopath):
+    # step 1 : check bwrap, and overlayfs-fuse are installed
+    assert os.path.isfile(BWRAP)
+    assert os.path.isfile("/usr/bin/fuse-overlayfs")
+    # step 2 : create the directory, so the function is not called again
+    subprocess.run(f"mkdir -pv {'/'.join(repopath.split('/'))}".split(), check=True)
+
 fd = os.open(repopath, os.O_RDONLY)
 repo = OSTree.Repo.create_at(fd, repo,
                              OSTree.RepoMode(OSTREE_REPO_MODE_BARE_USER), None, None)
