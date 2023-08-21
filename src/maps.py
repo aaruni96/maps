@@ -148,6 +148,29 @@ def mode_deploy(repo, args):
     repo.checkout_at(None, tfd, "rofs", refhash, None)
     print(f"Success... {args.DEPLOY} is now ready to use!")
 
+def blank_options():
+    opts = OSTree.RepoCheckoutAtOptions()
+    opts.bareuseronly_dirs = False
+    # opts.devino_to_csum_cache =
+    opts.enable_fsync = False
+    opts.enable_uncompressed_cache = False
+    # opts.filter = 
+    # opts.filter_user_data = 
+    opts.force_copy = False
+    opts.force_copy_zerosized = False
+    opts.mode = OSTree.RepoCheckoutMode(0)
+    opts.no_copy_fallback = False
+    opts.overwrite_mode = OSTree.RepoCheckoutOverwriteMode(0)
+    opts.process_passthrough_whiteouts = False
+    opts.process_whiteouts = False
+    opts.sepolicy
+    opts.sepolicy_prefix = ''
+    # opts.subpath = ''
+    # opts.unused_bools = []
+    # opts.unused_ints = []
+    # opts.unused_ptrs = []
+    return opts
+
 
 # Package Mode
 def mode_package(repo, args):
@@ -162,7 +185,10 @@ def mode_package(repo, args):
             refhash = repo.list_refs()[1]['base/x86_64/debian']
         with tempfile.TemporaryDirectory() as tmpdir:
             tfd = os.open(tmpdir, os.O_RDONLY)
-            repo.checkout_at(None, tfd, "ostree", refhash, None)
+            osopts = blank_options()
+            osopts.bareuseronly_dirs = True
+            osopts.mode = OSTree.RepoCheckoutMode(1)
+            repo.checkout_at(osopts, tfd, "ostree", refhash, None)
             if os.system(f"mkdir -v {args.DIR}") == 0:
                 os.system(f"cp -r --reflink=auto {tmpdir}/ostree/* {args.DIR}/")
                 print(f"Successfully initialized a base debian tree at {args.DIR} !")
