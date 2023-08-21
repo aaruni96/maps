@@ -32,7 +32,7 @@ def addCLI():
     parser.add_argument('-i', '--initialize', dest='DIR',
                         help="initialize DIR with a good base tree")
     parser.add_argument('-l', '--list', dest='LIST', action='store_true',
-                         default=False, help="List available environments")
+                        default=False, help="List available environments")
     parser.add_argument('-p', '--package', dest='PACKAGE', action='store_true',
                         default=False, help="package mode for defining "
                         "and publishing new environments")
@@ -78,8 +78,9 @@ def program_init(repopath):
 
 
 def make_remote_ref_list(repo):
+    """Given a repo, return a list of refs in the remotes of that repo"""
     if repo.remote_list() is not None:
-        remote_repos = [reponame for reponame in repo.remote_list()]
+        remote_repos = repo.remote_list()
     else:
         remote_repos = []
     remote_refs = []
@@ -89,12 +90,14 @@ def make_remote_ref_list(repo):
 
 
 def mode_list(repo):
+    """Prints a list of available refs"""
     refs = list(repo.list_refs()[1].keys())
     remote_refs = make_remote_ref_list(repo)
     refs.extend(remote_refs)
-    print(f"Available refs are :")
+    print("Available refs are :")
     for ref in sorted(refs):
         print(f"\t - {ref}")
+
 
 def mode_run(args):
     """Function to execute a published environment"""
@@ -130,7 +133,7 @@ def mode_deploy(repo, args):
         repo.pull("NameOfRemote", [refhash], OSTree.RepoPullFlags(4), None, None)
     else:
         print("Error: environment not found! Use list mode --list to view available environments.")
-        exit(1)
+        sys.exit(1)
     DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{args.DEPLOY}"
     PDATADIR = '/'.join(DATADIR.split('/')[0:-1])
     subprocess.run(f"mkdir -pv {PDATADIR}".split(), check=True)
