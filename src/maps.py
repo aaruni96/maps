@@ -128,9 +128,9 @@ def mode_deploy(repo, args):
     if args.DEPLOY in repo.list_refs()[1]:
         refhash = repo.list_refs()[1][args.DEPLOY]
     elif args.DEPLOY in make_remote_ref_list(repo):
-        # Assuming, for now, that we only have one remote named "NameOfRemote"
-        refhash = repo.remote_list_refs("NameOfRemote")[1][args.DEPLOY]
-        repo.pull("NameOfRemote", [refhash], OSTree.RepoPullFlags(4), None, None)
+        # Assuming, for now, that we only have one remote named "Official"
+        refhash = repo.remote_list_refs("Official")[1][args.DEPLOY]
+        repo.pull("Official", [refhash], OSTree.RepoPullFlags(4), None, None)
     else:
         print("Error: environment not found! Use list mode --list to view available environments.")
         sys.exit(1)
@@ -156,8 +156,8 @@ def mode_package(repo, args):
         refhash = ''
         if 'base/x86_64/debian' not in list(repo.list_refs()[1].keys()):
             # import base to local repo
-            refhash = repo.remote_list_refs("NameOfRemote")[1]['base/x86_64/debian']
-            repo.pull("NameOfRemote", [refhash], OSTree.RepoPullFlags(4), None, None)
+            refhash = repo.remote_list_refs("Official")[1]['base/x86_64/debian']
+            repo.pull("Official", [refhash], OSTree.RepoPullFlags(4), None, None)
         else:
             refhash = repo.list_refs()[1]['base/x86_64/debian']
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -223,8 +223,8 @@ def main():
                                  OSTree.RepoMode(OSTREE_REPO_MODE_BARE_USER), None, None)
     repo.open(None)
     # Configure a good known remote, if not already present
-    if (not repo.remote_list()) or "NameOfRemote" not in repo.remote_list():
-        repo.remote_add("NameOfRemote", "http://maunzerle:81",
+    if (not repo.remote_list()) or "Official" not in repo.remote_list():
+        repo.remote_add("Official", "http://maunzerle:81",
                         GLib.Variant('a{sv}', {"gpg-verify": GLib.Variant('b', False)}), None)
 
     # Run mode
