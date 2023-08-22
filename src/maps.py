@@ -134,9 +134,11 @@ def mode_deploy(repo, args):
     if args.DEPLOY in repo.list_refs()[1]:
         refhash = repo.list_refs()[1][args.DEPLOY]
     elif args.DEPLOY in make_remote_ref_list(repo):
-        # Assuming, for now, that we only have one remote named "Official"
-        refhash = repo.remote_list_refs("Official")[1][args.DEPLOY]
-        repo.pull("Official", [refhash], OSTree.RepoPullFlags(4), None, None)
+        for remote in repo.remote_list():
+            if args.DEPLOY in repo.remote_list_refs(remote)[1]:
+                refhash = repo.remote_list_refs(remote)[1][args.DEPLOY]
+                repo.pull(remote, [refhash], OSTree.RepoPullFlags(4), None, None)
+                break
     else:
         print("Error: environment not found! Use list mode --list to view available environments.")
         sys.exit(1)
