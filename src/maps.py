@@ -118,9 +118,12 @@ def mode_run(args):
 
     # launch sandbox
     print(f"Launching {args.RUN}...")
+    senv = os.environ
+    senv["HOME"] = "/home/runtime"
+    senv["PS1"] = "\\u@runtime:\\w# "
     rstatus = subprocess.run([BWRAP, "--no-int-term", "--unshare-user", "--unshare-pid",
                               "--bind", f"{DATADIR}/live", "/", "--proc", "/proc", "--dev", "/dev",
-                              "--uid", "0", "--gid", "0", "bash"], check=False)
+                              "--uid", "0", "--gid", "0", "bash"], env=senv, check=False)
     if rstatus.returncode != 0:
         print(f"Sandbox exited with return code {rstatus.returncode}")
     # when the sandbox exits, cleanup
@@ -209,9 +212,12 @@ def mode_package(repo, args):
         # location is a functional tree, we just have to sandbox in it
         # its the user's responsibility to ensure the tree is good
         print(f"Launching a sandbox in {args.LOCATION}...")
+        senv = os.environ
+        senv["HOME"] = "/home/runtime"
+        senv["PS1"] = "\\u@runtime:\\w# "
         rstatus = subprocess.run([BWRAP, "--no-int-term", "--unshare-user", "--unshare-pid",
                                   "--bind", args.LOCATION, "/", "--proc", "/proc", "--dev", "/dev",
-                                  "--uid", "0", "--gid", "0", "bash"], check=False)
+                                  "--uid", "0", "--gid", "0", "bash", "--norc"], env= senv, check=False)
         if rstatus.returncode != 0:
             print(f"Sandbox exited with return code {rstatus.returncode}")
     if args.COMMIT is not False:
