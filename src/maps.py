@@ -30,10 +30,14 @@ def addCLI():
                      ),
     )
     parser.add_argument('--version', action='version', version=VERSION)
+    parser.add_argument('--add-remote', dest='REMOTE', action='store',
+                        default=None, help="Add REMOTE to local ostree repo")
     parser.add_argument('-c', '--commit', dest='COMMIT', nargs=2, metavar=("TREE", "BRANCH"),
                         default=False, help="Commit TREE to BRANCH in REPO")
     parser.add_argument('-d', '--deploy', dest='DEPLOY', action='store',
                         default=False, help="deploy mode, for installing environments")
+    parser.add_argument('--del-remote', dest="DEL_REMOTE", action='store',
+                        default=None, help="Delete REMOTE from local ostree repo")
     parser.add_argument('-i', '--initialize', dest='DIR',
                         help="initialize DIR with a good base tree")
     parser.add_argument('-l', '--list', dest='LIST', action='store_true',
@@ -156,6 +160,15 @@ def mode_deploy(repo, args):
     else:
         print("Error: environment not found! Use list mode --list to view available environments.")
         sys.exit(1)
+    if args.REMOTE is not None:
+        repo.remote_add(args.REMOTE, args.REMOTE,
+                        GLib.Variant('a{sv}', {"gpg-verify": GLib.Variant('b', False)}), None)
+        print(f"Added {args.REMOTE} to list of remotes!")
+        return
+    if args.DEL_REMOTE is not None:
+        repo.remote_delete(args.DEL_REMOTE)
+        print(f"Deleted {args.REMOTE} from list of remotes!")
+        return
     DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{args.DEPLOY}"
     PDATADIR = '/'.join(DATADIR.split('/')[0:-1])
     subprocess.run(f"mkdir -pv {PDATADIR}".split(), check=True)
