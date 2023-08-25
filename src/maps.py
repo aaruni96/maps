@@ -69,7 +69,6 @@ def sanity_checks(parser, args):
                                  "Please check arguments!")
 
 
-# if the directory does not exist, assume we're doing a first run, go through initialization
 def program_init(repopath):
     """Function verifies requirements, and initializes the working directories"""
     # step 1 : check bwrap, and overlayfs-fuse are installed
@@ -156,7 +155,10 @@ def mode_deploy(repo, args):
         raise AssertionError("Error: Could not create directory. "
                              "Path already exists, or other unknown error")
     tfd = os.open(DATADIR, os.O_RDONLY)
-    repo.checkout_at(None, tfd, "rofs", refhash, None)
+    osopts = blank_options()
+    osopts.bareuseronly_dirs = True
+    osopts.mode = OSTree.RepoCheckoutMode(1)
+    repo.checkout_at(osopts, tfd, "rofs", refhash, None)
     print(f"Success... {args.DEPLOY} is now ready to use!")
 
 
