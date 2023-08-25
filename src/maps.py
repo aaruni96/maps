@@ -217,7 +217,8 @@ def mode_package(repo, args):
         senv["PS1"] = "\\u@runtime:\\w# "
         rstatus = subprocess.run([BWRAP, "--no-int-term", "--unshare-user", "--unshare-pid",
                                   "--bind", args.LOCATION, "/", "--proc", "/proc", "--dev", "/dev",
-                                  "--uid", "0", "--gid", "0", "bash", "--norc"], env= senv, check=False)
+                                  "--uid", "0", "--gid", "0", "bash", "--norc"],
+                                 env=senv, check=False)
         if rstatus.returncode != 0:
             print(f"Sandbox exited with return code {rstatus.returncode}")
     if args.COMMIT is not False:
@@ -263,7 +264,8 @@ def main():
 
     fd = os.open(repopath, os.O_RDONLY)
     repo = OSTree.Repo.create_at(fd, repo,
-                                 OSTree.RepoMode(OSTREE_REPO_MODE_BARE_USER), None, None)
+                                 OSTree.RepoMode(OSTREE_REPO_MODE_BARE_USER),
+                                 GLib.Variant('a{sv}', {}), None)
     repo.open(None)
     # Configure a good known remote, if not already present
     if (not repo.remote_list()) or "Official" not in repo.remote_list():
