@@ -10,7 +10,12 @@ gi.require_version("OSTree", "1.0")
 from gi.repository import OSTree, GLib
 
 VERSION = '0.1-alpha'
-BWRAP = '/home/akaushik/Programs/git/Github/bubblewrap/bwrap'
+BWRAP_DEFAULT = f"{'/'.join(__file__.split('/')[0:-2])}/deps/bubblewrap/bwrap"
+if os.getenv('BWRAP_CMD') is not None:
+    BWRAP = str(os.getenv('BWRAP_CMD'))
+else:
+    BWRAP = BWRAP_DEFAULT
+OVERLAYFS = '/usr/bin/fuse-overlayfs'
 OSTREE_REPO_MODE_BARE_USER = 2
 
 
@@ -72,9 +77,16 @@ def sanity_checks(parser, args):
 def program_init(repopath):
     """Function verifies requirements, and initializes the working directories"""
     # step 1 : check bwrap, and overlayfs-fuse are installed
+    if (BWRAP == BWRAP_DEFAULT) and not os.path.isfile(BWRAP):
+        # clone and compile bubblewrap
+        subprocess.run(["git", "clone", "git@github.com:aaruni96/bubblewrap.git", BWRAP[0:-5]],
+                       check=False)
+        subprocess.run(f"cd {BWRAP[0:-5]} && git checkout ak/sigint", shell=True, check=False)
+        subprocess.run(f"cd {BWRAP[0:-5]} && ./autogen.sh && ./configure && make -j", shell=True,
+                       check=True)
     assert os.path.isfile(BWRAP)
-    assert os.path.isfile("/usr/bin/fuse-overlayfs")
-    # step 2 : create the directory, so the function is not called again
+    assert os.path.isfile(OVERLAYFS)
+    # step 2 : create the directory
     subprocess.run(f"mkdir -pv {'/'.join(repopath.split('/'))}".split(), check=True)
 
 

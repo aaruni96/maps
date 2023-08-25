@@ -10,3 +10,7 @@ __pycache__
 #ostree files
 
 ostree
+
+# dynamic dependencies
+
+deps
