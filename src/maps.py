@@ -261,8 +261,7 @@ def main():
     repo = repopath.split('/')[-1]
     repopath = '/'.join(repopath.split('/')[0:-1])
 
-    if not os.path.isdir(repopath):
-        program_init(repopath)
+    program_init(repopath)
 
     fd = os.open(repopath, os.O_RDONLY)
     repo = OSTree.Repo.create_at(fd, repo,
