@@ -27,4 +27,4 @@ install -v julia-1.9.2/share/applications/julia.desktop /usr/share/applications/
 install -v julia-1.9.2/share/man/man1/julia.1 /usr/share/man/man1/julia.1
 cp -rv julia-1.9.2/share/doc/julia/html/en/* /usr/share/doc/julia/html/en/
 cp -rv julia-1.9.2/share/julia/* /usr/share/julia/
-rm -rvf julia-1.9.2 julia-1.9.2-linux.x86_64.tar.gz
+rm -rvf julia-1.9.2 julia-1.9.2-linux-x86_64.tar.gz
