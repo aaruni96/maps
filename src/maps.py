@@ -138,6 +138,7 @@ def mode_list(repo):
             for ref in sorted(remote_refs):
                 print(f"\t - {ref}")
 
+
 def mode_remotes(repo, args):
     """Administrative mode for remotes of the repo"""
     if args.REMOTE is not False:
@@ -149,7 +150,6 @@ def mode_remotes(repo, args):
         repo.remote_delete(args.DEL_REMOTE)
         print(f"Deleted {args.DEL_REMOTE} from list of remotes!")
         return
-    pass
 
 
 def mode_run(args):
