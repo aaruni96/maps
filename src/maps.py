@@ -184,6 +184,7 @@ def mode_run(args):
 # Deploy Mode
 def mode_deploy(repo, args):
     """Function to deploy from repo to local disk"""
+    refhash = ''
     if args.DEPLOY in repo.list_refs()[1]:
         refhash = repo.list_refs()[1][args.DEPLOY]
     elif args.DEPLOY in [j for remotes in repo.remote_list()
