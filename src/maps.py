@@ -112,7 +112,7 @@ def make_remote_ref_list(repo, remote):
 
 def mode_list(repo):
     """Prints a list of available refs"""
-    print("Available refs are :")
+    print("Available runtimes are :")
     refs = list(repo.list_refs()[1].keys())
     if refs:
         print("Local")
@@ -170,7 +170,7 @@ def mode_deploy(repo, args):
                 repo.pull(remote, [refhash], OSTree.RepoPullFlags(4), None, None)
                 break
     else:
-        print("Error: environment not found! Use list mode --list to view available environments.")
+        print("Error: environment not found! Use list mode --list to view available runtimes.")
         sys.exit(1)
     if args.REMOTE is not None:
         repo.remote_add(args.REMOTE, args.REMOTE,
