@@ -94,26 +94,37 @@ def program_init(repopath):
     subprocess.run(f"mkdir -pv {'/'.join(repopath.split('/'))}".split(), check=True)
 
 
-def make_remote_ref_list(repo):
-    """Given a repo, return a list of refs in the remotes of that repo"""
+def make_remote_ref_list(repo, remote):
+    """Given a repo and a remote, return a list of refs in the remote of that repo"""
+    if remote is None:
+        return []
+    if repo.remote_list() is None:
+        print(f"Repo {repo} has no remotes!")
+        return []
     if repo.remote_list() is not None:
-        remote_repos = repo.remote_list()
-    else:
-        remote_repos = []
+        if remote not in repo.remote_list():
+            print(f"Repo {repo} has no remote {remote}!")
+            return []
     remote_refs = []
-    for remote in remote_repos:
-        remote_refs.extend(list(repo.remote_list_refs(remote)[1].keys()))
+    remote_refs.extend(list(repo.remote_list_refs(remote)[1].keys()))
     return remote_refs
 
 
 def mode_list(repo):
     """Prints a list of available refs"""
-    refs = list(repo.list_refs()[1].keys())
-    remote_refs = make_remote_ref_list(repo)
-    refs.extend(remote_refs)
     print("Available refs are :")
-    for ref in sorted(refs):
-        print(f"\t - {ref}")
+    refs = list(repo.list_refs()[1].keys())
+    if refs:
+        print("Local")
+        for ref in sorted(refs):
+            print(f"\t - {ref}")
+    remotes = repo.remote_list()
+    for remote in remotes:
+        remote_refs = make_remote_ref_list(repo, remote)
+        if remote_refs:
+            print(remote)
+            for ref in sorted(remote_refs):
+                print(f"\t - {ref}")
 
 
 def mode_run(args):
@@ -151,7 +162,8 @@ def mode_deploy(repo, args):
     """Function to deploy from repo to local disk"""
     if args.DEPLOY in repo.list_refs()[1]:
         refhash = repo.list_refs()[1][args.DEPLOY]
-    elif args.DEPLOY in make_remote_ref_list(repo):
+    elif args.DEPLOY in [j for remotes in repo.remote_list()
+                         for j in make_remote_ref_list(repo, remotes)]:
         for remote in repo.remote_list():
             if args.DEPLOY in repo.remote_list_refs(remote)[1]:
                 refhash = repo.remote_list_refs(remote)[1][args.DEPLOY]
