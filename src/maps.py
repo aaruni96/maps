@@ -174,7 +174,7 @@ def mode_run(args):
     senv["PS1"] = "\\u@runtime:\\w# "
     rstatus = subprocess.run([BWRAP, "--no-int-term", "--unshare-user", "--unshare-pid",
                               "--bind", f"{DATADIR}/live", "/", "--proc", "/proc", "--dev", "/dev",
-                              "--uid", "0", "--gid", "0", "bash"], env=senv, check=False)
+                              "--uid", "0", "--gid", "0", "bash", "--norc"], env=senv, check=False)
     if rstatus.returncode != 0:
         print(f"Sandbox exited with return code {rstatus.returncode}")
     # when the sandbox exits, cleanup
