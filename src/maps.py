@@ -78,7 +78,7 @@ def sanity_checks(parser, args):
 
 
 def program_init(repopath):
-    """Function verifies requirements, and initializes the working directories"""
+    """Init function verifies requirements, sets up the repo. Returns the OSTree Repo."""
     # step 1 : check bwrap, and overlayfs-fuse are installed
     if (BWRAP == BWRAP_DEFAULT) and not os.path.isfile(BWRAP):
         # clone and compile bubblewrap
@@ -94,6 +94,7 @@ def program_init(repopath):
 
     # step 3 : Configure a good known remote, if not already present
     repo = repopath.split('/')[-1]
+    repopath = '/'.join(repopath.split('/')[0:-1])
     fd = os.open(repopath, os.O_RDONLY)
     repo = OSTree.Repo.create_at(fd, repo,
                                  OSTree.RepoMode(OSTREE_REPO_MODE_BARE_USER),
@@ -311,8 +312,6 @@ def main():
         repopath = f"{data}/ostree/repo"
     else:
         repopath = args.REPO
-    repo = repopath.split('/')[-1]
-    repopath = '/'.join(repopath.split('/')[0:-1])
 
     repo = program_init(repopath)
 
