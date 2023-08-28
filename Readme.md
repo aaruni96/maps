@@ -77,6 +77,10 @@ We deploy software in `$HOME/.var/maps/app-id/`, in directories `live`, `rofs`, 
 
 There is currently a bug in [fuse-overlayfs](https://github.com/containers/fuse-overlayfs/issues/399), which causes problems in copying a read-only file. In concrete terms, this means that `julia` testing infrastructure fails at the time of writing. This needs to be either patched in upstream, or worked around by `maps`.
 
+## Known Problems
+
+The OSTree Repository cannot be initialized onto a filesystem without extended attributes, in particular, NFS does not work. As a workaround, you can set the environment variables `XDG_DATA_HOME` (system OSTree Repository) and `HOME` (Runtime checkout) to point to some directory on a filesystem which has support for extended attributes.
+
 ## ToDo
 
  - [ ] Decide on a way of naming runtimes, and validate it in software.
