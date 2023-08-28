@@ -30,14 +30,15 @@ def addCLI():
                      ),
     )
     parser.add_argument('--version', action='version', version=VERSION)
-    parser.add_argument('--add-remote', dest='REMOTE', action='store',
-                        default=None, help="Add REMOTE to local ostree repo")
+    parser.add_argument('--add-remote', dest='REMOTE', nargs=2,
+                        metavar=("REMOTE_NAME", "REMOTE_URL"), action='store',
+                        default=False, help="Add REMOTE to local ostree repo")
     parser.add_argument('-c', '--commit', dest='COMMIT', nargs=2, metavar=("TREE", "BRANCH"),
                         default=False, help="Commit TREE to BRANCH in REPO")
     parser.add_argument('-d', '--deploy', dest='DEPLOY', action='store',
                         default=False, help="deploy mode, for installing environments")
     parser.add_argument('--del-remote', dest="DEL_REMOTE", action='store',
-                        default=None, help="Delete REMOTE from local ostree repo")
+                        default=False, help="Delete REMOTE from local ostree repo")
     parser.add_argument('-i', '--initialize', dest='DIR',
                         help="initialize DIR with a good base tree")
     parser.add_argument('-l', '--list', dest='LIST', action='store_true',
@@ -64,8 +65,6 @@ def sanity_checks(parser, args):
         parser.print_help()
         sys.exit(1)
     if not args.PACKAGE and args.RUN is False and args.LIST is False:
-        if args.DEPLOY is False:
-            raise AssertionError("This is an impossible case, I think?")
         if args.DIR is not None:
             raise AssertionError("Can only initialize a dir in package mode!")
         if args.LOCATION is not None:
@@ -92,6 +91,18 @@ def program_init(repopath):
     assert os.path.isfile(OVERLAYFS)
     # step 2 : create the directory
     subprocess.run(f"mkdir -pv {'/'.join(repopath.split('/'))}".split(), check=True)
+
+    # step 3 : Configure a good known remote, if not already present
+    repo = repopath.split('/')[-1]
+    fd = os.open(repopath, os.O_RDONLY)
+    repo = OSTree.Repo.create_at(fd, repo,
+                                 OSTree.RepoMode(OSTREE_REPO_MODE_BARE_USER),
+                                 GLib.Variant('a{sv}', {}), None)
+    if (not repo.remote_list()) or "Official" not in repo.remote_list():
+        repo.remote_add("Official", "http://maunzerle:81",
+                        GLib.Variant('a{sv}', {"gpg-verify": GLib.Variant('b', False)}), None)
+        print("Automatically adding official remote")
+    return repo
 
 
 def make_remote_ref_list(repo, remote):
@@ -125,6 +136,19 @@ def mode_list(repo):
             print(remote)
             for ref in sorted(remote_refs):
                 print(f"\t - {ref}")
+
+def mode_remotes(repo, args):
+    """Administrative mode for remotes of the repo"""
+    if args.REMOTE is not False:
+        repo.remote_add(args.REMOTE[0], args.REMOTE[1],
+                        GLib.Variant('a{sv}', {"gpg-verify": GLib.Variant('b', False)}), None)
+        print(f"Added {args.REMOTE} to list of remotes!")
+        return
+    if args.DEL_REMOTE is not False:
+        repo.remote_delete(args.DEL_REMOTE)
+        print(f"Deleted {args.DEL_REMOTE} from list of remotes!")
+        return
+    pass
 
 
 def mode_run(args):
@@ -172,15 +196,6 @@ def mode_deploy(repo, args):
     else:
         print("Error: environment not found! Use list mode --list to view available runtimes.")
         sys.exit(1)
-    if args.REMOTE is not None:
-        repo.remote_add(args.REMOTE, args.REMOTE,
-                        GLib.Variant('a{sv}', {"gpg-verify": GLib.Variant('b', False)}), None)
-        print(f"Added {args.REMOTE} to list of remotes!")
-        return
-    if args.DEL_REMOTE is not None:
-        repo.remote_delete(args.DEL_REMOTE)
-        print(f"Deleted {args.REMOTE} from list of remotes!")
-        return
     DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{args.DEPLOY}"
     PDATADIR = '/'.join(DATADIR.split('/')[0:-1])
     subprocess.run(f"mkdir -pv {PDATADIR}".split(), check=True)
@@ -298,20 +313,12 @@ def main():
     repo = repopath.split('/')[-1]
     repopath = '/'.join(repopath.split('/')[0:-1])
 
-    program_init(repopath)
-
-    fd = os.open(repopath, os.O_RDONLY)
-    repo = OSTree.Repo.create_at(fd, repo,
-                                 OSTree.RepoMode(OSTREE_REPO_MODE_BARE_USER),
-                                 GLib.Variant('a{sv}', {}), None)
-    repo.open(None)
-    # Configure a good known remote, if not already present
-    if (not repo.remote_list()) or "Official" not in repo.remote_list():
-        repo.remote_add("Official", "http://maunzerle:81",
-                        GLib.Variant('a{sv}', {"gpg-verify": GLib.Variant('b', False)}), None)
+    repo = program_init(repopath)
 
     # Run mode
-    if args.LIST is not False:
+    if (args.REMOTE is not False) or (args.DEL_REMOTE is not False):
+        mode_remotes(repo, args)
+    elif args.LIST is not False:
         mode_list(repo)
     elif args.RUN is not False:
         mode_run(args)
