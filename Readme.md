@@ -27,7 +27,7 @@ For users of other package managers, the exact package names might differ.
 
 ### Bubblewrap
 
-We currently depend on a patched version of bubblewrap to avoid minor problem in how SIGINT is handled. Until the fix (or equivalent) is bundled into release, we need to clone and compile `https://github.com/aaruni96/bubblewrap/tree/ak/sigint` . `maps` will automatically try to do this for you, but you must ensure you have the devtools installed to compile maps.
+We currently depend on a patched version of bubblewrap to avoid minor problem in how SIGINT is handled. Until the fix (or equivalent) is bundled into release, we need to clone and compile `https://github.com/aaruni96/bubblewrap/tree/ak/sigint` . `maps` will automatically try to do this for you, but you must ensure you have the devtools installed to compile bwrap.
 
 ## Installing
 
