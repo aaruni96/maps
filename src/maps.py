@@ -100,7 +100,7 @@ def program_init(repopath):
                                  OSTree.RepoMode(OSTREE_REPO_MODE_BARE_USER),
                                  GLib.Variant('a{sv}', {}), None)
     if (not repo.remote_list()) or "Official" not in repo.remote_list():
-        repo.remote_add("Official", "http://maunzerle:81",
+        repo.remote_add("Official", "https://repo.oscar-system.org/",
                         GLib.Variant('a{sv}', {"gpg-verify": GLib.Variant('b', False)}), None)
         print("Automatically adding official remote")
     return repo
