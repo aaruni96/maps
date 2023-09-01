@@ -86,11 +86,13 @@ def program_init(repopath):
     # step 1 : check bwrap, and overlayfs-fuse are installed
     if (BWRAP == BWRAP_DEFAULT) and not os.path.isfile(BWRAP):
         # clone and compile bubblewrap
-        subprocess.run(["git", "clone", "git@github.com:aaruni96/bubblewrap.git", BWRAP[0:-5]],
+        subprocess.run(["git", "clone", "https://github.com/aaruni96/bubblewrap.git", BWRAP[0:-5]],
                        check=False)
         subprocess.run(f"cd {BWRAP[0:-5]} && git checkout ak/sigint", shell=True, check=False)
-        subprocess.run(f"cd {BWRAP[0:-5]} && ./autogen.sh && ./configure && make -j", shell=True,
-                       check=True)
+        rstatus = subprocess.run(f"cd {BWRAP[0:-5]} && ./autogen.sh && ./configure && make -j", shell=True,
+                       check=False)
+        if rstatus.returncode != 0:
+            subprocess.run(f"cd {BWRAP[0:-5]} && make -j", shell=True, check=False)
     assert os.path.isfile(BWRAP)
     assert os.path.isfile(OVERLAYFS)
     # step 2 : create the directory
