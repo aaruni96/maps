@@ -2,12 +2,15 @@
 """This module provides package management functionality for MaRDI"""
 import os
 import sys
+import time
+import itertools
 import subprocess
 import tempfile
 import argparse
+import concurrent.futures
 import gi
 gi.require_version("OSTree", "1.0")
-from gi.repository import OSTree, GLib
+from gi.repository import OSTree, GLib, Gio
 
 VERSION = '0.1-alpha'
 BWRAP_DEFAULT = f"{'/'.join(__file__.split('/')[0:-2])}/deps/bubblewrap/bwrap"
@@ -17,6 +20,7 @@ else:
     BWRAP = BWRAP_DEFAULT
 OVERLAYFS = '/usr/bin/fuse-overlayfs'
 OSTREE_REPO_MODE_BARE_USER = 2
+SPINNER = itertools.cycle(['-', '\\', '|', '/'])
 
 
 # Define a CLI
@@ -182,6 +186,15 @@ def mode_run(args):
     subprocess.run(["fusermount", "-u", f"{DATADIR}/live"], check=False)
 
 
+#
+def zipped_pull(zarglist):
+    """Simple wrapper function to repo.pull()"""
+    repo = zarglist[0]
+    remote = zarglist[1]
+    refhash = zarglist[2]
+    repo.pull(remote, [refhash], OSTree.RepoPullFlags(4), None, None)
+
+
 # Deploy Mode
 def mode_deploy(repo, args):
     """Function to deploy from repo to local disk"""
@@ -193,7 +206,17 @@ def mode_deploy(repo, args):
         for remote in repo.remote_list():
             if args.DEPLOY in repo.remote_list_refs(remote)[1]:
                 refhash = repo.remote_list_refs(remote)[1][args.DEPLOY]
-                repo.pull(remote, [refhash], OSTree.RepoPullFlags(4), None, None)
+                with concurrent.futures.ThreadPoolExecutor() as executor:
+                    f = executor.submit(zipped_pull, [repo, remote, refhash])
+                    print(f"Downloading {args.DEPLOY} from {remote}")
+                    while True:
+                        sys.stdout.write(next(SPINNER))
+                        sys.stdout.flush()
+                        time.sleep(0.2)
+                        sys.stdout.write('\b')
+                        if f.done():
+                            sys.stdout.flush()
+                            break
                 break
     else:
         print("Error: environment not found! Use list mode --list to view available runtimes.")
