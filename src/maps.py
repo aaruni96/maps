@@ -10,7 +10,7 @@ import argparse
 import concurrent.futures
 import gi
 gi.require_version("OSTree", "1.0")
-from gi.repository import OSTree, GLib, Gio
+from gi.repository import OSTree, GLib
 
 VERSION = '0.1-alpha'
 BWRAP_DEFAULT = f"{'/'.join(__file__.split('/')[0:-2])}/deps/bubblewrap/bwrap"
@@ -186,7 +186,6 @@ def mode_run(args):
     subprocess.run(["fusermount", "-u", f"{DATADIR}/live"], check=False)
 
 
-#
 def zipped_pull(zarglist):
     """Simple wrapper function to repo.pull()"""
     repo = zarglist[0]
