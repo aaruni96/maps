@@ -193,7 +193,29 @@ def zipped_pull(zarglist):
     repo = zarglist[0]
     remote = zarglist[1]
     refhash = zarglist[2]
-    repo.pull(remote, [refhash], OSTree.RepoPullFlags(4), None, None)
+    progress = zarglist[3]
+    repo.pull(remote, [refhash], OSTree.RepoPullFlags(4), progress, None)
+
+
+def download(args, repo, remote, refhash):
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        progress = OSTree.AsyncProgress.new()
+        f = executor.submit(zipped_pull, [repo, remote, refhash, progress])
+        print(f"Downloading {args.DEPLOY} from {remote}")
+        while True:
+            sys.stdout.write(next(SPINNER))
+            sys.stdout.flush()
+            time.sleep(0.2)
+            sys.stdout.write('\b')
+            if f.done():
+                sys.stdout.flush()
+                break
+        if(progress.get_status() is None):
+            print(f"Error, {f.exception()}")
+            print("Retrying...")
+            download(args, repo, remote, refhash)
+        else:
+            print(progress.get_status())
 
 
 # Deploy Mode
@@ -207,17 +229,7 @@ def mode_deploy(repo, args):
         for remote in repo.remote_list():
             if args.DEPLOY in repo.remote_list_refs(remote)[1]:
                 refhash = repo.remote_list_refs(remote)[1][args.DEPLOY]
-                with concurrent.futures.ThreadPoolExecutor() as executor:
-                    f = executor.submit(zipped_pull, [repo, remote, refhash])
-                    print(f"Downloading {args.DEPLOY} from {remote}")
-                    while True:
-                        sys.stdout.write(next(SPINNER))
-                        sys.stdout.flush()
-                        time.sleep(0.2)
-                        sys.stdout.write('\b')
-                        if f.done():
-                            sys.stdout.flush()
-                            break
+                download(args, repo, remote, refhash)
                 break
     else:
         print("Error: environment not found! Use list mode --list to view available runtimes.")
