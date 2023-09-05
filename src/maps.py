@@ -205,7 +205,8 @@ def zipped_pull(zarglist):
     repo.pull(remote, [refhash], OSTree.RepoPullFlags(4), progress, None)
 
 
-def download(args, repo, remote, refhash):
+def download(args, repo, remote, refhash, cerror=0):
+    """Function to download a repo from remote"""
     with concurrent.futures.ThreadPoolExecutor() as executor:
         progress = OSTree.AsyncProgress.new()
         f = executor.submit(zipped_pull, [repo, remote, refhash, progress])
@@ -220,9 +221,13 @@ def download(args, repo, remote, refhash):
                 break
         if progress.get_status() is None:
             print(f"Error, {f.exception()}")
-            print("Retrying...")
-            download(args, repo, remote, refhash)
+            if cerror > 10:
+                print("10 consecutive network failures. Bailing!")
+                f.result()
+            print(f"Retrying... ({cerror}/10)")
+            download(args, repo, remote, refhash, cerror)
         else:
+            cerror = 0
             print(progress.get_status())
 
 
