@@ -90,8 +90,8 @@ def program_init(repopath):
         subprocess.run(["git", "clone", "https://github.com/aaruni96/bubblewrap.git", BWRAP[0:-5]],
                        check=False)
         subprocess.run(f"cd {BWRAP[0:-5]} && git checkout ak/sigint", shell=True, check=False)
-        rstatus = subprocess.run(f"cd {BWRAP[0:-5]} && ./autogen.sh && ./configure && make -j", shell=True,
-                       check=False)
+        rstatus = subprocess.run(f"cd {BWRAP[0:-5]} && ./autogen.sh && ./configure && make -j",
+                                 shell=True, check=False)
         if rstatus.returncode != 0:
             subprocess.run(f"cd {BWRAP[0:-5]} && make -j", shell=True, check=False)
     assert os.path.isfile(BWRAP)
@@ -209,21 +209,21 @@ def download(args, repo, remote, refhash, cerror=0):
     """Function to download a repo from remote"""
     with concurrent.futures.ThreadPoolExecutor() as executor:
         progress = OSTree.AsyncProgress.new()
-        f = executor.submit(zipped_pull, [repo, remote, refhash, progress])
+        future = executor.submit(zipped_pull, [repo, remote, refhash, progress])
         print(f"Downloading {args.DEPLOY} from {remote}")
         while True:
             sys.stdout.write(next(SPINNER))
             sys.stdout.flush()
             time.sleep(0.2)
             sys.stdout.write('\b')
-            if f.done():
+            if future.done():
                 sys.stdout.flush()
                 break
         if progress.get_status() is None:
-            print(f"Error, {f.exception()}")
+            print(f"Error, {future.exception()}")
             if cerror > 10:
                 print("10 consecutive network failures. Bailing!")
-                f.result()
+                future.result()
             print(f"Retrying... ({cerror}/10)")
             download(args, repo, remote, refhash, cerror)
         else:
