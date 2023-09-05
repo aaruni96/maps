@@ -21,6 +21,7 @@ else:
 OVERLAYFS = '/usr/bin/fuse-overlayfs'
 OSTREE_REPO_MODE_BARE_USER = 2
 SPINNER = itertools.cycle(['-', '\\', '|', '/'])
+HOME = os.getenv('HOME')
 
 
 # Define a CLI
@@ -168,10 +169,15 @@ def mode_run(args):
     if args.RESET:
         subprocess.run(f"rm -rf {DATADIR}/live/*".split(), check=True)
         return
+
     # setup live directory
     subprocess.run(["fuse-overlayfs", "-o", f"lowerdir={DATADIR}/rofs", "-o",
                     f"upperdir={DATADIR}/rwfs", "-o", f"workdir={DATADIR}/tmpfs",
                     f"{DATADIR}/live"], check=True)
+
+    # ensure share source and targets exist
+    subprocess.run(f"mkdir -pv {os.getenv('HOME')}/Public".split(), check=True)
+    subprocess.run(f"mkdir -pv {DATADIR}/live/home/runtime/Public".split(), check=True)
 
     # launch sandbox
     print(f"Launching {args.RUN}...")
@@ -179,8 +185,10 @@ def mode_run(args):
     senv["HOME"] = "/home/runtime"
     senv["PS1"] = "\\u@runtime:\\w# "
     rstatus = subprocess.run([BWRAP, "--no-int-term", "--unshare-user", "--unshare-pid",
-                              "--bind", f"{DATADIR}/live", "/", "--proc", "/proc", "--dev", "/dev",
-                              "--uid", "0", "--gid", "0", "bash", "--norc"], env=senv, check=False)
+                              "--bind", f"{DATADIR}/live", "/", "--bind",
+                              f"{HOME}/Public", f"{senv['HOME']}/Public",
+                              "--proc", "/proc", "--dev", "/dev", "--uid", "0", "--gid", "0",
+                              "bash", "--norc"], env=senv, check=False)
     if rstatus.returncode != 0:
         print(f"Sandbox exited with return code {rstatus.returncode}")
     # when the sandbox exits, cleanup
@@ -210,7 +218,7 @@ def download(args, repo, remote, refhash):
             if f.done():
                 sys.stdout.flush()
                 break
-        if(progress.get_status() is None):
+        if progress.get_status() is None:
             print(f"Error, {f.exception()}")
             print("Retrying...")
             download(args, repo, remote, refhash)
