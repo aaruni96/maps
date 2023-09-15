@@ -221,10 +221,10 @@ def download(args, repo, remote, refhash, cerror=0):
                 break
         if progress.get_status() is None:
             print(f"Error, {future.exception()}")
+            cerror = cerror + 1
             if cerror > 10:
                 print("10 consecutive network failures. Bailing!")
                 future.result()
-            cerror = cerror + 1
             print(f"Retrying... ({cerror}/10)")
             download(args, repo, remote, refhash, cerror)
         else:
