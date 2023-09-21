@@ -9,11 +9,12 @@ import tempfile
 import argparse
 import concurrent.futures
 import gi
+import pathlib
 gi.require_version("OSTree", "1.0")
 from gi.repository import OSTree, GLib
 
 VERSION = '0.1-alpha'
-BWRAP_DEFAULT = f"{'/'.join(__file__.split('/')[0:-2])}/deps/bubblewrap/bwrap"
+BWRAP_DEFAULT = f"{pathlib.Path().absolute()}/deps/bubblewrap/bwrap"
 if os.getenv('BWRAP_CMD') is not None:
     BWRAP = str(os.getenv('BWRAP_CMD'))
 else:
