@@ -8,8 +8,8 @@ import subprocess
 import tempfile
 import argparse
 import concurrent.futures
-import gi
 import pathlib
+import gi
 gi.require_version("OSTree", "1.0")
 from gi.repository import OSTree, GLib
 
@@ -201,16 +201,19 @@ def zipped_pull(zarglist):
     """Simple wrapper function to repo.pull()"""
     repo = zarglist[0]
     remote = zarglist[1]
-    refhash = zarglist[2]
+    refname = zarglist[2]
     progress = zarglist[3]
-    repo.pull(remote, [refhash], OSTree.RepoPullFlags(4), progress, None)
+    options = GLib.Variant('a{sv}',
+                           {"refs": GLib.Variant('as', [refname]),
+                            "flags": GLib.Variant('i', OSTree.RepoPullFlags(4))})
+    repo.pull_with_options(remote, options, progress, None)
 
 
-def download(args, repo, remote, refhash, cerror=0):
+def download(args, repo, remote, refname, cerror=0):
     """Function to download a repo from remote"""
     with concurrent.futures.ThreadPoolExecutor() as executor:
         progress = OSTree.AsyncProgress.new()
-        future = executor.submit(zipped_pull, [repo, remote, refhash, progress])
+        future = executor.submit(zipped_pull, [repo, remote, refname, progress])
         print(f"Downloading {args.DEPLOY} from {remote}")
         while True:
             sys.stdout.write(next(SPINNER))
@@ -223,11 +226,11 @@ def download(args, repo, remote, refhash, cerror=0):
         if progress.get_status() is None:
             print(f"Error, {future.exception()}")
             cerror = cerror + 1
-            #if cerror > 10:
-                #print("10 consecutive network failures. Bailing!")
-                #future.result()
+            # if cerror > 10:
+            #    print("10 consecutive network failures. Bailing!")
+            #    future.result()
             print(f"Retrying... ({cerror}/??)")
-            download(args, repo, remote, refhash, cerror)
+            download(args, repo, remote, refname, cerror)
         else:
             cerror = 0
             print(progress.get_status())
@@ -236,15 +239,12 @@ def download(args, repo, remote, refhash, cerror=0):
 # Deploy Mode
 def mode_deploy(repo, args):
     """Function to deploy from repo to local disk"""
-    refhash = ''
-    if args.DEPLOY in repo.list_refs()[1]:
-        refhash = repo.list_refs()[1][args.DEPLOY]
-    elif args.DEPLOY in [j for remotes in repo.remote_list()
-                         for j in make_remote_ref_list(repo, remotes)]:
+    if args.DEPLOY in [j for remotes in repo.remote_list()
+                       for j in make_remote_ref_list(repo, remotes)]:
         for remote in repo.remote_list():
             if args.DEPLOY in repo.remote_list_refs(remote)[1]:
                 refhash = repo.remote_list_refs(remote)[1][args.DEPLOY]
-                download(args, repo, remote, refhash)
+                download(args, repo, remote, args.DEPLOY)
                 break
     else:
         print("Error: environment not found! Use list mode --list to view available runtimes.")
