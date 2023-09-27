@@ -60,6 +60,8 @@ def addCLI():
                         default=False, help="Repository to use")
     parser.add_argument('-s', '--sandbox', dest='LOCATION',
                         help="Start a sandbox at LOCATION")
+    parser.add_argument('-u', '--uninstall', dest='UNINSTALL', action='store',
+                        default=False, help="Uninstall a runtime")
     parser.add_argument('-v', '--verbose', dest='VERBOSE', action='store_true',
                         help="enable verbose output")
     return parser
@@ -236,9 +238,42 @@ def download(args, repo, remote, refname, cerror=0):
             print(progress.get_status())
 
 
+# Uninstall
+def uninstall_runtime(repo, args):
+    """Function to remove a runtime from both the local disk checkout, and the local repo"""
+    # Check if runtime is checked out
+    FLAG1 = False
+    FLAG2 = False
+    DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{args.UNINSTALL}"
+    print(DATADIR)
+    if os.path.isdir(DATADIR):
+        FLAG1 = True
+        subprocess.run(f"rm -rvf {DATADIR}".split(), check=True)
+
+    for runtime in repo.list_refs()[1].keys():
+        if args.UNINSTALL in runtime:
+            FLAG2 = True
+            remote = ''
+            if ':' in runtime:
+                remote, runtime = runtime.split(':')
+            print(repo.list_refs()[1])
+            repo.set_ref_immediate(remote, runtime, None, None)
+            repo.prune(OSTree.RepoPruneFlags(0), -1, None)
+            break
+
+    if not (FLAG1 and FLAG2):
+        print(f"Error, {args.UNINSTALL} isn't deployed and thus cannot be uninstalled!")
+
+    sys.exit()
+
+
 # Deploy Mode
 def mode_deploy(repo, args):
     """Function to deploy from repo to local disk"""
+
+    if args.UNINSTALL:
+        uninstall_runtime(repo, args)
+
     if args.DEPLOY in [j for remotes in repo.remote_list()
                        for j in make_remote_ref_list(repo, remotes)]:
         for remote in repo.remote_list():
