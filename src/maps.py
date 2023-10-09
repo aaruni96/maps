@@ -23,6 +23,7 @@ OVERLAYFS = '/usr/bin/fuse-overlayfs'
 OSTREE_REPO_MODE_BARE_USER = 2
 SPINNER = itertools.cycle(['-', '\\', '|', '/'])
 HOME = os.getenv('HOME')
+KEEP_FREE_SPACE = 3
 
 
 # Define a CLI
@@ -105,10 +106,20 @@ def program_init(repopath):
     # step 3 : Configure a good known remote, if not already present
     repo = repopath.split('/')[-1]
     repopath = '/'.join(repopath.split('/')[0:-1])
+    config_path = f"{repopath}/repo/config"
+    config_exists = os.path.isfile(config_path)
     fd = os.open(repopath, os.O_RDONLY)
     repo = OSTree.Repo.create_at(fd, repo,
                                  OSTree.RepoMode(OSTREE_REPO_MODE_BARE_USER),
                                  GLib.Variant('a{sv}', {}), None)
+    # if we just created a repo (and thus config), configure how we reserve free space
+    if not config_exists:
+        print("Just created repo, configuring free space parameters...")
+        with open(config_path, 'a') as fo:
+            fo.write(f'min-free-space-size={KEEP_FREE_SPACE}GB\n')
+        input("hit any button to continue...")
+        repo.reload_config()
+        print("Done")
     if (not repo.remote_list()) or "Official" not in repo.remote_list():
         repo.remote_add("Official", "https://repo.oscar-system.org/",
                         GLib.Variant('a{sv}', {"gpg-verify": GLib.Variant('b', False)}), None)
