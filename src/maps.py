@@ -296,7 +296,7 @@ def uninstall_runtime(repo, args):
     for runtime in repo.list_refs()[1].keys():
         if args.UNINSTALL in runtime:
             FLAG2 = True
-            remote = ''
+            remote = None
             if ':' in runtime:
                 remote, runtime = runtime.split(':')
             if VERBOSE:
