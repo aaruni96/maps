@@ -56,7 +56,7 @@ def addCLI():
     parser.add_argument('--repo', dest='REPO',
                         help="Repository to use")
     parser.add_argument('--reset', dest='RESET', action='store_true',
-                        default=False, help="Reset the runtime")
+                        default=False, help="Reset the runtime. Use with --run.")
     parser.add_argument('-r', '--run', dest='RUN', action='store',
                         default=False, help="Repository to use")
     parser.add_argument('-s', '--sandbox', dest='LOCATION',
