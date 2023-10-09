@@ -24,6 +24,7 @@ OSTREE_REPO_MODE_BARE_USER = 2
 SPINNER = itertools.cycle(['-', '\\', '|', '/'])
 HOME = os.getenv('HOME')
 KEEP_FREE_SPACE = 3
+VERBOSE = False
 
 
 # Define a CLI
@@ -91,9 +92,13 @@ def program_init(repopath):
     # step 1 : check bwrap, and overlayfs-fuse are installed
     if (BWRAP == BWRAP_DEFAULT) and not os.path.isfile(BWRAP):
         # clone and compile bubblewrap
+        if (VERBOSE):
+            print("Cloning bubblewrap...")
         subprocess.run(["git", "clone", "https://github.com/aaruni96/bubblewrap.git", BWRAP[0:-5]],
                        check=False)
         subprocess.run(f"cd {BWRAP[0:-5]} && git checkout ak/sigint", shell=True, check=False)
+        if (VERBOSE):
+            print("Compiling bubblewrap...")
         rstatus = subprocess.run(f"cd {BWRAP[0:-5]} && ./autogen.sh && ./configure && make -j",
                                  shell=True, check=False)
         if rstatus.returncode != 0:
@@ -101,7 +106,12 @@ def program_init(repopath):
     assert os.path.isfile(BWRAP)
     assert os.path.isfile(OVERLAYFS)
     # step 2 : create the directory
-    subprocess.run(f"mkdir -pv {'/'.join(repopath.split('/'))}".split(), check=True)
+    if VERBOSE:
+        print("Ensuring repo directory exists...")
+        opts = "-pv"
+    else:
+        opts = "-p"
+    subprocess.run(f"mkdir {opts} {'/'.join(repopath.split('/'))}".split(), check=True)
 
     # step 3 : Configure a good known remote, if not already present
     repo = repopath.split('/')[-1]
@@ -114,16 +124,16 @@ def program_init(repopath):
                                  GLib.Variant('a{sv}', {}), None)
     # if we just created a repo (and thus config), configure how we reserve free space
     if not config_exists:
-        print("Just created repo, configuring free space parameters...")
+        if VERBOSE:
+            print("Just created repo, configuring free space parameters...")
         with open(config_path, 'a') as fo:
             fo.write(f'min-free-space-size={KEEP_FREE_SPACE}GB\n')
-        input("hit any button to continue...")
         repo.reload_config()
-        print("Done")
     if (not repo.remote_list()) or "Official" not in repo.remote_list():
+        if VERBOSE:
+            print("Automatically adding official remote")
         repo.remote_add("Official", "https://repo.oscar-system.org/",
                         GLib.Variant('a{sv}', {"gpg-verify": GLib.Variant('b', False)}), None)
-        print("Automatically adding official remote")
     return repo
 
 
@@ -177,21 +187,35 @@ def mode_run(args):
     """Function to execute a published environment"""
     # check if the path exists
     DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{args.RUN}"
+    if VERBOSE:
+        print("Attempting to run {DATADIR}...")
     if not os.path.isdir(DATADIR):
         raise AssertionError(f"Data directory does not exist. Is {args.RUN} installed ?")
     # check if reset is requested
     if args.RESET:
-        subprocess.run(f"rm -rf {DATADIR}/live/*".split(), check=True)
+        if VERBOSE:
+            print(f"Resetting {args.RUN}...")
+            opts = '-rvf'
+        else:
+            opts = '-rf'
+        subprocess.run(f"rm {opts} {DATADIR}/live/*".split(), check=True)
         return
 
     # setup live directory
+    if VERBOSE:
+        print("Setting up overlay structure...")
     subprocess.run(["fuse-overlayfs", "-o", f"lowerdir={DATADIR}/rofs", "-o",
                     f"upperdir={DATADIR}/rwfs", "-o", f"workdir={DATADIR}/tmpfs",
                     f"{DATADIR}/live"], check=True)
 
     # ensure share source and targets exist
-    subprocess.run(f"mkdir -pv {os.getenv('HOME')}/Public".split(), check=True)
-    subprocess.run(f"mkdir -pv {DATADIR}/live/home/runtime/Public".split(), check=True)
+    if VERBOSE:
+        print("Making sure Public directories exist...")
+        opts = '-pv'
+    else:
+        opts = '-p'
+    subprocess.run(f"mkdir {opts} {os.getenv('HOME')}/Public".split(), check=True)
+    subprocess.run(f"mkdir {opts} {DATADIR}/live/home/runtime/Public".split(), check=True)
 
     # launch sandbox
     print(f"Launching {args.RUN}...")
@@ -207,6 +231,8 @@ def mode_run(args):
         print(f"Sandbox exited with return code {rstatus.returncode}")
     # when the sandbox exits, cleanup
     # can this fail? how do we handle that scenario?
+    if VERBOSE:
+        print("Cleaning up overlay structure...")
     subprocess.run(["fusermount", "-u", f"{DATADIR}/live"], check=False)
 
 
@@ -227,7 +253,7 @@ def download(args, repo, remote, refname, cerror=0):
     with concurrent.futures.ThreadPoolExecutor() as executor:
         progress = OSTree.AsyncProgress.new()
         future = executor.submit(zipped_pull, [repo, remote, refname, progress])
-        print(f"Downloading {args.DEPLOY} from {remote}")
+        print(f"Downloading {refname} from {remote}")
         while True:
             sys.stdout.write(next(SPINNER))
             sys.stdout.flush()
@@ -256,10 +282,16 @@ def uninstall_runtime(repo, args):
     FLAG1 = False
     FLAG2 = False
     DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{args.UNINSTALL}"
-    print(DATADIR)
+    if VERBOSE:
+        print(f"Trying to remove {args.UNINSTALL}...")
     if os.path.isdir(DATADIR):
         FLAG1 = True
-        subprocess.run(f"rm -rvf {DATADIR}".split(), check=True)
+        if VERBOSE:
+            print("Deleting files...")
+            opts = '-rvf'
+        else:
+            opts = '-rf'
+        subprocess.run(f"rm {opts} {DATADIR}".split(), check=True)
 
     for runtime in repo.list_refs()[1].keys():
         if args.UNINSTALL in runtime:
@@ -267,13 +299,16 @@ def uninstall_runtime(repo, args):
             remote = ''
             if ':' in runtime:
                 remote, runtime = runtime.split(':')
-            print(repo.list_refs()[1])
+            if VERBOSE:
+                print("Marking branch for deletion from repo...")
             repo.set_ref_immediate(remote, runtime, None, None)
             repo.prune(OSTree.RepoPruneFlags(0), -1, None)
             break
 
     if not (FLAG1 and FLAG2):
         print(f"Error, {args.UNINSTALL} isn't deployed and thus cannot be uninstalled!")
+    else:
+        print(f"Uninstalled {args.UNINSTALL} !")
 
     sys.exit()
 
@@ -297,11 +332,18 @@ def mode_deploy(repo, args):
         sys.exit(1)
     DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{args.DEPLOY}"
     PDATADIR = '/'.join(DATADIR.split('/')[0:-1])
-    subprocess.run(f"mkdir -pv {PDATADIR}".split(), check=True)
-    ret = subprocess.run(f"mkdir -v {DATADIR}".split(), check=False)
-    subprocess.run(f"mkdir -pv {DATADIR}/rwfs".split(), check=False)
-    subprocess.run(f"mkdir -pv {DATADIR}/tmpfs".split(), check=False)
-    subprocess.run(f"mkdir -pv {DATADIR}/live".split(), check=False)
+    if VERBOSE:
+        print("Setting up direcotires...")
+        opts1 = '-pv'
+        opts2 = '-v'
+    else:
+        opts1 = '-p'
+        opts2 = ''
+    subprocess.run(f"mkdir {opts1} {PDATADIR}".split(), check=True)
+    ret = subprocess.run(f"mkdir {opts2} {DATADIR}".split(), check=False)
+    subprocess.run(f"mkdir {opts1} {DATADIR}/rwfs".split(), check=True)
+    subprocess.run(f"mkdir {opts1} {DATADIR}/tmpfs".split(), check=True)
+    subprocess.run(f"mkdir {opts1} {DATADIR}/live".split(), check=True)
     if ret.returncode != 0:
         raise AssertionError("Error: Could not create directory. "
                              "Path already exists, or other unknown error")
@@ -309,6 +351,8 @@ def mode_deploy(repo, args):
     osopts = blank_options()
     osopts.bareuseronly_dirs = True
     osopts.mode = OSTree.RepoCheckoutMode(1)
+    if VERBOSE:
+        print(f"Checking out tree from repo to {DATADIR}/rwfs ...")
     repo.checkout_at(osopts, tfd, "rofs", refhash, None)
     print(f"Success... {args.DEPLOY} is now ready to use!")
 
@@ -344,19 +388,26 @@ def mode_package(repo, args):
     """Function for package mode. Not intended to be used by "end users" """
     if args.DIR is not None:
         refhash = ''
-        if 'base/x86_64/debian' not in list(repo.list_refs()[1].keys()):
+        if 'Official:base/x86_64/debian' not in list(repo.list_refs()[1].keys()):
             # import base to local repo
+            if VERBOSE:
+                print("base/x86_64/debian not found locally, fetching...")
             refhash = repo.remote_list_refs("Official")[1]['base/x86_64/debian']
-            repo.pull("Official", [refhash], OSTree.RepoPullFlags(4), None, None)
+            download(args, repo, "Official", "base/x86_64/debian")
         else:
-            refhash = repo.list_refs()[1]['base/x86_64/debian']
+            refhash = repo.list_refs()[1]['Official:base/x86_64/debian']
         with tempfile.TemporaryDirectory() as tmpdir:
             tfd = os.open(tmpdir, os.O_RDONLY)
             osopts = blank_options()
             osopts.bareuseronly_dirs = True
             osopts.mode = OSTree.RepoCheckoutMode(1)
             repo.checkout_at(osopts, tfd, "ostree", refhash, None)
-            if os.system(f"mkdir -v {args.DIR}") == 0:
+            if VERBOSE:
+                print("Creating directory...")
+                opts = '-v'
+            else:
+                opts = ''
+            if os.system(f"mkdir {opts} {args.DIR}") == 0:
                 os.system(f"cp -r --reflink=auto {tmpdir}/ostree/* {args.DIR}/")
                 print(f"Successfully initialized a base debian tree at {args.DIR} !")
             else:
@@ -372,21 +423,37 @@ def mode_package(repo, args):
                                   "--bind", args.LOCATION, "/", "--proc", "/proc", "--dev", "/dev",
                                   "--uid", "0", "--gid", "0", "bash", "--norc"],
                                  env=senv, check=False)
+        if VERBOSE:
+            print("Exiting sandbox...")
         if rstatus.returncode != 0:
             print(f"Sandbox exited with return code {rstatus.returncode}")
     if args.COMMIT is not False:
         # we are given TREE and BRANCH. All we have to do is commit TREE to BRANCH
+        if VERBOSE:
+            print("Preparing transaction...")
+        tree = args.COMMIT[0]
+        if tree[0]!='/':
+            #if not an absolute pathname
+            tree = f"./{tree}"
         repo.prepare_transaction()
+        if VERBOSE:
+            print("Constructing mutable tree in memory...")
         mutree = OSTree.MutableTree.new()
-        mfd = os.open('/'.join(args.COMMIT[0].split('/')[0:-1]), os.O_RDONLY)
-        repo.write_dfd_to_mtree(mfd, args.COMMIT[0].split('/')[-1], mutree, None, None)
+        if VERBOSE:
+            print("Filling tree...")
+        mfd = os.open('/'.join(tree.split('/')[0:-1]), os.O_RDONLY)
+        repo.write_dfd_to_mtree(mfd, tree.split('/')[-1], mutree, None, None)
         mfile = repo.write_mtree(mutree, None)
         mcommit = repo.write_commit(None, None, None, None, mfile[1], None)
-        print(mcommit[1])
+        if VERBOSE:
+            print(f"Committing to tree with hash {mcommit[1]}")
         repo.transaction_set_ref(None, args.COMMIT[1], mcommit[1])
         repo.commit_transaction(None)
         _, refs = repo.list_refs()
-        print(list(refs.keys()))
+        print("Done!")
+        if VERBOSE:
+            print(f"Currently available refs: ")
+            print(list(refs.keys()))
 
 
 # Main function
@@ -394,6 +461,8 @@ def main():
     """Main function"""
     parser = addCLI()
     args = parser.parse_args()
+    global VERBOSE
+    VERBOSE = args.VERBOSE
 
     # Some sanity checks
     sanity_checks(parser, args)
