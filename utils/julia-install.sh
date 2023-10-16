@@ -1,8 +1,9 @@
 #!/bin/bash
 
 #download Julia
-apt install curl g++
-apt install -f
+fakeroot apt update
+fakeroot apt install curl g++
+fakeroot apt install -f
 curl -sL 'https://julialang-s3.julialang.org/bin/linux/x64/1.9/julia-1.9.2-linux-x86_64.tar.gz' > 'julia-1.9.2-linux-x86_64.tar.gz'
 tar --no-same-owner -xvzf julia-1.9.2-linux-x86_64.tar.gz
 install -dv /etc/julia
