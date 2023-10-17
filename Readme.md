@@ -38,7 +38,7 @@ git clone git@github.com:aaruni96/maps.git
 cd maps
 python3 -m venv .venv
 source .venv/bin/activate
-pip install pygobject
+pip install pygobject tomli
 ```
 
 Then, use maps using the venv'ed python interpretor. So, replace each invocation of `maps` in the documentation with `python src/maps.py` .
@@ -90,7 +90,7 @@ We deploy software in `$HOME/.var/maps/app-id/`, in directories `live`, `rofs`, 
 All code must conform to these settings of pylint and flake8
 
 ```bash
-pylint -d C0413,C0103 src/maps.py
+pylint -d C0413,C0103,R0912,R0915,W0603 src/maps.py
 flake8 --max-line-length 100 --ignore=E402 src/maps.py
 ```
 

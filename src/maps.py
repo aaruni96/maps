@@ -9,6 +9,7 @@ import tempfile
 import argparse
 import concurrent.futures
 import pathlib
+import tomli
 import gi
 gi.require_version("OSTree", "1.0")
 from gi.repository import OSTree, GLib
@@ -92,12 +93,12 @@ def program_init(repopath):
     # step 1 : check bwrap, and overlayfs-fuse are installed
     if (BWRAP == BWRAP_DEFAULT) and not os.path.isfile(BWRAP):
         # clone and compile bubblewrap
-        if (VERBOSE):
+        if VERBOSE:
             print("Cloning bubblewrap...")
         subprocess.run(["git", "clone", "https://github.com/aaruni96/bubblewrap.git", BWRAP[0:-5]],
                        check=False)
         subprocess.run(f"cd {BWRAP[0:-5]} && git checkout ak/sigint", shell=True, check=False)
-        if (VERBOSE):
+        if VERBOSE:
             print("Compiling bubblewrap...")
         rstatus = subprocess.run(f"cd {BWRAP[0:-5]} && ./autogen.sh && ./configure && make -j",
                                  shell=True, check=False)
@@ -126,7 +127,7 @@ def program_init(repopath):
     if not config_exists:
         if VERBOSE:
             print("Just created repo, configuring free space parameters...")
-        with open(config_path, 'a') as fo:
+        with open(config_path, 'a', encoding="utf-8") as fo:
             fo.write(f'min-free-space-size={KEEP_FREE_SPACE}GB\n')
         repo.reload_config()
     if (not repo.remote_list()) or "Official" not in repo.remote_list():
@@ -217,16 +218,25 @@ def mode_run(args):
     subprocess.run(f"mkdir {opts} {os.getenv('HOME')}/Public".split(), check=True)
     subprocess.run(f"mkdir {opts} {DATADIR}/live/home/runtime/Public".split(), check=True)
 
+    # check for manifest file
+    if os.path.isfile(f"{DATADIR}/live/manifest.toml"):
+        with open(f"{DATADIR}/live/manifest.toml", 'rb') as manifest_file:
+            command = tomli.load(manifest_file)
+            command = command['Core']["command"]
+    else:
+        command = "bash --norc"
+    if command == '':
+        raise ValueError
     # launch sandbox
     print(f"Launching {args.RUN}...")
     senv = os.environ
     senv["HOME"] = "/home/runtime"
     senv["PS1"] = "\\u@runtime:\\w# "
-    rstatus = subprocess.run([BWRAP, "--no-int-term", "--unshare-user", "--unshare-pid",
-                              "--bind", f"{DATADIR}/live", "/", "--bind",
-                              f"{HOME}/Public", f"{senv['HOME']}/Public",
-                              "--proc", "/proc", "--dev", "/dev", "--uid", "0", "--gid", "0",
-                              "bash", "--norc"], env=senv, check=False)
+    senv["LC_ALL"] = "C"
+    rstatus = subprocess.run((f"{BWRAP} --no-int-term --unshare-user --unshare-pid "
+                              f"--bind {DATADIR}/live / --bind {HOME}/Public {senv['HOME']}/Public "
+                              f"--proc /proc --dev /dev --uid 0 --gid 0 {command}").split(),
+                             env=senv, check=False)
     if rstatus.returncode != 0:
         print(f"Sandbox exited with return code {rstatus.returncode}")
     # when the sandbox exits, cleanup
@@ -327,6 +337,8 @@ def mode_deploy(repo, args):
                 refhash = repo.remote_list_refs(remote)[1][args.DEPLOY]
                 download(args, repo, remote, args.DEPLOY)
                 break
+    elif args.DEPLOY in list(repo.list_refs()[1].keys()):
+        refhash = repo.list_refs()[1][args.DEPLOY]
     else:
         print("Error: environment not found! Use list mode --list to view available runtimes.")
         sys.exit(1)
@@ -419,6 +431,7 @@ def mode_package(repo, args):
         senv = os.environ
         senv["HOME"] = "/home/runtime"
         senv["PS1"] = "\\u@runtime:\\w# "
+        senv["LC_ALL"] = "C"
         rstatus = subprocess.run([BWRAP, "--no-int-term", "--unshare-user", "--unshare-pid",
                                   "--bind", args.LOCATION, "/", "--proc", "/proc", "--dev", "/dev",
                                   "--uid", "0", "--gid", "0", "bash", "--norc"],
@@ -432,8 +445,8 @@ def mode_package(repo, args):
         if VERBOSE:
             print("Preparing transaction...")
         tree = args.COMMIT[0]
-        if tree[0]!='/':
-            #if not an absolute pathname
+        if tree[0] != '/':
+            # if not an absolute pathname
             tree = f"./{tree}"
         repo.prepare_transaction()
         if VERBOSE:
@@ -452,7 +465,7 @@ def mode_package(repo, args):
         _, refs = repo.list_refs()
         print("Done!")
         if VERBOSE:
-            print(f"Currently available refs: ")
+            print("Currently available refs: ")
             print(list(refs.keys()))
 
 
