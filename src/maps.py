@@ -42,6 +42,8 @@ def addCLI():
     parser.add_argument('--add-remote', dest='REMOTE', nargs=2,
                         metavar=("REMOTE_NAME", "REMOTE_URL"), action='store',
                         default=False, help="Add REMOTE to local ostree repo")
+    parser.add_argument('--command', dest='COMMAND', action='store',
+                        default=False, help="Override for the command to run")
     parser.add_argument('-c', '--commit', dest='COMMIT', nargs=2, metavar=("TREE", "BRANCH"),
                         default=False, help="Commit TREE to BRANCH in REPO")
     parser.add_argument('-d', '--deploy', dest='DEPLOY', action='store',
@@ -225,6 +227,8 @@ def mode_run(args):
             command = command['Core']["command"]
     else:
         command = "bash --norc"
+    if args.COMMAND:
+        command = args.COMMAND
     if command == '':
         raise ValueError
     # launch sandbox
