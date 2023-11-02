@@ -446,31 +446,47 @@ def mode_package(repo, args):
             print(f"Sandbox exited with return code {rstatus.returncode}")
     if args.COMMIT is not False:
         # we are given TREE and BRANCH. All we have to do is commit TREE to BRANCH
-        if VERBOSE:
-            print("Preparing transaction...")
-        tree = args.COMMIT[0]
-        if tree[0] != '/':
-            # if not an absolute pathname
-            tree = f"./{tree}"
-        repo.prepare_transaction()
-        if VERBOSE:
-            print("Constructing mutable tree in memory...")
-        mutree = OSTree.MutableTree.new()
-        if VERBOSE:
-            print("Filling tree...")
-        mfd = os.open('/'.join(tree.split('/')[0:-1]), os.O_RDONLY)
-        repo.write_dfd_to_mtree(mfd, tree.split('/')[-1], mutree, None, None)
-        mfile = repo.write_mtree(mutree, None)
-        mcommit = repo.write_commit(None, None, None, None, mfile[1], None)
-        if VERBOSE:
-            print(f"Committing to tree with hash {mcommit[1]}")
-        repo.transaction_set_ref(None, args.COMMIT[1], mcommit[1])
-        repo.commit_transaction(None)
+        with concurrent.futures.ThreadPoolExecutor() as executor:
+            future = executor.submit(commit, [repo, args.COMMIT[0], args.COMMIT[1]])
+            print(f"Committing {args.COMMIT[0]} as {args.COMMIT[1]}")
+            while True:
+                sys.stdout.write(next(SPINNER))
+                sys.stdout.flush()
+                time.sleep(0.2)
+                sys.stdout.write('\b')
+                if future.done():
+                    sys.stdout.flush()
+                    break
+            print("Done!")
         _, refs = repo.list_refs()
-        print("Done!")
         if VERBOSE:
             print("Currently available refs: ")
             print(list(refs.keys()))
+
+
+def commit(zarglist):
+    repo = zarglist[0]
+    tree = zarglist[1]
+    branch = zarglist[2]
+    if VERBOSE:
+        print("\bPreparing transaction...")
+    if tree[0] != '/':
+        # if not an absolute pathname
+        tree = f"./{tree}"
+    repo.prepare_transaction()
+    if VERBOSE:
+        print("\bConstructing mutable tree in memory...")
+    mutree = OSTree.MutableTree.new()
+    if VERBOSE:
+        print("\bFilling tree...")
+    mfd = os.open('/'.join(tree.split('/')[0:-1]), os.O_RDONLY)
+    repo.write_dfd_to_mtree(mfd, tree.split('/')[-1], mutree, None, None)
+    mfile = repo.write_mtree(mutree, None)
+    mcommit = repo.write_commit(None, None, None, None, mfile[1], None)
+    if VERBOSE:
+        print(f"\bCommitting to tree with hash {mcommit[1]}")
+    repo.transaction_set_ref(None, branch, mcommit[1])
+    repo.commit_transaction(None)
 
 
 # Main function
