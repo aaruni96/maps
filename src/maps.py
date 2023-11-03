@@ -4,6 +4,7 @@ import os
 import sys
 import time
 import itertools
+import signal
 import subprocess
 import tempfile
 import argparse
@@ -26,6 +27,7 @@ SPINNER = itertools.cycle(['-', '\\', '|', '/'])
 HOME = os.getenv('HOME')
 KEEP_FREE_SPACE = 3
 VERBOSE = False
+OG_SIGINT_HANLDER = signal.getsignal(signal.SIGINT)
 
 
 # Define a CLI
@@ -237,6 +239,8 @@ def mode_run(args):
     senv["HOME"] = "/home/runtime"
     senv["PS1"] = "\\u@runtime:\\w# "
     senv["LC_ALL"] = "C"
+    # ignore SIGINT
+    signal.signal(signal.SIGINT, signal.SIG_IGN)
     rstatus = subprocess.run((f"{BWRAP} --no-int-term --unshare-user --unshare-pid "
                               f"--bind {DATADIR}/live / --bind {HOME}/Public {senv['HOME']}/Public "
                               f"--proc /proc --dev /dev --uid 0 --gid 0 {command}").split(),
@@ -248,6 +252,8 @@ def mode_run(args):
     if VERBOSE:
         print("Cleaning up overlay structure...")
     subprocess.run(["fusermount", "-u", f"{DATADIR}/live"], check=False)
+    # stop ignoring SIGINT
+    signal.signal(signal.SIGINT, OG_SIGINT_HANLDER)
 
 
 def zipped_pull(zarglist):
@@ -436,6 +442,8 @@ def mode_package(repo, args):
         senv["HOME"] = "/home/runtime"
         senv["PS1"] = "\\u@runtime:\\w# "
         senv["LC_ALL"] = "C"
+        # ignore SIGINT
+        signal.signal(signal.SIGINT, signal.SIG_IGN)
         rstatus = subprocess.run([BWRAP, "--no-int-term", "--unshare-user", "--unshare-pid",
                                   "--bind", args.LOCATION, "/", "--proc", "/proc", "--dev", "/dev",
                                   "--uid", "0", "--gid", "0", "bash", "--norc"],
@@ -444,6 +452,8 @@ def mode_package(repo, args):
             print("Exiting sandbox...")
         if rstatus.returncode != 0:
             print(f"Sandbox exited with return code {rstatus.returncode}")
+        # stop ignoring SIGINT
+        signal.signal(signal.SIGINT, OG_SIGINT_HANLDER)
     if args.COMMIT is not False:
         # we are given TREE and BRANCH. All we have to do is commit TREE to BRANCH
         with concurrent.futures.ThreadPoolExecutor() as executor:
