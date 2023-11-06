@@ -46,43 +46,42 @@ def addCLI():
 
     parser_runtime = subparser.add_parser("runtime", help="a help")
     parser_runtime.add_argument('--command', dest='COMMAND', action='store',
-                        default=False, help="Override for the command to run")
+                                default=False, help="Override for the command to run")
     parser_runtime.add_argument('-d', '--deploy', dest='DEPLOY', action='store',
-                        default=False, help="deploy mode, for installing environments")
+                                default=False, help="deploy mode, for installing environments")
     parser_runtime.add_argument('-l', '--list', dest='LIST', action='store_true',
-                        default=False, help="List available environments")
+                                default=False, help="List available environments")
     parser_runtime.add_argument('--repo', dest='REPO', help="Repository to use")
     parser_runtime.add_argument('--reset', dest='RESET', action='store',
-                        default=False, help="Reset the runtime.")
+                                default=False, help="Reset the runtime.")
     parser_runtime.add_argument('-r', '--run', dest='RUN', action='store',
-                        default=False, help="Which runtime to play.")
+                                default=False, help="Which runtime to play.")
     parser_runtime.add_argument('-u', '--uninstall', dest='UNINSTALL', action='store',
-                        default=False, help="Uninstall a runtime")
+                                default=False, help="Uninstall a runtime")
     parser_runtime.add_argument('-v', '--verbose', dest='VERBOSE', action='store_true',
-                        help="enable verbose output")
-
+                                help="enable verbose output")
 
     # arguments for remote management
     parser_remote = subparser.add_parser("remote")
     parser_remote.add_argument('--add-remote', dest='REMOTE', nargs=2,
-                        metavar=("REMOTE_NAME", "REMOTE_URL"), action='store',
-                        default=False, help="Add REMOTE to local ostree repo")
+                               metavar=("REMOTE_NAME", "REMOTE_URL"), action='store',
+                               default=False, help="Add REMOTE to local ostree repo")
     parser_remote.add_argument('--del-remote', dest="DEL_REMOTE", action='store',
-                        default=False, help="Delete REMOTE from local ostree repo")
+                               default=False, help="Delete REMOTE from local ostree repo")
     parser_remote.add_argument('-v', '--verbose', dest='VERBOSE', action='store_true',
-                        help="enable verbose output")
+                               help="enable verbose output")
 
     # arguments for packaging
     parser_pack = subparser.add_parser("package")
     parser_pack.add_argument('-c', '--commit', dest='COMMIT', nargs=2, metavar=("TREE", "BRANCH"),
-                        default=False, help="Commit TREE to BRANCH in REPO")
+                             default=False, help="Commit TREE to BRANCH in REPO")
     parser_pack.add_argument('-i', '--initialize', dest='DIR',
-                        help="initialize DIR with a good base tree")
+                             help="initialize DIR with a good base tree")
     parser_pack.add_argument('-s', '--sandbox', dest='LOCATION',
-                        help="Start a sandbox at LOCATION")
+                             help="Start a sandbox at LOCATION")
     parser_pack.add_argument('-v', '--verbose', dest='VERBOSE', action='store_true',
-                        help="enable verbose output")
-    
+                             help="enable verbose output")
+
     return parser
 
 
@@ -496,7 +495,6 @@ def reset(runtime):
     else:
         opts = '-rf'
     subprocess.run(f"rm {opts} {DATADIR}/live/*".split(), check=True)
-    return
 
 
 # runtime mode: the default path for execution
