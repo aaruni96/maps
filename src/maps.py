@@ -242,8 +242,9 @@ def mode_run(args):
     # ignore SIGINT
     signal.signal(signal.SIGINT, signal.SIG_IGN)
     rstatus = subprocess.run((f"{BWRAP} --no-int-term --unshare-user --unshare-pid "
-                              f"--bind {DATADIR}/live / --bind {HOME}/Public {senv['HOME']}/Public "
-                              f"--proc /proc --dev /dev --uid 0 --gid 0 {command}").split(),
+                              f"--bind {DATADIR}/live / --bind {HOME}/Public {senv['HOME']}/Public"
+                              " --die-with-parent --proc /proc --dev /dev --uid 0 --gid 0 "
+                              f"{command}").split(),
                              env=senv, check=False)
     if rstatus.returncode != 0:
         print(f"Sandbox exited with return code {rstatus.returncode}")
@@ -446,7 +447,8 @@ def mode_package(repo, args):
         signal.signal(signal.SIGINT, signal.SIG_IGN)
         rstatus = subprocess.run([BWRAP, "--no-int-term", "--unshare-user", "--unshare-pid",
                                   "--bind", args.LOCATION, "/", "--proc", "/proc", "--dev", "/dev",
-                                  "--uid", "0", "--gid", "0", "bash", "--norc"],
+                                  "----die-with-parent", "--uid", "0", "--gid", "0", "bash",
+                                  "--norc"],
                                  env=senv, check=False)
         if VERBOSE:
             print("Exiting sandbox...")
