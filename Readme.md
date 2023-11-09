@@ -4,26 +4,9 @@
 
 MaPS, short for MaRDI Packaging System is the working name for the software system created by TA1 **Computer Algebra** for Measure 1.4 **Predefined software environments**. MaPS provides a unified interface both, to package a software inside a functional environment (called a _runtime_), and to "install" a published runtime onto a computer system in a user friendly way, while still keeping it separate from the computer's host environment.
 
-## Requirements
+## WiKi
 
-We depend on the following other programs and libraries:
-
-1. `libcairo2-dev`
-1. `gcc`
-1. `python3-dev`
-1. `libgirepository1.0-dev`
-1. `libostree-dev`
-1. `fuse-overlayfs`
-1. `pygobject`
-1. `bubblewrap`
-
-For DPKG users, this simply means
-
-```bash
-sudo apt install libcairo2-dev gcc python3-dev libgirepository1.0-dev libostree-dev fuse-overlayfs
-```
-
-For users of other package managers, the exact package names might differ.
+Have a look at the wiki, located at https://github.com/aaruni96/maps/wiki
 
 ### Bubblewrap
 
@@ -69,23 +52,16 @@ maps --package --sandbox /path/to/new/tree
 maps --package --commit /path/to/new/tree me.myname.myapplication/sysarch/version
 ```
 
-## Technical Overview
-
-### Deploying Software
-
-We deploy software in `$HOME/.var/maps/app-id/`, in directories `live`, `rofs`, and `rwfs`. Ostree repo is checked out in `rofs`, and marked as read only. Then `rwfs` is overlayed on `rofs`, and presented as `live`. This way the user gets a live mutable tree, but the actual ostree repo is left unmodified and can be reverted to.
-
 ## Known Problems
 
  - The OSTree Repository cannot be initialized onto a filesystem without extended attributes, in particular, NFS does not work. As a workaround, you can set the environment variables `XDG_DATA_HOME` (system OSTree Repository) and `HOME` (Runtime checkout) to point to some directory on a filesystem which has support for extended attributes.
   - There is currently a bug in [fuse-overlayfs](https://github.com/containers/fuse-overlayfs/issues/399), which causes problems in copying a read-only file. In concrete terms, this means that `julia` testing infrastructure fails at the time of writing. This needs to be either patched in upstream, or worked around by `maps`.
+  - Only Linux is supported directly. MacOS and Windows users are recommended to virtualize Linux in their respective environments. More information about this is in the Wiki.
 
-## ToDo
 
- - [ ] Decide on a way of naming runtimes, and validate it in software.
- - [ ] Submit `me.myname.myapplication/sysarch/version` to a global, official repository for publishing.
+## Contributing
 
-## Style Practices
+### Style Practices
 
 All code must conform to these settings of pylint and flake8
 
