@@ -56,7 +56,7 @@ maps --package --commit /path/to/new/tree me.myname.myapplication/sysarch/versio
 
  - The OSTree Repository cannot be initialized onto a filesystem without extended attributes, in particular, NFS does not work. As a workaround, you can set the environment variables `XDG_DATA_HOME` (system OSTree Repository) and `HOME` (Runtime checkout) to point to some directory on a filesystem which has support for extended attributes.
   - There is currently a bug in [fuse-overlayfs](https://github.com/containers/fuse-overlayfs/issues/399), which causes problems in copying a read-only file. In concrete terms, this means that `julia` testing infrastructure fails at the time of writing. This needs to be either patched in upstream, or worked around by `maps`.
-  - Only Linux is supported directly. MacOS and Windows users are recommended to virtualize Linux in their respective environments. More information about this is in the Wiki.
+  - Only Linux is supported directly. MacOS and Windows users are recommended to virtualize Linux in their respective environments. More information about this is in the [Wiki](https://github.com/aaruni96/maps/wiki/Non-Linux-OSs).
 
 
 ## Contributing
