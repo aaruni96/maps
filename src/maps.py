@@ -51,6 +51,8 @@ def addCLI():
                                 default=False, help="deploy mode, for installing environments")
     parser_runtime.add_argument('-l', '--list', dest='LIST', action='store_true',
                                 default=False, help="List available environments")
+    parser_runtime.add_argument('--list-local', dest='LIST_LOCAL', action='store_true',
+                                default=False, help="List available environments")
     parser_runtime.add_argument('--repo', dest='REPO', help="Repository to use")
     parser_runtime.add_argument('--reset', dest='RESET', action='store',
                                 default=False, help="Reset the runtime.")
@@ -514,6 +516,11 @@ def mode_runtime(repo, args):
 
     if args.LIST:
         mode_list(repo)
+    elif args.LIST_LOCAL:
+        refs = list(repo.list_refs()[1].keys())
+        if refs:
+            for ref in sorted(refs):
+                print(f"{ref.split(':')[1]}")
     elif args.RESET:
         reset(args.RESET)
     elif args.UNINSTALL:
