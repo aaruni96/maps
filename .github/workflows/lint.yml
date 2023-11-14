@@ -1,11 +1,26 @@
-name: flake8 Lint
+name: Lint
 
 on: [push, pull_request]
 
 jobs:
+  pylint:
+    runs-on: debian-latest
+    name: PyLint
+    steps:
+      - name: Check out source repository
+        uses: actions/checkout@v3
+      - name: Setup Python environment
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.8"
+      - name: Install dependencies
+        run: sudo apt-get install libcairo2-dev gcc python3-dev libgirepository1.0-dev libostree-dev fuse-overlayfs libcap-dev autoconf && python -m pip install -r requirements.txt
+      - name: pylint
+        run: pylint -d C0413,C0103,R0912,R0915,W0603 src/maps.py
+
   flake8-lint:
-    runs-on: ubuntu-latest
-    name: Lint
+    runs-on: debian-latest
+    name: Flake8
     steps:
       - name: Check out source repository
         uses: actions/checkout@v3
