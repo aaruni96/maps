@@ -4,7 +4,7 @@ on: [push, pull_request]
 
 jobs:
   pylint:
-    runs-on: debian-latest
+    runs-on: ubuntu-latest
     name: PyLint
     steps:
       - name: Check out source repository
@@ -19,7 +19,7 @@ jobs:
         run: pylint -d C0413,C0103,R0912,R0915,W0603 src/maps.py
 
   flake8-lint:
-    runs-on: debian-latest
+    runs-on: ubuntu-latest
     name: Flake8
     steps:
       - name: Check out source repository
