@@ -70,6 +70,9 @@ def addCLI():
                                default=False, help="Add REMOTE to local ostree repo")
     parser_remote.add_argument('--del-remote', dest="DEL_REMOTE", action='store',
                                default=False, help="Delete REMOTE from local ostree repo")
+    parser_remote.add_argument('--list', dest="LIST", action='store_true',
+                               default=False, help="List configured remotes")
+    parser_remote.add_argument('--repo', dest='REPO', help="Repository to use")
     parser_remote.add_argument('-v', '--verbose', dest='VERBOSE', action='store_true',
                                help="enable verbose output")
 
@@ -179,6 +182,10 @@ def mode_list(repo):
 
 def mode_remotes(repo, args):
     """Administrative mode for remotes of the repo"""
+    if args.LIST is not False:
+        for remote in repo.remote_list():
+            print(remote)
+        return
     if args.REMOTE is not False:
         repo.remote_add(args.REMOTE[0], args.REMOTE[1],
                         GLib.Variant('a{sv}', {"gpg-verify": GLib.Variant('b', False)}), None)
@@ -544,8 +551,7 @@ def main():
             pass
         elif "--version" in sys.argv:
             pass
-        elif len(sys.argv) == 1:
-            print(sys.argv)
+        elif len(sys.argv) > 2:
             pass
         else:
             sys.argv.insert(1, "runtime")

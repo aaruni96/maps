@@ -34,11 +34,26 @@ _maps_completions()
                 return
             fi
         fi
+
+        # for "remote" specified case
+        if [ "${COMP_WORDS[1]}" == "remote" ]; then
+            if [ "${COMP_WORDS[2]}" == "--del-remote" ]; then
+                COMPREPLY=($(compgen -W "$(./src/maps.py remote --list)" -- "${COMP_WORDS[3]}"))
+                return
+            fi
+        fi
     fi
 
     if [ "${COMP_WORDS[1]}" == "runtime" ]; then
         COMPREPLY=($(compgen -W "-h --help --command -d --deploy -l --list --repo --reset -r --run -u --uninstall --verbose" -- "${COMP_WORDS[2]}"))
         return
+    fi
+
+    if [ "${COMP_WORDS[1]}" == "remote" ]; then
+        if [ "${#COMP_WORDS[@]}" -eq 3 ]; then
+            COMPREPLY=($(compgen -W "-h --help --add-remote --del-remote -v --verbose" -- "${COMP_WORDS[2]}"))
+            return
+        fi
     fi
 
 
