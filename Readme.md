@@ -1,5 +1,7 @@
 # MaPS - MaRDI Packaging System
 
+![](https://img.shields.io/badge/version-0.1--beta-blue)
+
 ## Introduction
 
 MaPS, short for MaRDI Packaging System is the working name for the software system created by TA1 **Computer Algebra** for Measure 1.4 **Predefined software environments**. MaPS provides a unified interface both, to package a software inside a functional environment (called a _runtime_), and to "install" a published runtime onto a computer system in a user friendly way, while still keeping it separate from the computer's host environment.

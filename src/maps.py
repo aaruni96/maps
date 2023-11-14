@@ -15,7 +15,7 @@ import gi
 gi.require_version("OSTree", "1.0")
 from gi.repository import OSTree, GLib
 
-VERSION = '0.1-alpha'
+VERSION = '0.1-beta'
 BWRAP_DEFAULT = f"{pathlib.Path().absolute()}/deps/bubblewrap/bwrap"
 if os.getenv('BWRAP_CMD') is not None:
     BWRAP = str(os.getenv('BWRAP_CMD'))
@@ -40,56 +40,56 @@ def addCLI():
                      "and deploying software environments."
                      ),
     )
+    subparser = parser.add_subparsers(help="subcommand help", dest="SubPars_NAME")
+    # arguments for "main" path
     parser.add_argument('--version', action='version', version=VERSION)
-    parser.add_argument('--add-remote', dest='REMOTE', nargs=2,
-                        metavar=("REMOTE_NAME", "REMOTE_URL"), action='store',
-                        default=False, help="Add REMOTE to local ostree repo")
-    parser.add_argument('--command', dest='COMMAND', action='store',
-                        default=False, help="Override for the command to run")
-    parser.add_argument('-c', '--commit', dest='COMMIT', nargs=2, metavar=("TREE", "BRANCH"),
-                        default=False, help="Commit TREE to BRANCH in REPO")
-    parser.add_argument('-d', '--deploy', dest='DEPLOY', action='store',
-                        default=False, help="deploy mode, for installing environments")
-    parser.add_argument('--del-remote', dest="DEL_REMOTE", action='store',
-                        default=False, help="Delete REMOTE from local ostree repo")
-    parser.add_argument('-i', '--initialize', dest='DIR',
-                        help="initialize DIR with a good base tree")
-    parser.add_argument('-l', '--list', dest='LIST', action='store_true',
-                        default=False, help="List available environments")
-    parser.add_argument('-p', '--package', dest='PACKAGE', action='store_true',
-                        default=False, help="package mode for defining "
-                        "and publishing new environments")
-    parser.add_argument('--repo', dest='REPO',
-                        help="Repository to use")
-    parser.add_argument('--reset', dest='RESET', action='store_true',
-                        default=False, help="Reset the runtime. Use with --run.")
-    parser.add_argument('-r', '--run', dest='RUN', action='store',
-                        default=False, help="Repository to use")
-    parser.add_argument('-s', '--sandbox', dest='LOCATION',
-                        help="Start a sandbox at LOCATION")
-    parser.add_argument('-u', '--uninstall', dest='UNINSTALL', action='store',
-                        default=False, help="Uninstall a runtime")
-    parser.add_argument('-v', '--verbose', dest='VERBOSE', action='store_true',
-                        help="enable verbose output")
+
+    parser_runtime = subparser.add_parser("runtime", help="a help")
+    parser_runtime.add_argument('--command', dest='COMMAND', action='store',
+                                default=False, help="Override for the command to run")
+    parser_runtime.add_argument('-d', '--deploy', dest='DEPLOY', action='store',
+                                default=False, help="deploy mode, for installing environments")
+    parser_runtime.add_argument('-l', '--list', dest='LIST', action='store_true',
+                                default=False, help="List available environments")
+    parser_runtime.add_argument('--repo', dest='REPO', help="Repository to use")
+    parser_runtime.add_argument('--reset', dest='RESET', action='store',
+                                default=False, help="Reset the runtime.")
+    parser_runtime.add_argument('-r', '--run', dest='RUN', action='store',
+                                default=False, help="Which runtime to play.")
+    parser_runtime.add_argument('-u', '--uninstall', dest='UNINSTALL', action='store',
+                                default=False, help="Uninstall a runtime")
+    parser_runtime.add_argument('-v', '--verbose', dest='VERBOSE', action='store_true',
+                                help="enable verbose output")
+
+    # arguments for remote management
+    parser_remote = subparser.add_parser("remote")
+    parser_remote.add_argument('--add-remote', dest='REMOTE', nargs=2,
+                               metavar=("REMOTE_NAME", "REMOTE_URL"), action='store',
+                               default=False, help="Add REMOTE to local ostree repo")
+    parser_remote.add_argument('--del-remote', dest="DEL_REMOTE", action='store',
+                               default=False, help="Delete REMOTE from local ostree repo")
+    parser_remote.add_argument('-v', '--verbose', dest='VERBOSE', action='store_true',
+                               help="enable verbose output")
+
+    # arguments for packaging
+    parser_pack = subparser.add_parser("package")
+    parser_pack.add_argument('-c', '--commit', dest='COMMIT', nargs=2, metavar=("TREE", "BRANCH"),
+                             default=False, help="Commit TREE to BRANCH in REPO")
+    parser_pack.add_argument('-i', '--initialize', dest='DIR',
+                             help="initialize DIR with a good base tree")
+    parser_pack.add_argument('-s', '--sandbox', dest='LOCATION',
+                             help="Start a sandbox at LOCATION")
+    parser_pack.add_argument('-v', '--verbose', dest='VERBOSE', action='store_true',
+                             help="enable verbose output")
+
     return parser
 
 
-def sanity_checks(parser, args):
+def sanity_checks(parser):
     """Some simply sanity checks, before the program proceeds"""
     if len(sys.argv) == 1:
         parser.print_help()
         sys.exit(1)
-    if not args.PACKAGE and args.RUN is False and args.LIST is False:
-        if args.DIR is not None:
-            raise AssertionError("Can only initialize a dir in package mode!")
-        if args.LOCATION is not None:
-            raise AssertionError("As of now, sandboxing is only supported as a part of packaging.")
-        if args.COMMIT is not False:
-            raise AssertionError("Can only commit to repo in package mode!")
-    else:
-        if args.DEPLOY is not False:
-            raise AssertionError("Cannot open in package mode and deploy mode simultaneously! "
-                                 "Please check arguments!")
 
 
 def program_init(repopath):
@@ -196,15 +196,6 @@ def mode_run(args):
         print("Attempting to run {DATADIR}...")
     if not os.path.isdir(DATADIR):
         raise AssertionError(f"Data directory does not exist. Is {args.RUN} installed ?")
-    # check if reset is requested
-    if args.RESET:
-        if VERBOSE:
-            print(f"Resetting {args.RUN}...")
-            opts = '-rvf'
-        else:
-            opts = '-rf'
-        subprocess.run(f"rm {opts} {DATADIR}/live/*".split(), check=True)
-        return
 
     # setup live directory
     if VERBOSE:
@@ -337,9 +328,6 @@ def uninstall_runtime(repo, args):
 # Deploy Mode
 def mode_deploy(repo, args):
     """Function to deploy from repo to local disk"""
-
-    if args.UNINSTALL:
-        uninstall_runtime(repo, args)
 
     if args.DEPLOY in [j for remotes in repo.remote_list()
                        for j in make_remote_ref_list(repo, remotes)]:
@@ -477,6 +465,10 @@ def mode_package(repo, args):
 
 
 def commit(zarglist):
+    """
+    Function commits a tree to a repo in branch asynchronously,
+    so spinner can be animated in the main thread to show activity.
+    """
     repo = zarglist[0]
     tree = zarglist[1]
     branch = zarglist[2]
@@ -501,16 +493,54 @@ def commit(zarglist):
     repo.commit_transaction(None)
 
 
+def reset(runtime):
+    """
+    Function resets a runtime, simply by deleting the contents of the "rwfs" dir.
+    """
+    DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{runtime}"
+    if VERBOSE:
+        print(f"Resetting {runtime}...")
+        opts = '-rvf'
+    else:
+        opts = '-rf'
+    subprocess.run(f"rm {opts} {DATADIR}/live/*".split(), check=True)
+
+
+# runtime mode: the default path for execution
+def mode_runtime(repo, args):
+    """
+    Runtime mode, the default path for execution, and the "end user" mode.
+    """
+
+    if args.LIST:
+        mode_list(repo)
+    elif args.RESET:
+        reset(args.RESET)
+    elif args.UNINSTALL:
+        uninstall_runtime(repo, args)
+    elif args.RUN:
+        mode_run(args)
+    elif args.DEPLOY:
+        mode_deploy(repo, args)
+
+
 # Main function
 def main():
     """Main function"""
+    # is modifying argv evil ?
+    # if no "mode" is specified
+    if ("runtime" not in sys.argv) or ("remote" in sys.argv) or ("package" in sys.argv):
+        # if you're not just asking for help
+        if ("--help" not in sys.argv) and (len(sys.argv) != 1):
+            sys.argv.insert(1, "runtime")
     parser = addCLI()
     args = parser.parse_args()
-    global VERBOSE
-    VERBOSE = args.VERBOSE
 
     # Some sanity checks
-    sanity_checks(parser, args)
+    sanity_checks(parser)
+
+    global VERBOSE
+    VERBOSE = args.VERBOSE
 
     # Setup
     if os.getenv('XDG_DATA_HOME') is not None:
@@ -527,18 +557,14 @@ def main():
     repo = program_init(repopath)
 
     # Run mode
-    if (args.REMOTE is not False) or (args.DEL_REMOTE is not False):
+    if args.SubPars_NAME == 'runtime':
+        mode_runtime(repo, args)
+    elif args.SubPars_NAME == 'remote':
         mode_remotes(repo, args)
-    elif args.LIST is not False:
-        mode_list(repo)
-    elif args.RUN is not False:
-        mode_run(args)
-    # Deploy mode
-    elif args.DEPLOY is not False:
-        mode_deploy(repo, args)
-    # Package mode
-    else:
+    elif args.SubPars_NAME == 'package':
         mode_package(repo, args)
+    else:
+        raise ValueError("Impossible case!")
 
 
 if __name__ == "__main__":
