@@ -13,11 +13,11 @@ _maps_completions()
     # if completing the second word (for runtime unspecified case)
     if [ $cword -eq 2 ]; then
         if [ $prev == "-r" -o $prev == "--run" -o $prev == "--reset" -o $prev == "-u " -o $prev == "--uninstall" ]; then
-            COMPREPLY=($(compgen -W "$(./src/maps.py --list-local)" -- $cur))
+            COMPREPLY=($(compgen -W "$($words --list-local)" -- $cur))
             return
         fi
         if [ $prev == "-d" -o $prev == "--deploy" ]; then
-            COMPREPLY=($(compgen -W "$(./src/maps.py --list | grep '-' | grep -v 'Official' | sed 's/^\s*- //')" -- $cur))
+            COMPREPLY=($(compgen -W "$($words --list | grep '-' | grep -v 'Official' | sed 's/^\s*- //')" -- $cur))
             return
         fi
     fi
@@ -27,18 +27,18 @@ _maps_completions()
         # for "runtime" specified case
         if [ "${COMP_WORDS[1]}" == "runtime" ]; then
             if [ $prev == "-r" -o $prev == "--run" -o $prev == "--reset" -o $prev == "-u" -o $prev == "--uninstall" ]; then
-                COMPREPLY=($(compgen -W "$(./src/maps.py --list-local)" -- $cur))
+                COMPREPLY=($(compgen -W "$($words --list-local)" -- $cur))
                 return
             fi
             if [ $prev == "-d" -o $prev == "--deploy" ]; then
-                COMPREPLY=($(compgen -W "$(./src/maps.py --list | grep '-' | grep -v 'Official' | sed 's/^\s*- //')" -- $cur))
+                COMPREPLY=($(compgen -W "$($words --list | grep '-' | grep -v 'Official' | sed 's/^\s*- //')" -- $cur))
                 return
             fi
         fi
         # for "remote" specified case
         if [ "${COMP_WORDS[1]}" == "remote" ]; then
             if [ $prev == "--del-remote" ]; then
-                COMPREPLY=($(compgen -W "$(./src/maps.py remote --list)" -- $cur))
+                COMPREPLY=($(compgen -W "$($words remote --list)" -- $cur))
                 return
             fi
         fi
