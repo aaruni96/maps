@@ -15,7 +15,7 @@ import gi
 gi.require_version("OSTree", "1.0")
 from gi.repository import OSTree, GLib
 
-VERSION = '0.1-alpha'
+VERSION = '0.1-beta'
 BWRAP_DEFAULT = f"{pathlib.Path().absolute()}/deps/bubblewrap/bwrap"
 if os.getenv('BWRAP_CMD') is not None:
     BWRAP = str(os.getenv('BWRAP_CMD'))
@@ -85,7 +85,7 @@ def addCLI():
     return parser
 
 
-def sanity_checks(parser, args):
+def sanity_checks(parser):
     """Some simply sanity checks, before the program proceeds"""
     if len(sys.argv) == 1:
         parser.print_help()
@@ -515,18 +515,20 @@ def mode_runtime(repo, args):
 # Main function
 def main():
     """Main function"""
-    if not (("runtime" in sys.argv) or ("remote" in sys.argv) or ("package" in sys.argv)):
-        # is modifying argv evil ?
-        sys.argv.insert(1, "runtime")
-    print(sys.argv)
+    # is modifying argv evil ?
+    # if no "mode" is specified
+    if ("runtime" not in sys.argv) or ("remote" in sys.argv) or ("package" in sys.argv):
+        # if you're not just asking for help
+        if ("--help" not in sys.argv) and (len(sys.argv) != 1):
+            sys.argv.insert(1, "runtime")
     parser = addCLI()
     args = parser.parse_args()
-    print(args)
-    global VERBOSE
-    VERBOSE = args.VERBOSE
 
     # Some sanity checks
-    sanity_checks(parser, args)
+    sanity_checks(parser)
+
+    global VERBOSE
+    VERBOSE = args.VERBOSE
 
     # Setup
     if os.getenv('XDG_DATA_HOME') is not None:
