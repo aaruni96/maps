@@ -1,57 +1,71 @@
 #/usr/bin/env bash
 _maps_completions()
 {
-    cur_=${words_[cword_]}
-
+    local cur prev words cword
+    _init_completion || return
+    
     # if completing the first word
-    if [ "${#COMP_WORDS[@]}" -eq 2 ]; then
-        COMPREPLY=($(compgen -W "runtime remote package --help -h --command -d --deploy -l --list --repo --reset -r --run -u --uninstall --verbose" -- "${COMP_WORDS[1]}"))
+    if [ $cword -eq 1 ]; then
+        COMPREPLY=($(compgen -W "runtime remote package --help -h --command -d --deploy -l --list --repo --reset -r --run -u --uninstall --verbose" -- $cur))
         return
     fi
 
     # if completing the second word (for runtime unspecified case)
-    if [ "${#COMP_WORDS[@]}" -eq 3 ]; then
-        if [ "${COMP_WORDS[1]}" == "-r" -o "${COMP_WORDS[1]}" == "--run" -o "${COMP_WORDS[1]}" == "--reset" -o "${COMP_WORDS[1]}" == "-u " -o "${COMP_WORDS[1]}" == "--uninstall" ]; then
-            COMPREPLY=($(compgen -W "$(./src/maps.py --list-local)" -- "${COMP_WORDS[2]}"))
+    if [ $cword -eq 2 ]; then
+        if [ $prev == "-r" -o $prev == "--run" -o $prev == "--reset" -o $prev == "-u " -o $prev == "--uninstall" ]; then
+            COMPREPLY=($(compgen -W "$(./src/maps.py --list-local)" -- $cur))
             return
         fi
-        if [ "${COMP_WORDS[1]}" == "-d" -o "${COMP_WORDS[1]}" == "--deploy" ]; then
-            COMPREPLY=($(compgen -W "$(./src/maps.py --list | grep '-' | grep -v 'Official' | sed 's/^\s*- //')" -- "${COMP_WORDS[2]}"))
+        if [ $prev == "-d" -o $prev == "--deploy" ]; then
+            COMPREPLY=($(compgen -W "$(./src/maps.py --list | grep '-' | grep -v 'Official' | sed 's/^\s*- //')" -- $cur))
             return
         fi
     fi
 
     # if completing the third word
-    if [ "${#COMP_WORDS[@]}" -eq 4 ]; then
+    if [ $cword -eq 3 ]; then
         # for "runtime" specified case
         if [ "${COMP_WORDS[1]}" == "runtime" ]; then
-            if [ "${COMP_WORDS[2]}" == "-r" -o "${COMP_WORDS[2]}" == "--run" -o "${COMP_WORDS[2]}" == "--reset" -o "${COMP_WORDS[2]}" == "-u " -o "${COMP_WORDS[2]}" == "--uninstall" ]; then
-                COMPREPLY=($(compgen -W "$(./src/maps.py --list-local)" -- "${COMP_WORDS[3]}"))
+            if [ $prev == "-r" -o $prev == "--run" -o $prev == "--reset" -o $prev == "-u " -o $prev == "--uninstall" ]; then
+                COMPREPLY=($(compgen -W "$(./src/maps.py --list-local)" -- $cur))
                 return
             fi
-            if [ "${COMP_WORDS[2]}" == "-d" -o "${COMP_WORDS[2]}" == "--deploy" ]; then
-                COMPREPLY=($(compgen -W "$(./src/maps.py --list | grep '-' | grep -v 'Official' | sed 's/^\s*- //')" -- "${COMP_WORDS[3]}"))
+            if [ $prev == "-d" -o $prev == "--deploy" ]; then
+                COMPREPLY=($(compgen -W "$(./src/maps.py --list | grep '-' | grep -v 'Official' | sed 's/^\s*- //')" -- $cur))
                 return
             fi
         fi
-
         # for "remote" specified case
         if [ "${COMP_WORDS[1]}" == "remote" ]; then
-            if [ "${COMP_WORDS[2]}" == "--del-remote" ]; then
-                COMPREPLY=($(compgen -W "$(./src/maps.py remote --list)" -- "${COMP_WORDS[3]}"))
+            if [ $prev == "--del-remote" ]; then
+                COMPREPLY=($(compgen -W "$(./src/maps.py remote --list)" -- $cur))
+                return
+            fi
+        fi
+        # for "package" specified case
+        if [ "${COMP_WORDS[1]}" == "package" ]; then
+            if [ $prev == "-c" -o $prev == "--commit" -o $prev == "-i" -o $prev == "--initialize" -o $prev == "-s" -o $prev == "-sandbox" ]; then
+                COMPREPLY=($(compgen -o dirnames -- "$cur"))
                 return
             fi
         fi
     fi
 
-    if [ "${COMP_WORDS[1]}" == "runtime" ]; then
-        COMPREPLY=($(compgen -W "-h --help --command -d --deploy -l --list --repo --reset -r --run -u --uninstall --verbose" -- "${COMP_WORDS[2]}"))
+    if [ $prev == "runtime" ]; then
+        COMPREPLY=($(compgen -W "-h --help --command -d --deploy -l --list --repo --reset -r --run -u --uninstall --verbose" -- $cur))
         return
     fi
 
-    if [ "${COMP_WORDS[1]}" == "remote" ]; then
+    if [ $prev == "remote" ]; then
         if [ "${#COMP_WORDS[@]}" -eq 3 ]; then
-            COMPREPLY=($(compgen -W "-h --help --add-remote --del-remote -v --verbose" -- "${COMP_WORDS[2]}"))
+            COMPREPLY=($(compgen -W "-h --help --add-remote --del-remote -v --verbose" -- $cur))
+            return
+        fi
+    fi
+
+    if [ $prev == "package" ]; then
+        if [ "${#COMP_WORDS[@]}" -eq 3 ]; then
+            COMPREPLY=($(compgen -W "-h --help -c --commit -i --initialize -s --sandbox -v --verbose" -- $cur))
             return
         fi
     fi
