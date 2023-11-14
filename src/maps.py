@@ -40,11 +40,13 @@ def addCLI():
                      "and deploying software environments."
                      ),
     )
-    subparser = parser.add_subparsers(help="subcommand help", dest="SubPars_NAME")
+    subparser = parser.add_subparsers(help="Use --help with each of the commands for more help ",
+                                      dest="SubPars_NAME")
     # arguments for "main" path
     parser.add_argument('--version', action='version', version=VERSION)
 
-    parser_runtime = subparser.add_parser("runtime", help="a help")
+    parser_runtime = subparser.add_parser("runtime",
+                                          help="Command for deploying and executing runtimes")
     parser_runtime.add_argument('--command', dest='COMMAND', action='store',
                                 default=False, help="Override for the command to run")
     parser_runtime.add_argument('-d', '--deploy', dest='DEPLOY', action='store',
@@ -64,7 +66,8 @@ def addCLI():
                                 help="enable verbose output")
 
     # arguments for remote management
-    parser_remote = subparser.add_parser("remote")
+    parser_remote = subparser.add_parser("remote",
+                                         help="Command to add, delete, or list available remotes")
     parser_remote.add_argument('--add-remote', dest='REMOTE', nargs=2,
                                metavar=("REMOTE_NAME", "REMOTE_URL"), action='store',
                                default=False, help="Add REMOTE to local ostree repo")
@@ -77,7 +80,8 @@ def addCLI():
                                help="enable verbose output")
 
     # arguments for packaging
-    parser_pack = subparser.add_parser("package")
+    parser_pack = subparser.add_parser("package",
+                                       help="Package mode, for creating runtimes")
     parser_pack.add_argument('-c', '--commit', dest='COMMIT', nargs=2, metavar=("TREE", "BRANCH"),
                              default=False, help="Commit TREE to BRANCH in REPO")
     parser_pack.add_argument('-i', '--initialize', dest='DIR',
@@ -87,13 +91,22 @@ def addCLI():
     parser_pack.add_argument('-v', '--verbose', dest='VERBOSE', action='store_true',
                              help="enable verbose output")
 
-    return parser
+    return parser, parser_runtime, parser_remote, parser_pack
 
 
-def sanity_checks(parser):
+def sanity_checks(parsers):
     """Some simply sanity checks, before the program proceeds"""
     if len(sys.argv) == 1:
-        parser.print_help()
+        parsers[0].print_help()
+        sys.exit(1)
+
+    if len(sys.argv) == 2:
+        if "runtime" in sys.argv:
+            parsers[1].print_help()
+        elif "remote" in sys.argv:
+            parsers[2].print_help()
+        elif "package" in sys.argv:
+            parsers[3].print_help()
         sys.exit(1)
 
 
@@ -543,7 +556,7 @@ def main():
     """Main function"""
     # is modifying argv evil ?
     # if no "mode" is specified
-    if ("runtime" not in sys.argv) or ("remote" in sys.argv) or ("package" in sys.argv):
+    if ("runtime" not in sys.argv) and ("remote" in sys.argv) and ("package" in sys.argv):
         # if you're not just asking for help or version
         if "-h" in sys.argv:
             pass
@@ -551,13 +564,16 @@ def main():
             pass
         elif "--version" in sys.argv:
             pass
+        elif len(sys.argv) == 1:
+            pass
         else:
             sys.argv.insert(1, "runtime")
-    parser = addCLI()
+    parsers = addCLI()
+    parser = parsers[0]
     args = parser.parse_args()
 
     # Some sanity checks
-    sanity_checks(parser)
+    sanity_checks(parsers)
 
     global VERBOSE
     VERBOSE = args.VERBOSE
