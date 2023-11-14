@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python
 """This module provides package management functionality for MaRDI"""
 import os
 import sys
