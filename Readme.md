@@ -14,17 +14,7 @@ We currently depend on a patched version of bubblewrap to avoid minor problem in
 
 ## Installing
 
-We have ambitions of packaing `maps` in `apt`/`dnf`/`aur`/whatever. In the meantime, it must be cloned from git, and run as a python script, ideally within a venv.
-
-```bash
-git clone git@github.com:aaruni96/maps.git
-cd maps
-python3 -m venv .venv
-source .venv/bin/activate
-pip install pygobject tomli
-```
-
-Then, use maps using the venv'ed python interpretor. So, replace each invocation of `maps` in the documentation with `python src/maps.py` .
+We have ambitions of packaing `maps` in `apt`/`dnf`/`aur`/whatever. In the meantime, it must be cloned from git, and run as a python script, ideally within a venv. CHeck the [installation instructions on the wiki](https://github.com/aaruni96/maps/wiki/Deploy-and-Run-OSCAR#maps-installation).
 
 ## Usage
 
