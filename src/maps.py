@@ -463,6 +463,10 @@ def mode_package(repo, args):
 
 
 def commit(zarglist):
+    """
+    Function commits a tree to a repo in branch asynchronously,
+    so spinner can be animated in the main thread to show activity.
+    """
     repo = zarglist[0]
     tree = zarglist[1]
     branch = zarglist[2]
@@ -488,6 +492,9 @@ def commit(zarglist):
 
 
 def reset(runtime):
+    """
+    Function resets a runtime, simply by deleting the contents of the "rwfs" dir.
+    """
     DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{runtime}"
     if VERBOSE:
         print(f"Resetting {runtime}...")
@@ -499,6 +506,9 @@ def reset(runtime):
 
 # runtime mode: the default path for execution
 def mode_runtime(repo, args):
+    """
+    Runtime mode, the default path for execution, and the "end user" mode.
+    """
 
     if args.LIST:
         mode_list(repo)
