@@ -537,8 +537,17 @@ def main():
     # is modifying argv evil ?
     # if no "mode" is specified
     if ("runtime" not in sys.argv) or ("remote" in sys.argv) or ("package" in sys.argv):
-        # if you're not just asking for help
-        if ("--help" not in sys.argv) and (len(sys.argv) != 1):
+        # if you're not just asking for help or version
+        if "-h" in sys.argv:
+            pass
+        elif "--help" in sys.argv:
+            pass
+        elif "--version" in sys.argv:
+            pass
+        elif len(sys.argv) == 1:
+            print(sys.argv)
+            pass
+        else:
             sys.argv.insert(1, "runtime")
     parser = addCLI()
     args = parser.parse_args()
