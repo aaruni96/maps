@@ -26,7 +26,7 @@ _maps_completions()
     if [ $cword -eq 3 ]; then
         # for "runtime" specified case
         if [ "${COMP_WORDS[1]}" == "runtime" ]; then
-            if [ $prev == "-r" -o $prev == "--run" -o $prev == "--reset" -o $prev == "-u " -o $prev == "--uninstall" ]; then
+            if [ $prev == "-r" -o $prev == "--run" -o $prev == "--reset" -o $prev == "-u" -o $prev == "--uninstall" ]; then
                 COMPREPLY=($(compgen -W "$(./src/maps.py --list-local)" -- $cur))
                 return
             fi
@@ -57,14 +57,14 @@ _maps_completions()
     fi
 
     if [ $prev == "remote" ]; then
-        if [ "${#COMP_WORDS[@]}" -eq 3 ]; then
+        if [ $cword -eq 2 ]; then
             COMPREPLY=($(compgen -W "-h --help --add-remote --del-remote -v --verbose" -- $cur))
             return
         fi
     fi
 
     if [ $prev == "package" ]; then
-        if [ "${#COMP_WORDS[@]}" -eq 3 ]; then
+        if [ $cword -eq 3 ]; then
             COMPREPLY=($(compgen -W "-h --help -c --commit -i --initialize -s --sandbox -v --verbose" -- $cur))
             return
         fi

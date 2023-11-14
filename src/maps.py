@@ -551,8 +551,6 @@ def main():
             pass
         elif "--version" in sys.argv:
             pass
-        elif len(sys.argv) > 2:
-            pass
         else:
             sys.argv.insert(1, "runtime")
     parser = addCLI()
