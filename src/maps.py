@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python
 """This module provides package management functionality for MaRDI"""
 import os
 import sys
@@ -51,6 +51,8 @@ def addCLI():
                                 default=False, help="deploy mode, for installing environments")
     parser_runtime.add_argument('-l', '--list', dest='LIST', action='store_true',
                                 default=False, help="List available environments")
+    parser_runtime.add_argument('--list-local', dest='LIST_LOCAL', action='store_true',
+                                default=False, help="List available environments")
     parser_runtime.add_argument('--repo', dest='REPO', help="Repository to use")
     parser_runtime.add_argument('--reset', dest='RESET', action='store',
                                 default=False, help="Reset the runtime.")
@@ -68,6 +70,9 @@ def addCLI():
                                default=False, help="Add REMOTE to local ostree repo")
     parser_remote.add_argument('--del-remote', dest="DEL_REMOTE", action='store',
                                default=False, help="Delete REMOTE from local ostree repo")
+    parser_remote.add_argument('--list', dest="LIST", action='store_true',
+                               default=False, help="List configured remotes")
+    parser_remote.add_argument('--repo', dest='REPO', help="Repository to use")
     parser_remote.add_argument('-v', '--verbose', dest='VERBOSE', action='store_true',
                                help="enable verbose output")
 
@@ -177,6 +182,10 @@ def mode_list(repo):
 
 def mode_remotes(repo, args):
     """Administrative mode for remotes of the repo"""
+    if args.LIST is not False:
+        for remote in repo.remote_list():
+            print(remote)
+        return
     if args.REMOTE is not False:
         repo.remote_add(args.REMOTE[0], args.REMOTE[1],
                         GLib.Variant('a{sv}', {"gpg-verify": GLib.Variant('b', False)}), None)
@@ -514,6 +523,11 @@ def mode_runtime(repo, args):
 
     if args.LIST:
         mode_list(repo)
+    elif args.LIST_LOCAL:
+        refs = list(repo.list_refs()[1].keys())
+        if refs:
+            for ref in sorted(refs):
+                print(f"{ref.split(':')[1]}")
     elif args.RESET:
         reset(args.RESET)
     elif args.UNINSTALL:
@@ -530,8 +544,14 @@ def main():
     # is modifying argv evil ?
     # if no "mode" is specified
     if ("runtime" not in sys.argv) or ("remote" in sys.argv) or ("package" in sys.argv):
-        # if you're not just asking for help
-        if ("--help" not in sys.argv) and (len(sys.argv) != 1):
+        # if you're not just asking for help or version
+        if "-h" in sys.argv:
+            pass
+        elif "--help" in sys.argv:
+            pass
+        elif "--version" in sys.argv:
+            pass
+        else:
             sys.argv.insert(1, "runtime")
     parser = addCLI()
     args = parser.parse_args()
