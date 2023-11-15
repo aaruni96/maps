@@ -35,13 +35,13 @@ In this mode, the user can commit arbitrary trees into an ostree repo, and then 
 
 ```bash
 # Initialise a new tree from a minimal debian base
-maps --package --initialize /path/to/new/tree
+maps package --initialize /path/to/new/tree
 
 # Start a bash session inside a sandbox
-maps --package --sandbox /path/to/new/tree
+maps package --sandbox /path/to/new/tree
 
 # Commit the tree into ostree repository
-maps --package --commit /path/to/new/tree me.myname.myapplication/sysarch/version
+maps package --commit /path/to/new/tree me.myname.myapplication/sysarch/version
 ```
 
 ## Known Problems

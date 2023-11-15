@@ -556,7 +556,7 @@ def main():
     """Main function"""
     # is modifying argv evil ?
     # if no "mode" is specified
-    if ("runtime" not in sys.argv) and ("remote" in sys.argv) and ("package" in sys.argv):
+    if ("runtime" not in sys.argv) and ("remote" not in sys.argv) and ("package" not in sys.argv):
         # if you're not just asking for help or version
         if "-h" in sys.argv:
             pass
