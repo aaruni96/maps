@@ -9,7 +9,6 @@ import subprocess
 import tempfile
 import argparse
 import concurrent.futures
-import pathlib
 import tomli
 import gi
 gi.require_version("OSTree", "1.0")
