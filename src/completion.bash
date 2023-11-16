@@ -73,4 +73,4 @@ _maps_completions()
 
 }
 
-complete -F _maps_completions maps.py
+complete -F _maps_completions maps
