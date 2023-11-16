@@ -16,7 +16,7 @@ gi.require_version("OSTree", "1.0")
 from gi.repository import OSTree, GLib
 
 VERSION = '0.1-beta'
-BWRAP_DEFAULT = f"{pathlib.Path().absolute()}/deps/bubblewrap/bwrap"
+BWRAP_DEFAULT = f"{os.getenv('HOME')}/.var/org.mardi.maps/deps/bubblewrap/bwrap"
 if os.getenv('BWRAP_CMD') is not None:
     BWRAP = str(os.getenv('BWRAP_CMD'))
 else:
