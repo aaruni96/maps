@@ -5,7 +5,7 @@ all:
 
 install:
 	install src/maps.py $(DESTDIR)$(prefix)/bin/maps
-	install -b 644 src/completion.bash $(DESTDIR)$(prefix)/share/bash-completion/completions/maps
+	install --mode 644 src/completion.bash $(DESTDIR)$(prefix)/share/bash-completion/completions/maps
 
 clean:
 	echo "nothing to compile, so nothing to clean!"
