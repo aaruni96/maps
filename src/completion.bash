@@ -1,4 +1,5 @@
-#/usr/bin/env bash
+# bash completion for maps
+
 _maps_completions()
 {
     local cur prev words cword
