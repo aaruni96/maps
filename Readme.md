@@ -1,5 +1,7 @@
 # MaPS - MaRDI Packaging System
 
+![](https://img.shields.io/badge/version-0.1--beta-blue)
+
 ## Introduction
 
 MaPS, short for MaRDI Packaging System is the working name for the software system created by TA1 **Computer Algebra** for Measure 1.4 **Predefined software environments**. MaPS provides a unified interface both, to package a software inside a functional environment (called a _runtime_), and to "install" a published runtime onto a computer system in a user friendly way, while still keeping it separate from the computer's host environment.
@@ -14,16 +16,21 @@ We currently depend on a patched version of bubblewrap to avoid minor problem in
 
 ## Installing
 
-We have ambitions of packaing `maps` in `apt`/`dnf`/`aur`/whatever. In the meantime, it must be cloned from git, and run as a python script, ideally within a venv. CHeck the [installation instructions on the wiki](https://github.com/aaruni96/maps/wiki/Deploy-and-Run-OSCAR#maps-installation).
+We have ambitions of packaing `maps` in `apt`/`dnf`/`aur`/whatever. In the meantime, it must be cloned from git, and run as a python script, ideally within a venv. Check the [installation instructions on the wiki](https://github.com/aaruni96/maps/wiki/Deploy-and-Run-OSCAR#maps-installation).
 
 ## Usage
+
+> **NOTE**: MaPS recently had a UI overhaul, making it nicer to use. Please refer to the **NEW** help messages and documentation to use the system.
 
 ### Installing Runtimes
 
 Installing and running a runtime is a simple case of providing the unique identifier of the runtime to `maps`.
 
 ```bash
-maps --deploy me.myname.myapplication/sysarch/version
+# specifying the keyword `runtime` is optional
+# if no other keyword is specified, it is assumed that one wishes to
+# use the runtime mode (as it is the most common use of MaPS)
+maps runtime --deploy me.myname.myapplication/sysarch/version
 maps --run me.myname.myapplication/sysarch/version
 ```
 
@@ -33,19 +40,19 @@ In this mode, the user can commit arbitrary trees into an ostree repo, and then 
 
 ```bash
 # Initialise a new tree from a minimal debian base
-maps --package --initialize /path/to/new/tree
+maps package --initialize /path/to/new/tree
 
 # Start a bash session inside a sandbox
-maps --package --sandbox /path/to/new/tree
+maps package --sandbox /path/to/new/tree
 
 # Commit the tree into ostree repository
-maps --package --commit /path/to/new/tree me.myname.myapplication/sysarch/version
+maps package --commit /path/to/new/tree me.myname.myapplication/sysarch/version
 ```
 
 ## Known Problems
 
  - The OSTree Repository cannot be initialized onto a filesystem without extended attributes, in particular, NFS does not work. As a workaround, you can set the environment variables `XDG_DATA_HOME` (system OSTree Repository) and `HOME` (Runtime checkout) to point to some directory on a filesystem which has support for extended attributes.
-  - There is currently a bug in [fuse-overlayfs](https://github.com/containers/fuse-overlayfs/issues/399), which causes problems in copying a read-only file. In concrete terms, this means that `julia` testing infrastructure fails at the time of writing. This needs to be either patched in upstream, or worked around by `maps`.
+  - There is currently a bug in [fuse-overlayfs](https://github.com/containers/fuse-overlayfs/issues/399), which causes problems in copying a read-only file. In concrete terms, this means that `julia` testing infrastructure fails at the time of writing. This needs to be either patched in upstream, or worked around by `maps`. Upstream bubblewrap is integrating `overlayfs` directly. Once [Add --overlay and related options](https://github.com/containers/bubblewrap/pull/547) is merged, we expect this problem to be resolved.
   - Only Linux is supported directly. MacOS and Windows users are recommended to virtualize Linux in their respective environments. More information about this is in the [Wiki](https://github.com/aaruni96/maps/wiki/Non-Linux-OSs).
 
 
@@ -53,7 +60,7 @@ maps --package --commit /path/to/new/tree me.myname.myapplication/sysarch/versio
 
 ### Style Practices
 
-All code must conform to these settings of pylint and flake8
+All code must conform to these settings of pylint and flake8 (enforced by CI):
 
 ```bash
 pylint -d C0413,C0103,R0912,R0915,W0603 src/maps.py
