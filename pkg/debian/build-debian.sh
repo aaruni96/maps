@@ -1,3 +1,4 @@
+#!/bin/bash
 # step 1: grab the thingy
 
 wget 'http://github.com/aaruni96/maps/archive/refs/heads/devel.tar.gz' -O maps.tar.gz
@@ -23,8 +24,6 @@ cd "maps_${VERSION}" && mkdir -pv "debian/source"
 
 echo "3.0 (quilt)" > "debian/source/format"
 
-# add changelog
-
 echo "maps (0.1-1) UNRELEASED; urgency=medium
 
   * Initial release.
@@ -33,7 +32,7 @@ echo "maps (0.1-1) UNRELEASED; urgency=medium
 
 # add control
 
-echo "Source: maps
+ echo 'Source: maps
 Maintainer: Aaruni Kaushik <akaushik@mathematik.uni-kl.de>
 Section: misc
 Priority: optional
@@ -42,9 +41,9 @@ Build-Depends: debhelper-compat (= 13)
 
 Package: maps
 Architecture: amd64
-Depends: ${shlibs:Depends}, ${misc:Depends}, libcairo2-dev, git, gcc (= 11), python3, python3-dev, libgirepository1.0-dev, libostree-dev, fuse-overlayfs, python3-venv, libcap-dev, autoconf, python3-gi, python3-tomli
-Description: package stuff
- hithere greets the user, or the world, or many sandbox packages" > "debian/control"
+Depends: ${shlibs:Depends}, ${misc:Depends}, libcairo2-dev, gcc (>= 11), python3, python3-dev, libgirepository1.0-dev, libostree-dev, fuse-overlayfs, python3-venv, libcap-dev, autoconf, python3-gi, python3-tomli
+Description: Mathematical Packaging System
+ MaPS helps mathematicians create and publish software runtimes, as well as deploy and run software inside published runtimes.' > "debian/control"
 
 # add copyright
 
@@ -72,7 +71,7 @@ License: GPL-3.0
  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
  .
  On Debian systems, the complete text of the GNU General
- Public License can be found in `/usr/share/common-licenses/GPL-3`.' > "debian/copyright"
+ Public License can be found in `/usr/share/common-licenses/GPL-3.`' > "debian/copyright"
 
  # debian.dirs
 
@@ -81,13 +80,14 @@ usr/share/bash-completion/completions" > "debian/maps.dirs"
 
 # debian rules
 
-echo "#!/usr/bin/make -f
+echo '#!/usr/bin/make -f
 %:
 	dh $@
 
 override_dh_auto_install:
-	$(MAKE) DESTDIR=$$(pwd)/debian/maps prefix=/usr install" > "debian/rules"
+	$(MAKE) DESTDIR=$$(pwd)/debian/maps prefix=/usr install' > "debian/rules"
 
 # try building, see what happens
 
 debuild -us -uc
+
