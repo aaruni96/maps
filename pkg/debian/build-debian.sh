@@ -43,7 +43,8 @@ Package: maps
 Architecture: amd64
 Depends: ${shlibs:Depends}, ${misc:Depends}, libcairo2-dev, git, gcc (>= 11), python3, python3-dev, libgirepository1.0-dev, libostree-dev, fuse-overlayfs, python3-venv, libcap-dev, autoconf, python3-gi, python3-tomli
 Description: Mathematical Packaging System
- MaPS helps mathematicians create and publish software runtimes, as well as deploy and run software inside published runtimes.' > "debian/control"
+ MaPS helps mathematicians create and publish software runtimes, 
+ as well as deploy and run software inside published runtimes.' > "debian/control"
 
 # add copyright
 
