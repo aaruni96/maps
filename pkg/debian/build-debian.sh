@@ -1,0 +1,93 @@
+# step 1: grab the thingy
+
+wget 'http://github.com/aaruni96/maps/archive/refs/heads/devel.tar.gz' -O maps.tar.gz
+
+# unpack
+
+tar -xf maps.tar.gz
+
+# grab version
+
+VERSION=$(cat maps-devel/Readme.md | grep -i 'version' | head -n 1 | sed 's/^.*version-//' | sed 's/-.*//')
+
+#rename
+
+mv -v maps.tar.gz "maps_${VERSION}.orig.tar.gz"
+mv -v maps-devel "maps_${VERSION}"
+
+# setup the debian specific dirs
+
+cd "maps_${VERSION}" && mkdir -pv "debian/source"
+
+# add the format version
+
+echo "3.0 (quilt)" > "debian/source/format"
+
+# add changelog
+
+echo "maps (0.1-1) UNRELEASED; urgency=medium
+
+  * Initial release.
+
+ -- Aaruni Kaushik  <akaushik@mathematik.uni-kl.de>  Thu, 16 Nov 2023 15:00:38 +0100" > "debian/changelog"
+
+# add control
+
+echo "Source: maps
+Maintainer: Aaruni Kaushik <akaushik@mathematik.uni-kl.de>
+Section: misc
+Priority: optional
+Standards-Version: 4.6.0.1
+Build-Depends: debhelper-compat (= 13)
+
+Package: maps
+Architecture: amd64
+Depends: ${shlibs:Depends}, ${misc:Depends}, libcairo2-dev, git, gcc (= 11), python3, python3-dev, libgirepository1.0-dev, libostree-dev, fuse-overlayfs, python3-venv, libcap-dev, autoconf, python3-gi, python3-tomli
+Description: package stuff
+ hithere greets the user, or the world, or many sandbox packages" > "debian/control"
+
+# add copyright
+
+echo 'Format: http://dep.debian.net/deps/dep5
+Upstream-Name: MaPS
+Source: https://github.com/aaruni96/maps
+
+Files: *
+Copyright: 2023 Aaruni Kaushi
+License: GPL-3.0
+
+License: GPL-3.0
+ This package is free software; you can redistribute it and/or modify
+ it under the terms of the GNU General Public License as published by
+ the Free Software Foundation; either version 3 of the License, or
+ (at your option) any later version.
+ .
+ This package is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ .
+ You should have received a copy of the GNU General Public License
+ along with this package; if not, write to the Free Software
+ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301 USA
+ .
+ On Debian systems, the complete text of the GNU General
+ Public License can be found in `/usr/share/common-licenses/GPL-3`.' > "debian/copyright"
+
+ # debian.dirs
+
+ echo "usr/bin
+usr/share/bash-completion/completions" > "debian/maps.dirs"
+
+# debian rules
+
+echo "#!/usr/bin/make -f
+%:
+	dh $@
+
+override_dh_auto_install:
+	$(MAKE) DESTDIR=$$(pwd)/debian/maps prefix=/usr install" > "debian/rules"
+
+# try building, see what happens
+
+debuild -us -uc
