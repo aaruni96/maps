@@ -286,7 +286,7 @@ def download(args, repo, remote, refname, cerror=0):
     with concurrent.futures.ThreadPoolExecutor() as executor:
         progress = OSTree.AsyncProgress.new()
         future = executor.submit(zipped_pull, [repo, remote, refname, progress])
-        print(f"Downloading {refname} from {remote}")
+        print(f"Downloading {refname} from {remote}. This may take some time.\nPlease wait...")
         while True:
             sys.stdout.write(next(SPINNER))
             sys.stdout.flush()
@@ -469,7 +469,7 @@ def mode_package(repo, args):
         # we are given TREE and BRANCH. All we have to do is commit TREE to BRANCH
         with concurrent.futures.ThreadPoolExecutor() as executor:
             future = executor.submit(commit, [repo, args.COMMIT[0], args.COMMIT[1]])
-            print(f"Committing {args.COMMIT[0]} as {args.COMMIT[1]}")
+            print(f"Committing {args.COMMIT[0]} as {args.COMMIT[1]}. Please wait...")
             while True:
                 sys.stdout.write(next(SPINNER))
                 sys.stdout.flush()
