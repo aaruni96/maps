@@ -65,7 +65,7 @@ _maps_completions()
     fi
 
     if [ $prev == "package" ]; then
-        if [ $cword -eq 3 ]; then
+        if [ $cword -eq 2 ]; then
             COMPREPLY=($(compgen -W "-h --help -c --commit -i --initialize -s --sandbox -v --verbose" -- $cur))
             return
         fi

@@ -89,6 +89,7 @@ def addCLI():
                              help="Start a sandbox at LOCATION")
     parser_pack.add_argument('-v', '--verbose', dest='VERBOSE', action='store_true',
                              help="enable verbose output")
+    parser_pack.add_argument('--repo', dest='REPO', help="Repository to use")
 
     return parser, parser_runtime, parser_remote, parser_pack
 
@@ -456,7 +457,7 @@ def mode_package(repo, args):
         signal.signal(signal.SIGINT, signal.SIG_IGN)
         rstatus = subprocess.run([BWRAP, "--no-int-term", "--unshare-user", "--unshare-pid",
                                   "--bind", args.LOCATION, "/", "--proc", "/proc", "--dev", "/dev",
-                                  "----die-with-parent", "--uid", "0", "--gid", "0", "bash",
+                                  "--die-with-parent", "--uid", "0", "--gid", "0", "bash",
                                   "--norc"],
                                  env=senv, check=False)
         if VERBOSE:
