@@ -526,6 +526,7 @@ def reset(runtime):
     else:
         opts = '-rf'
     subprocess.run(f"rm {opts} {DATADIR}/live/*".split(), check=True)
+    print(f"{runtime} reset successfully!")
 
 
 # runtime mode: the default path for execution
