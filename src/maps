@@ -336,7 +336,7 @@ def uninstall_runtime(repo, args):
             if VERBOSE:
                 print("Marking branch for deletion from repo...")
             repo.set_ref_immediate(remote, runtime, None, None)
-            repo.prune(OSTree.RepoPruneFlags(0), -1, None)
+            repo.prune(OSTree.RepoPruneFlags(2), -1, None)
             break
 
     if not (FLAG1 and FLAG2):
