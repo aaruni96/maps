@@ -7,7 +7,7 @@ _maps_completions()
     
     # if completing the first word
     if [ $cword -eq 1 ]; then
-        COMPREPLY=($(compgen -W "runtime remote package --help -h --command -d --deploy -l --list --repo --reset -r --run -u --uninstall --verbose" -- $cur))
+        COMPREPLY=($(compgen -W "runtime remote package --help -h --command -d --deploy -l --list --list-local --repo --reset -r --run -u --uninstall --verbose" -- $cur))
         return
     fi
 
@@ -53,7 +53,7 @@ _maps_completions()
     fi
 
     if [ $prev == "runtime" ]; then
-        COMPREPLY=($(compgen -W "-h --help --command -d --deploy -l --list --repo --reset -r --run -u --uninstall --verbose" -- $cur))
+        COMPREPLY=($(compgen -W "-h --help --command -d --deploy -l --list --list-local --repo --reset -r --run -u --uninstall --verbose" -- $cur))
         return
     fi
 
