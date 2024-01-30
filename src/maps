@@ -541,7 +541,7 @@ def mode_runtime(repo, args):
         refs = list(repo.list_refs()[1].keys())
         if refs:
             for ref in sorted(refs):
-                print(f"{ref.split(':')[1]}")
+                print(f"{ref.split(':')[-1]}")
     elif args.RESET:
         reset(args.RESET)
     elif args.UNINSTALL:
