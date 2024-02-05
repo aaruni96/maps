@@ -254,7 +254,7 @@ def mode_run(args):
     senv["LC_ALL"] = "C"
     # ignore SIGINT
     signal.signal(signal.SIGINT, signal.SIG_IGN)
-    rstatus = subprocess.run((f"{BWRAP} --no-int-term --unshare-user --unshare-pid "
+    rstatus = subprocess.run((f"{BWRAP} --forward-signals --unshare-user --unshare-pid "
                               f"--bind {DATADIR}/live / --bind {HOME}/Public {senv['HOME']}/Public"
                               " --die-with-parent --proc /proc --dev /dev --uid 0 --gid 0 "
                               f"{command}").split(),
@@ -455,7 +455,7 @@ def mode_package(repo, args):
         senv["LC_ALL"] = "C"
         # ignore SIGINT
         signal.signal(signal.SIGINT, signal.SIG_IGN)
-        rstatus = subprocess.run([BWRAP, "--no-int-term", "--unshare-user", "--unshare-pid",
+        rstatus = subprocess.run([BWRAP, "--forward-signals", "--unshare-user", "--unshare-pid",
                                   "--bind", args.LOCATION, "/", "--proc", "/proc", "--dev", "/dev",
                                   "--die-with-parent", "--uid", "0", "--gid", "0", "bash",
                                   "--norc"],
