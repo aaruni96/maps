@@ -7,7 +7,7 @@ _maps_completions()
     
     # if completing the first word
     if [ $cword -eq 1 ]; then
-        COMPREPLY=($(compgen -W "runtime remote package --help -h --command -d --deploy -l --list --repo --reset -r --run -u --uninstall --verbose" -- $cur))
+        COMPREPLY=($(compgen -W "runtime remote package --help -h --command -d --deploy -l --list --list-local --repo --reset -r --run -u --uninstall --verbose" -- $cur))
         return
     fi
 
@@ -45,7 +45,7 @@ _maps_completions()
         fi
         # for "package" specified case
         if [ "${COMP_WORDS[1]}" == "package" ]; then
-            if [ $prev == "-c" -o $prev == "--commit" -o $prev == "-i" -o $prev == "--initialize" -o $prev == "-s" -o $prev == "-sandbox" ]; then
+            if [ $prev == "-c" -o $prev == "--commit" -o $prev == "-i" -o $prev == "--initialize" -o $prev == "-s" -o $prev == "--sandbox" ]; then
                 COMPREPLY=($(compgen -o dirnames -- "$cur"))
                 return
             fi
@@ -53,7 +53,7 @@ _maps_completions()
     fi
 
     if [ $prev == "runtime" ]; then
-        COMPREPLY=($(compgen -W "-h --help --command -d --deploy -l --list --repo --reset -r --run -u --uninstall --verbose" -- $cur))
+        COMPREPLY=($(compgen -W "-h --help --command -d --deploy -l --list --list-local --repo --reset -r --run -u --uninstall --verbose" -- $cur))
         return
     fi
 
@@ -65,7 +65,7 @@ _maps_completions()
     fi
 
     if [ $prev == "package" ]; then
-        if [ $cword -eq 3 ]; then
+        if [ $cword -eq 2 ]; then
             COMPREPLY=($(compgen -W "-h --help -c --commit -i --initialize -s --sandbox -v --verbose" -- $cur))
             return
         fi

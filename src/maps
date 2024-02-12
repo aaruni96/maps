@@ -14,7 +14,7 @@ import gi
 gi.require_version("OSTree", "1.0")
 from gi.repository import OSTree, GLib
 
-VERSION = '0.1-beta'
+VERSION = '0.1'
 BWRAP_DEFAULT = f"{os.getenv('HOME')}/.var/org.mardi.maps/deps/bubblewrap/bwrap"
 if os.getenv('BWRAP_CMD') is not None:
     BWRAP = str(os.getenv('BWRAP_CMD'))
@@ -89,6 +89,7 @@ def addCLI():
                              help="Start a sandbox at LOCATION")
     parser_pack.add_argument('-v', '--verbose', dest='VERBOSE', action='store_true',
                              help="enable verbose output")
+    parser_pack.add_argument('--repo', dest='REPO', help="Repository to use")
 
     return parser, parser_runtime, parser_remote, parser_pack
 
@@ -253,7 +254,7 @@ def mode_run(args):
     senv["LC_ALL"] = "C"
     # ignore SIGINT
     signal.signal(signal.SIGINT, signal.SIG_IGN)
-    rstatus = subprocess.run((f"{BWRAP} --no-int-term --unshare-user --unshare-pid "
+    rstatus = subprocess.run((f"{BWRAP} --forward-signals --unshare-user --unshare-pid "
                               f"--bind {DATADIR}/live / --bind {HOME}/Public {senv['HOME']}/Public"
                               " --die-with-parent --proc /proc --dev /dev --uid 0 --gid 0 "
                               f"{command}").split(),
@@ -286,7 +287,7 @@ def download(args, repo, remote, refname, cerror=0):
     with concurrent.futures.ThreadPoolExecutor() as executor:
         progress = OSTree.AsyncProgress.new()
         future = executor.submit(zipped_pull, [repo, remote, refname, progress])
-        print(f"Downloading {refname} from {remote}")
+        print(f"Downloading {refname} from {remote}. This may take some time.\nPlease wait...")
         while True:
             sys.stdout.write(next(SPINNER))
             sys.stdout.flush()
@@ -335,7 +336,7 @@ def uninstall_runtime(repo, args):
             if VERBOSE:
                 print("Marking branch for deletion from repo...")
             repo.set_ref_immediate(remote, runtime, None, None)
-            repo.prune(OSTree.RepoPruneFlags(0), -1, None)
+            repo.prune(OSTree.RepoPruneFlags(2), -1, None)
             break
 
     if not (FLAG1 and FLAG2):
@@ -454,9 +455,9 @@ def mode_package(repo, args):
         senv["LC_ALL"] = "C"
         # ignore SIGINT
         signal.signal(signal.SIGINT, signal.SIG_IGN)
-        rstatus = subprocess.run([BWRAP, "--no-int-term", "--unshare-user", "--unshare-pid",
+        rstatus = subprocess.run([BWRAP, "--forward-signals", "--unshare-user", "--unshare-pid",
                                   "--bind", args.LOCATION, "/", "--proc", "/proc", "--dev", "/dev",
-                                  "----die-with-parent", "--uid", "0", "--gid", "0", "bash",
+                                  "--die-with-parent", "--uid", "0", "--gid", "0", "bash",
                                   "--norc"],
                                  env=senv, check=False)
         if VERBOSE:
@@ -469,7 +470,7 @@ def mode_package(repo, args):
         # we are given TREE and BRANCH. All we have to do is commit TREE to BRANCH
         with concurrent.futures.ThreadPoolExecutor() as executor:
             future = executor.submit(commit, [repo, args.COMMIT[0], args.COMMIT[1]])
-            print(f"Committing {args.COMMIT[0]} as {args.COMMIT[1]}")
+            print(f"Committing {args.COMMIT[0]} as {args.COMMIT[1]}. Please wait...")
             while True:
                 sys.stdout.write(next(SPINNER))
                 sys.stdout.flush()
@@ -525,6 +526,7 @@ def reset(runtime):
     else:
         opts = '-rf'
     subprocess.run(f"rm {opts} {DATADIR}/live/*".split(), check=True)
+    print(f"{runtime} reset successfully!")
 
 
 # runtime mode: the default path for execution
@@ -539,7 +541,7 @@ def mode_runtime(repo, args):
         refs = list(repo.list_refs()[1].keys())
         if refs:
             for ref in sorted(refs):
-                print(f"{ref.split(':')[1]}")
+                print(f"{ref.split(':')[-1]}")
     elif args.RESET:
         reset(args.RESET)
     elif args.UNINSTALL:

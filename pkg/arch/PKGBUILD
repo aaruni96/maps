@@ -1,0 +1,34 @@
+# Maintainer: Aaruni Kaushik <akaushik@mathematik.uni-kl.de>
+pkgname=maps-git
+pkgver=v0.1.alpha.33.g175bddb
+pkgrel=1
+pkgdesc="Sandboxing tool for Mathematical Research Software"
+arch=('x86_64')
+url='https://github.com/aaruni96/maps'
+license=('GPL3')
+depends=('base-devel'
+         'cairo'
+         'git'
+         'gobject-introspection-runtime'
+         'python3'
+         'ostree'
+         'fuse-overlayfs'
+         'python-tomli'
+         )
+conflicts=('maps')
+provides=('maps')
+optdepends=()
+makedepends=('git')
+source=("git+https://github.com/aaruni96/maps.git")
+md5sums=('SKIP')
+BUILDENV+=('!check')
+
+pkgver() {
+    cd "$srcdir/maps"
+    git describe --tags | sed 's/-/./g'
+}
+
+package(){
+    install -Dm 755 "$srcdir/maps/src/maps" "$pkgdir/usr/bin/maps"
+    install -Dm 644 "$srcdir/maps/src/completion.bash" "$pkgdir/usr/share/bash-completion/completions/maps"
+}
