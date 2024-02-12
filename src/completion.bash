@@ -45,7 +45,7 @@ _maps_completions()
         fi
         # for "package" specified case
         if [ "${COMP_WORDS[1]}" == "package" ]; then
-            if [ $prev == "-c" -o $prev == "--commit" -o $prev == "-i" -o $prev == "--initialize" -o $prev == "-s" -o $prev == "-sandbox" ]; then
+            if [ $prev == "-c" -o $prev == "--commit" -o $prev == "-i" -o $prev == "--initialize" -o $prev == "-s" -o $prev == "--sandbox" ]; then
                 COMPREPLY=($(compgen -o dirnames -- "$cur"))
                 return
             fi
