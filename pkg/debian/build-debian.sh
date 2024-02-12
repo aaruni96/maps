@@ -1,7 +1,7 @@
 #!/bin/bash
 # step 1: grab the thingy
 
-wget 'http://github.com/aaruni96/maps/archive/refs/heads/devel.tar.gz' -O maps.tar.gz
+wget 'https://github.com/aaruni96/maps/archive/refs/tags/v0.1.tar.gz' -O maps.tar.gz
 
 # unpack
 
@@ -9,12 +9,12 @@ tar -xf maps.tar.gz
 
 # grab version
 
-VERSION=$(cat maps-devel/Readme.md | grep -i 'version' | head -n 1 | sed 's/^.*version-//' | sed 's/-.*//')
+VERSION=$(cat maps-0.1/Readme.md | grep -i 'version' | head -n 1 | sed 's/^.*version-//' | sed 's/-.*//')
 
 #rename
 
 mv -v maps.tar.gz "maps_${VERSION}.orig.tar.gz"
-mv -v maps-devel "maps_${VERSION}"
+mv -v maps-0.1 "maps_${VERSION}"
 
 # setup the debian specific dirs
 
@@ -24,11 +24,13 @@ cd "maps_${VERSION}" && mkdir -pv "debian/source"
 
 echo "3.0 (quilt)" > "debian/source/format"
 
-echo "maps (0.1-1) UNRELEASED; urgency=medium
+echo "maps (0.1-2) UNRELEASED; urgency=medium
+
+  * Update to v0.1
 
   * Initial release.
 
- -- Aaruni Kaushik  <akaushik@mathematik.uni-kl.de>  Thu, 16 Nov 2023 15:00:38 +0100" > "debian/changelog"
+ -- Aaruni Kaushik  <akaushik@mathematik.uni-kl.de>  $(date +'%a, %d %b %Y %H:%M:%S %z')" > "debian/changelog"
 
 # add control
 
@@ -53,7 +55,7 @@ Upstream-Name: MaPS
 Source: https://github.com/aaruni96/maps
 
 Files: *
-Copyright: 2023 Aaruni Kaushi
+Copyright: 2024 Aaruni Kaushi
 License: GPL-3.0
 
 License: GPL-3.0
@@ -92,3 +94,15 @@ override_dh_auto_install:
 
 debuild -us -uc
 
+mkdir -pv apt-repo/pool/main
+mkdir -pv apt-repo/dists/stable/main/binary-amd64
+cp -v maps*.deb apt-repo/pool/main/
+
+cd apt-repo
+dpkg-scanpackages --arch amd64 pool/ > dists/stable/main/binary-amd64/Packages
+cat dists/stable/main/binary-amd64/Packages | gzip -9 > dists/stable/main/binary-amd64/Packages.gz
+
+cd dists/stable
+. ../../../make-release.sh > Release
+
+#then, just have to sign Release with valid GPG keys
