@@ -1,6 +1,9 @@
 name: Make a .deb package
 
-on: push
+on: 
+  push:
+    branches:
+      - master
 
 jobs:
   pkg-deb:
@@ -8,5 +11,7 @@ jobs:
     name: Deb Package
     steps:
       - uses: actions/checkout@v3
-      - name: Check thingy
-        run: echo "${{github.ref_name}}"
+      - name: Run debian pkg script
+        run: |
+          git fetch --all
+          bash pkg/debian/build-debian.sh $(git tag --sort "-committerdate" | cut -d$'\n' -f1) $(git tag --sort "-committerdate" | cut -d$'\n' -f2)
