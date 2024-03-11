@@ -361,7 +361,7 @@ def mode_deploy(repo, args):
     elif args.DEPLOY in list(repo.list_refs()[1].keys()):
         refhash = repo.list_refs()[1][args.DEPLOY]
     else:
-        print("Error: environment not found! Use list mode --list to view available runtimes.")
+        print("Error: runtime not found! Use list mode --list to view available runtimes.")
         sys.exit(1)
     DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{args.DEPLOY}"
     PDATADIR = '/'.join(DATADIR.split('/')[0:-1])
