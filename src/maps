@@ -364,7 +364,7 @@ def mode_update(repo, args, remote="Official"):
 
     # check if we need an update
     same = repo.list_refs()[1][f'{remote}:{args.UPDATE}'] ==\
-           repo.remote_list_refs(remote)[1][args.UPDATE]
+        repo.remote_list_refs(remote)[1][args.UPDATE]
     if VERBOSE:
         print(f"Local refhash = {repo.list_refs()[1][f'{remote}:{args.UPDATE}']}")
         print(f"Remote refhash = {repo.remote_list_refs(remote)[1][args.UPDATE]}")
@@ -376,7 +376,7 @@ def mode_update(repo, args, remote="Official"):
     download(args, repo, remote, args.UPDATE)
     DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{args.UPDATE}"
 
-    #clean out the data dir
+    # clean out the data dir
     if VERBOSE:
         opts1 = "-rvf"
         opts2 = "-pv"
@@ -385,10 +385,10 @@ def mode_update(repo, args, remote="Official"):
         opts2 = "-p"
     subprocess.run(f"rm {opts1} {DATADIR}/rofs".split(), check=True)
 
-    #make the data dir again
+    # make the data dir again
     subprocess.run(f"mkdir {opts2} {DATADIR}/rofs".split(), check=True)
 
-    #checkout branch to tree
+    # checkout branch to tree
     refhash = repo.remote_list_refs(remote)[1][args.UPDATE]
     tfd = os.open(DATADIR, os.O_RDONLY)
     osopts = blank_options()
@@ -401,6 +401,7 @@ def mode_update(repo, args, remote="Official"):
     print(f"Success... {args.DEPLOY} is now updated!")
 
     return 0
+
 
 # Deploy Mode
 def mode_deploy(repo, args):
@@ -436,7 +437,7 @@ def mode_deploy(repo, args):
         if ret == 2:
             print(f"{args.DEPLOY} already installed and up to date.... nothing to do!")
         return
-    #download
+    # download
     for remote in repo.remote_list():
         if args.DEPLOY in repo.remote_list_refs(remote)[1]:
             refhash = repo.remote_list_refs(remote)[1][args.DEPLOY]
