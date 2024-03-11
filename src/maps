@@ -429,15 +429,13 @@ def mode_deploy(repo, args):
     subprocess.run(f"mkdir {opts1} {DATADIR}/tmpfs".split(), check=True)
     subprocess.run(f"mkdir {opts1} {DATADIR}/live".split(), check=True)
     if ret.returncode != 0:
-        print(f"Directory already exists, trying to update...")
+        print("Directory already exists, trying to update...")
         ret = mode_update(repo, args)
         if ret == 1:
             raise AssertionError("Error: Unknown error!")
-        elif ret == 2:
+        if ret == 2:
             print(f"{args.DEPLOY} already installed and up to date.... nothing to do!")
-            return
-        else: #ret is 0
-            return    
+        return
     #download
     for remote in repo.remote_list():
         if args.DEPLOY in repo.remote_list_refs(remote)[1]:
