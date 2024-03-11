@@ -61,6 +61,8 @@ def addCLI():
                                 default=False, help="Which runtime to play.")
     parser_runtime.add_argument('-u', '--uninstall', dest='UNINSTALL', action='store',
                                 default=False, help="Uninstall a runtime")
+    parser_runtime.add_argument('--update', dest="UPDATE", action='store',
+                                default=False, help="Update a runtime")
     parser_runtime.add_argument('-v', '--verbose', dest='VERBOSE', action='store_true',
                                 help="enable verbose output")
 
@@ -347,21 +349,71 @@ def uninstall_runtime(repo, args):
     sys.exit()
 
 
+# Update
+def mode_update(repo, args, remote="Official"):
+    """Function to update a runtime identifier to its recent version (if any)"""
+    if not args.UPDATE:
+        args.UPDATE = args.DEPLOY
+    # check if ref is installed
+    installed = args.UPDATE in [key.split(':')[-1] for key in repo.list_refs()[1].keys()]
+    if VERBOSE:
+        print(f"List of installed runtimes is {repo.list_refs()[1].keys()}")
+    if not installed:
+        print(f"{args.UPDATE} is not installed, hence cannot be updated! Try --deploy instead")
+        return 1
+
+    # check if we need an update
+    same = repo.list_refs()[1][f'{remote}:{args.UPDATE}'] ==\
+        repo.remote_list_refs(remote)[1][args.UPDATE]
+    if VERBOSE:
+        print(f"Local refhash = {repo.list_refs()[1][f'{remote}:{args.UPDATE}']}")
+        print(f"Remote refhash = {repo.remote_list_refs(remote)[1][args.UPDATE]}")
+    if same:
+        print(f"{args.UPDATE} is already up to date!")
+        return 2
+
+    # do the update
+    download(args, repo, remote, args.UPDATE)
+    DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{args.UPDATE}"
+
+    # clean out the data dir
+    if VERBOSE:
+        opts1 = "-rvf"
+        opts2 = "-pv"
+    else:
+        opts1 = "-rf"
+        opts2 = "-p"
+    subprocess.run(f"rm {opts1} {DATADIR}/rofs".split(), check=True)
+
+    # make the data dir again
+    subprocess.run(f"mkdir {opts2} {DATADIR}/rofs".split(), check=True)
+
+    # checkout branch to tree
+    refhash = repo.remote_list_refs(remote)[1][args.UPDATE]
+    tfd = os.open(DATADIR, os.O_RDONLY)
+    osopts = blank_options()
+    osopts.bareuseronly_dirs = True
+    osopts.mode = OSTree.RepoCheckoutMode(1)
+    if VERBOSE:
+        print(f"Checking out tree from repo to {DATADIR}/rofs ...")
+    repo.checkout_at(osopts, tfd, "rofs", refhash, None)
+
+    print(f"Success... {args.DEPLOY} is now updated!")
+
+    return 0
+
+
 # Deploy Mode
 def mode_deploy(repo, args):
     """Function to deploy from repo to local disk"""
 
     if args.DEPLOY in [j for remotes in repo.remote_list()
                        for j in make_remote_ref_list(repo, remotes)]:
-        for remote in repo.remote_list():
-            if args.DEPLOY in repo.remote_list_refs(remote)[1]:
-                refhash = repo.remote_list_refs(remote)[1][args.DEPLOY]
-                download(args, repo, remote, args.DEPLOY)
-                break
+        pass
     elif args.DEPLOY in list(repo.list_refs()[1].keys()):
         refhash = repo.list_refs()[1][args.DEPLOY]
     else:
-        print("Error: environment not found! Use list mode --list to view available runtimes.")
+        print("Error: runtime not found! Use list mode --list to view available runtimes.")
         sys.exit(1)
     DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{args.DEPLOY}"
     PDATADIR = '/'.join(DATADIR.split('/')[0:-1])
@@ -378,14 +430,25 @@ def mode_deploy(repo, args):
     subprocess.run(f"mkdir {opts1} {DATADIR}/tmpfs".split(), check=True)
     subprocess.run(f"mkdir {opts1} {DATADIR}/live".split(), check=True)
     if ret.returncode != 0:
-        raise AssertionError("Error: Could not create directory. "
-                             "Path already exists, or other unknown error")
+        print("Directory already exists, trying to update...")
+        ret = mode_update(repo, args)
+        if ret == 1:
+            raise AssertionError("Error: Unknown error!")
+        if ret == 2:
+            print(f"{args.DEPLOY} already installed and up to date.... nothing to do!")
+        return
+    # download
+    for remote in repo.remote_list():
+        if args.DEPLOY in repo.remote_list_refs(remote)[1]:
+            refhash = repo.remote_list_refs(remote)[1][args.DEPLOY]
+            download(args, repo, remote, args.DEPLOY)
+            break
     tfd = os.open(DATADIR, os.O_RDONLY)
     osopts = blank_options()
     osopts.bareuseronly_dirs = True
     osopts.mode = OSTree.RepoCheckoutMode(1)
     if VERBOSE:
-        print(f"Checking out tree from repo to {DATADIR}/rwfs ...")
+        print(f"Checking out tree from repo to {DATADIR}/rofs ...")
     repo.checkout_at(osopts, tfd, "rofs", refhash, None)
     print(f"Success... {args.DEPLOY} is now ready to use!")
 
@@ -550,6 +613,8 @@ def mode_runtime(repo, args):
         mode_run(args)
     elif args.DEPLOY:
         mode_deploy(repo, args)
+    elif args.UPDATE:
+        mode_update(repo, args)
 
 
 # Main function
