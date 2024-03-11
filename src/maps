@@ -385,7 +385,7 @@ def mode_deploy(repo, args):
     osopts.bareuseronly_dirs = True
     osopts.mode = OSTree.RepoCheckoutMode(1)
     if VERBOSE:
-        print(f"Checking out tree from repo to {DATADIR}/rwfs ...")
+        print(f"Checking out tree from repo to {DATADIR}/rofs ...")
     repo.checkout_at(osopts, tfd, "rofs", refhash, None)
     print(f"Success... {args.DEPLOY} is now ready to use!")
 
