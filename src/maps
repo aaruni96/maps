@@ -31,6 +31,7 @@ KEEP_FREE_SPACE = 3
 VERBOSE = False
 OG_SIGINT_HANLDER = signal.getsignal(signal.SIGINT)
 TUSTARGET = "http://192.168.122.245:8080"
+AUTH = os.getenv("MTDAUTH")
 
 
 # Define a CLI
@@ -646,11 +647,14 @@ def tus_upload(filename, storage_file):
     """
     filesize = os.path.getsize(filename)
     chunksize = 1024*256 #chunksize in bytes
-    upclient = client.TusClient(f'{TUSTARGET}/files/')
+    headers = {{'Authentication': f'Basic {AUTH}'},{'Tus-Resumable': '1.0.0'}}
+    upclient = client.TusClient(f'{TUSTARGET}/files/', headers=)
     storage = filestorage.FileStorage(storage_file)
     uploader = upclient.uploader(filename, store_url=True,
                                   url_storage=storage, chunk_size=chunksize)
 
+    # going to need some try-catch here instead of just crashing
+    # if auth or network fails
     print(f"Uploading {filename}")
     if not uploader.url:
         print("Created URL")
@@ -693,6 +697,8 @@ def upload(repo, runtime):
     """
     Given a local runtime, tar it and upload it. (Try)
     """
+    if AUTH == None:
+        raise AssertionError("MTDAUTH not set! Cannot upload without authentication!")
     runtimes = list(repo.list_refs()[1].keys())
     if VERBOSE:
         print("Available local runtimes are:")
