@@ -644,9 +644,9 @@ def tus_upload(filename, storage_file):
     """
     filesize = os.path.getsize(filename)
     chunksize = 1024*256 #chunksize in bytes
-    my_client = client.TusClient(f'{TUSTARGET}/files/')
+    upclient = client.TusClient(f'{TUSTARGET}/files/')
     storage = filestorage.FileStorage(storage_file)
-    uploader = my_client.uploader(filename, store_url=True,
+    uploader = upclient.uploader(filename, store_url=True,
                                   url_storage=storage, chunk_size=chunksize)
 
     print(f"Uploading {filename}")
