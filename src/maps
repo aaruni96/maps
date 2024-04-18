@@ -648,7 +648,7 @@ def tus_upload(filename, storage_file):
     filesize = os.path.getsize(filename)
     chunksize = 1024*256 #chunksize in bytes
     headers = {{'Authentication': f'Basic {AUTH}'},{'Tus-Resumable': '1.0.0'}}
-    upclient = client.TusClient(f'{TUSTARGET}/files/', headers=)
+    upclient = client.TusClient(f'{TUSTARGET}/files/', headers=headers)
     storage = filestorage.FileStorage(storage_file)
     uploader = upclient.uploader(filename, store_url=True,
                                   url_storage=storage, chunk_size=chunksize)
