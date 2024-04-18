@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """This module provides package management functionality for MaRDI"""
+# standard imports
 import os
 import sys
 import time
@@ -9,9 +10,11 @@ import subprocess
 import tempfile
 import argparse
 import concurrent.futures
+from math import log10, floor
+
+# third party imports
 import tomli
 import gi
-from math import log10, floor
 from progress.bar import Bar
 from tusclient import client
 from tusclient.storage import filestorage
@@ -157,7 +160,8 @@ def program_init(repopath):
     config_path = f"{repopath}/repo/config"
     config_exists = os.path.isfile(config_path)
     fd = os.open(repopath, os.O_RDONLY)
-    repo = OSTree.Repo.create_at(fd, repo,OSTree.RepoMode(OSTREE_REPO_MODE_BARE_USER),GLib.Variant('a{sv}', {}), None)
+    repo = OSTree.Repo.create_at(fd, repo, OSTree.RepoMode(OSTREE_REPO_MODE_BARE_USER),
+                                 GLib.Variant('a{sv}', {}), None)
     # if we just created a repo (and thus config), configure how we reserve free space
     if not config_exists:
         if VERBOSE:
@@ -168,7 +172,9 @@ def program_init(repopath):
     if (not repo.remote_list()) or "Official" not in repo.remote_list():
         if VERBOSE:
             print("Automatically adding official remote")
-        repo.remote_add("Official", "https://repo.oscar-system.org/",                        GLib.Variant('a{sv}', {"gpg-verify": GLib.Variant('b', False)}), None)
+        repo.remote_add("Official", "https://repo.oscar-system.org/",
+                        GLib.Variant('a{sv}', {"gpg-verify": GLib.Variant('b', False)}),
+                        None)
     return repo
 
 
@@ -633,11 +639,11 @@ def byteSI(inbytes):
     """
     Given bytes, turn it into K/M/G bytes. Only kind of accurate.
     """
-    scale = {0:'', 1:'K', 2:'M', 3:'G'}
+    scale = {0: '', 1: 'K', 2: 'M', 3: 'G'}
     exp = log10(inbytes)
-    exp = int(exp/3)
+    exp = int(exp / 3)
     suf = scale[exp]
-    rem = inbytes/(1024**exp)
+    rem = inbytes / (1024 ** exp)
     return f"{rem:.2f} {suf}"
 
 
@@ -646,12 +652,12 @@ def tus_upload(filename, storage_file):
     tus upload subroutine
     """
     filesize = os.path.getsize(filename)
-    chunksize = 1024*256 #chunksize in bytes
-    headers = {{'Authentication': f'Basic {AUTH}'},{'Tus-Resumable': '1.0.0'}}
+    chunksize = 1024 * 256  # chunksize in bytes
+    headers = {'Authentication': f'Basic {AUTH}', 'Tus-Resumable': '1.0.0'}
     upclient = client.TusClient(f'{TUSTARGET}/files/', headers=headers)
     storage = filestorage.FileStorage(storage_file)
     uploader = upclient.uploader(filename, store_url=True,
-                                  url_storage=storage, chunk_size=chunksize)
+                                 url_storage=storage, chunk_size=chunksize)
 
     # going to need some try-catch here instead of just crashing
     # if auth or network fails
@@ -669,23 +675,23 @@ def tus_upload(filename, storage_file):
         print(f"Total file size is {filesize}")
         print("=================")
 
-    bar = Bar("Uploading", max=floor(filesize/chunksize))
+    bar = Bar("Uploading", max=floor(filesize / chunksize))
     bar.suffix = '%(percent).1d%%'
-    bar.index=int(offset/chunksize)
+    bar.index = int(offset / chunksize)
     bar.start()
     bar.update()
-    acc=0
+    acc = 0
     while offset < filesize:
-        told = time()
+        told = time.time()
         uploader.upload_chunk()
-        tnew = time()
-        rate = chunksize/(tnew-told)
-        if(acc==0):
+        tnew = time.time()
+        rate = chunksize / (tnew - told)
+        if acc == 0:
             bar.suffix = f'%(percent).1d%% | %(eta)ds remaining | {byteSI(rate)}B/s'
-        acc = acc+1
-        if acc==1000:
+        acc = acc + 1
+        if acc == 1000:
             bar.suffix = f'%(percent).1d%% | %(eta)ds remaining | {byteSI(rate)}B/s'
-            acc=1
+            acc = 1
         offset = uploader.offset
         bar.next()
     bar.finish()
@@ -697,7 +703,7 @@ def upload(repo, runtime):
     """
     Given a local runtime, tar it and upload it. (Try)
     """
-    if AUTH == None:
+    if AUTH is None:
         raise AssertionError("MTDAUTH not set! Cannot upload without authentication!")
     runtimes = list(repo.list_refs()[1].keys())
     if VERBOSE:
