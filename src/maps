@@ -20,10 +20,12 @@ from gi.repository import OSTree, GLib
 
 VERSION = '0.1'
 BWRAP_DEFAULT = f"{os.getenv('HOME')}/.var/org.mardi.maps/deps/bubblewrap/bwrap"
+
 if os.getenv('BWRAP_CMD') is not None:
     BWRAP = str(os.getenv('BWRAP_CMD'))
 else:
     BWRAP = BWRAP_DEFAULT
+
 OVERLAYFS = '/usr/bin/fuse-overlayfs'
 OSTREE_REPO_MODE_BARE_USER = 2
 SPINNER = itertools.cycle(['-', '\\', '|', '/'])
@@ -125,7 +127,7 @@ def program_init(repopath):
         if VERBOSE:
             print("Cloning bubblewrap...")
         subprocess.run(["git", "clone", "https://github.com/aaruni96/bubblewrap.git", BWRAP[0:-5]],
-                       check=False)
+                       check=True) # might fail due tu network issues
         subprocess.run(f"cd {BWRAP[0:-5]} && git checkout ak/sigint", shell=True, check=False)
         if VERBOSE:
             print("Compiling bubblewrap...")
@@ -149,9 +151,7 @@ def program_init(repopath):
     config_path = f"{repopath}/repo/config"
     config_exists = os.path.isfile(config_path)
     fd = os.open(repopath, os.O_RDONLY)
-    repo = OSTree.Repo.create_at(fd, repo,
-                                 OSTree.RepoMode(OSTREE_REPO_MODE_BARE_USER),
-                                 GLib.Variant('a{sv}', {}), None)
+    repo = OSTree.Repo.create_at(fd, repo,OSTree.RepoMode(OSTREE_REPO_MODE_BARE_USER),GLib.Variant('a{sv}', {}), None)
     # if we just created a repo (and thus config), configure how we reserve free space
     if not config_exists:
         if VERBOSE:
@@ -162,8 +162,7 @@ def program_init(repopath):
     if (not repo.remote_list()) or "Official" not in repo.remote_list():
         if VERBOSE:
             print("Automatically adding official remote")
-        repo.remote_add("Official", "https://repo.oscar-system.org/",
-                        GLib.Variant('a{sv}', {"gpg-verify": GLib.Variant('b', False)}), None)
+        repo.remote_add("Official", "https://repo.oscar-system.org/",                        GLib.Variant('a{sv}', {"gpg-verify": GLib.Variant('b', False)}), None)
     return repo
 
 
@@ -179,7 +178,12 @@ def make_remote_ref_list(repo, remote):
             print(f"Repo {repo} has no remote {remote}!")
             return []
     remote_refs = []
-    remote_refs.extend(list(repo.remote_list_refs(remote)[1].keys()))
+    try:
+        remote_refs.extend(list(repo.remote_list_refs(remote)[1].keys()))
+    except GLib.Error as e:
+        print(f"Error in make_remote_ref_list: {e.message}. Could not fetch remotes. "
+              "Reporting local refs only. ")
+        return []
     return remote_refs
 
 
@@ -218,7 +222,7 @@ def mode_remotes(repo, args):
 
 
 def mode_run(args):
-    """Function to execute a published environment"""
+    """Function to execute a deployed environment"""
     # check if the path exists
     DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{args.RUN}"
     if VERBOSE:
