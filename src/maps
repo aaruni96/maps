@@ -11,6 +11,10 @@ import argparse
 import concurrent.futures
 import tomli
 import gi
+from math import log10, floor
+from progress.bar import Bar
+from tusclient import client
+from tusclient.storage import filestorage
 gi.require_version("OSTree", "1.0")
 from gi.repository import OSTree, GLib
 
@@ -26,6 +30,7 @@ HOME = os.getenv('HOME')
 KEEP_FREE_SPACE = 3
 VERBOSE = False
 OG_SIGINT_HANLDER = signal.getsignal(signal.SIGINT)
+TUSTARGET = "http://192.168.122.245:8080"
 
 
 # Define a CLI
@@ -96,7 +101,7 @@ def addCLI():
 
 
 def sanity_checks(parsers):
-    """Some simply sanity checks, before the program proceeds"""
+    """Some simple sanity checks, before the program proceeds"""
     if len(sys.argv) == 1:
         parsers[0].print_help()
         sys.exit(1)
@@ -619,6 +624,100 @@ def mode_runtime(repo, args):
         mode_deploy(repo, args)
     elif args.UPDATE:
         mode_update(repo, args)
+
+
+def byteSI(inbytes):
+    """
+    Given bytes, turn it into K/M/G bytes. Only kind of accurate.
+    """
+    scale = {0:'', 1:'K', 2:'M', 3:'G'}
+    exp = log10(inbytes)
+    exp = int(exp/3)
+    suf = scale[exp]
+    rem = inbytes/(1024**exp)
+    return f"{rem:.2f} {suf}"
+
+
+def tus_upload(filename, storage_file):
+    """
+    tus upload subroutine
+    """
+    filesize = os.path.getsize(filename)
+    chunksize = 1024*256 #chunksize in bytes
+    my_client = client.TusClient(f'{TUSTARGET}/files/')
+    storage = filestorage.FileStorage(storage_file)
+    uploader = my_client.uploader(filename, store_url=True,
+                                  url_storage=storage, chunk_size=chunksize)
+
+    print(f"Uploading {filename}")
+    if not uploader.url:
+        print("Created URL")
+        uploader.upload_chunk()
+        uploader.create_url()
+
+    offset = uploader.get_offset()
+    uploader.offset = offset
+
+    if VERBOSE:
+        print(f"Current offset is {offset}")
+        print(f"Total file size is {filesize}")
+        print("=================")
+
+    bar = Bar("Uploading", max=floor(filesize/chunksize))
+    bar.suffix = '%(percent).1d%%'
+    bar.index=int(offset/chunksize)
+    bar.start()
+    bar.update()
+    acc=0
+    while offset < filesize:
+        told = time()
+        uploader.upload_chunk()
+        tnew = time()
+        rate = chunksize/(tnew-told)
+        if(acc==0):
+            bar.suffix = f'%(percent).1d%% | %(eta)ds remaining | {byteSI(rate)}B/s'
+        acc = acc+1
+        if acc==1000:
+            bar.suffix = f'%(percent).1d%% | %(eta)ds remaining | {byteSI(rate)}B/s'
+            acc=1
+        offset = uploader.offset
+        bar.next()
+    bar.finish()
+
+    return 0
+
+
+def upload(repo, runtime):
+    """
+    Given a local runtime, tar it and upload it. (Try)
+    """
+    runtimes = list(repo.list_refs()[1].keys())
+    if VERBOSE:
+        print("Available local runtimes are:")
+        for i in runtimes:
+            print(i)
+    if not runtime in runtimes:
+        print("We only allow publishing locally made runtimes!")
+        exit(1)
+    
+    DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps"
+    RUNTIMEDIR = f"{DATADIR/{runtime}}"
+    TARPATH = f"{DATADIR}/{runtime}.tar.gz"
+    STORAGEFILE = f"{DATADIR}/tustorage"
+
+    if VERBOSE:
+        print("Making tarball...")
+        opts = "-cvzf"
+    else:
+        opts = "-czf"
+
+    subprocess.run(f"tar {opts} {TARPATH} {RUNTIMEDIR}".split(), check=True)
+
+    if tus_upload(TARPATH, STORAGEFILE) != 0:
+        print("something very bad happened")
+        return -1
+
+    return 0
 
 
 # Main function
