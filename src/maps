@@ -36,7 +36,7 @@ HOME = os.getenv('HOME')
 KEEP_FREE_SPACE = 3
 VERBOSE = False
 OG_SIGINT_HANLDER = signal.getsignal(signal.SIGINT)
-TUSTARGET = "http://192.168.122.245:8080"
+TUSTARGET = "http://192.168.122.60:8080"
 AUTH = os.getenv("MTDAUTH")
 
 
@@ -103,6 +103,7 @@ def addCLI():
     parser_pack.add_argument('-v', '--verbose', dest='VERBOSE', action='store_true',
                              help="enable verbose output")
     parser_pack.add_argument('--repo', dest='REPO', help="Repository to use")
+    parser_pack.add_argument('-u', '--upload', dest='UPLOAD', action='store', default=False)
 
     return parser, parser_runtime, parser_remote, parser_pack
 
@@ -564,6 +565,9 @@ def mode_package(repo, args):
             print("Currently available refs: ")
             print(list(refs.keys()))
 
+    if args.UPLOAD:
+        upload(repo, args.UPLOAD)
+
 
 def commit(zarglist):
     """
@@ -712,7 +716,7 @@ def upload(repo, runtime):
         raise AssertionError("We only allow publishing locally made runtimes!")
 
     DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps"
-    RUNTIMEDIR = f"{DATADIR/{runtime}}"
+    RUNTIMEDIR = f"{DATADIR}/{runtime}"
     TARPATH = f"{DATADIR}/{runtime}.tar.gz"
     STORAGEFILE = f"{DATADIR}/tustorage"
 
