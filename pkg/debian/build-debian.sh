@@ -11,7 +11,8 @@ tar -czf /tmp/maps.tar.gz $OWD
 
 #go to tempdir
 
-cd $(mktemp -d)
+mkdir -p /tmp/maps-build-temp
+cd /tmp/maps-build-temp
 mv /tmp/maps.tar.gz ./
 
 # unpack
