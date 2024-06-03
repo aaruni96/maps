@@ -20,5 +20,5 @@ jobs:
       - name: Upload new deb
         uses: actions/upload-artifact@v4
         with:
-          - path: "../maps*.deb"
+          path: "../maps*.deb"
 
