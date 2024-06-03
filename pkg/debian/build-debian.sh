@@ -1,7 +1,18 @@
 #!/bin/bash
 # step 1: grab the thingy
 
-wget 'https://github.com/aaruni96/maps/archive/refs/tags/v0.1.tar.gz' -O maps.tar.gz
+#wget 'https://github.com/aaruni96/maps/archive/refs/tags/v0.1.tar.gz' -O maps.tar.gz
+
+#Tar the thingy
+
+OWD=$(pwd)
+cd ..
+tar -czf /tmp/maps.tar.gz $OWD
+
+#go to tempdir
+
+cd $(mktemp -d)
+mv /tmp/maps.tar.gz ./
 
 # unpack
 
@@ -9,12 +20,12 @@ tar -xf maps.tar.gz
 
 # grab version
 
-VERSION=$(cat maps-0.1/Readme.md | grep -i 'version' | head -n 1 | sed 's/^.*version-//' | sed 's/-.*//')
+VERSION=$(cat maps/Readme.md | grep -i 'version' | head -n 1 | sed 's/^.*version-//' | sed 's/-.*//')
 
 #rename
 
 mv -v maps.tar.gz "maps_${VERSION}.orig.tar.gz"
-mv -v maps-0.1 "maps_${VERSION}"
+mv -v "maps" "maps_${VERSION}"
 
 # setup the debian specific dirs
 
@@ -34,7 +45,7 @@ echo "maps (0.1-2) UNRELEASED; urgency=medium
 
 # add control
 
- echo 'Source: maps
+echo 'Source: maps
 Maintainer: Aaruni Kaushik <akaushik@mathematik.uni-kl.de>
 Section: misc
 Priority: optional
@@ -76,9 +87,9 @@ License: GPL-3.0
  On Debian systems, the complete text of the GNU General
  Public License can be found in `/usr/share/common-licenses/GPL-3.`' > "debian/copyright"
 
- # debian.dirs
+# debian.dirs
 
- echo "usr/bin
+echo "usr/bin
 usr/share/bash-completion/completions" > "debian/maps.dirs"
 
 # debian rules
@@ -93,16 +104,3 @@ override_dh_auto_install:
 # try building, see what happens
 
 debuild -us -uc
-
-mkdir -pv apt-repo/pool/main
-mkdir -pv apt-repo/dists/stable/main/binary-amd64
-cp -v maps*.deb apt-repo/pool/main/
-
-cd apt-repo
-dpkg-scanpackages --arch amd64 pool/ > dists/stable/main/binary-amd64/Packages
-cat dists/stable/main/binary-amd64/Packages | gzip -9 > dists/stable/main/binary-amd64/Packages.gz
-
-cd dists/stable
-. ../../../make-release.sh > Release
-
-#then, just have to sign Release with valid GPG keys

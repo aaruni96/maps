@@ -2,16 +2,23 @@ name: Make a .deb package
 
 on: 
   push:
-    branches:
-      - master
+    #branches: ## need this for testing, uncomment later.
+    #  - master
 
 jobs:
   pkg-deb:
     runs-on: ubuntu-latest
     name: Deb Package
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+      - name: Install devscripts
+        run: apt update; apt install devscripts
       - name: Run debian pkg script
         run: |
           git fetch --all
-          bash pkg/debian/build-debian.sh $(git tag --sort "-committerdate" | cut -d$'\n' -f1) $(git tag --sort "-committerdate" | cut -d$'\n' -f2)
+          bash pkg/debian/build-debian.sh
+      - name: Upload new deb
+        uses: actions/upload-artifact@v4
+        with:
+          - path: "../maps*.deb"
+
