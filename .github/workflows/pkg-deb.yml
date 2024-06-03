@@ -12,7 +12,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install devscripts
-        run: apt update; apt install devscripts
+        run: sudo apt update; sudo apt install devscripts
       - name: Run debian pkg script
         run: |
           git fetch --all
