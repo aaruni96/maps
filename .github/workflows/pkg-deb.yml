@@ -13,8 +13,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install devscripts
         run: |
-        sudo apt update
-         sudo apt install devscripts libcairo2-dev git gcc python3 python3-dev libgirepository1.0-dev libostree-dev fuse-overlayfs python3-venv libcap-dev autoconf python3-gi python3-tomli
+          sudo apt update
+          sudo apt install devscripts libcairo2-dev git gcc python3 python3-dev libgirepository1.0-dev libostree-dev fuse-overlayfs python3-venv libcap-dev autoconf python3-gi python3-tomli
       - name: Run debian pkg script
         run: |
           git fetch --all
