@@ -5,7 +5,7 @@
 
 #Tar the thingy
 
-OWD=$(pwd)
+OWD=$(pwd | sed "s/^.*\///") 
 cd ..
 tar -czf /tmp/maps.tar.gz $OWD
 
