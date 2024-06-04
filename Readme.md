@@ -63,7 +63,7 @@ maps package --commit /path/to/new/tree me.myname.myapplication/sysarch/version
 All code must conform to these settings of pylint and flake8 (enforced by CI):
 
 ```bash
-pylint -d C0413,C0103,R0912,R0915,W0603 src/maps.py
-flake8 --max-line-length 100 --ignore=E402 src/maps.py
+pylint -d C0413,C0103,R0912,R0915,W0603 src/maps
+flake8 --max-line-length 100 --ignore=E402 src/maps
 ```
 
