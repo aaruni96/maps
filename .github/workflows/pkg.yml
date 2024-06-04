@@ -20,5 +20,6 @@ jobs:
       - name: Run RPM script
         run: bash pkg/rpm/build-rpm.sh
       - name: Upload new rpm
+        uses: actions/upload-artifact@v4
         with:
           path: "/$HOME/rpmbuild/RPMS/noarch/maps*.rpm"
