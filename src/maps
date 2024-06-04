@@ -369,11 +369,12 @@ def mode_update(repo, args, remote="Official"):
         print(f"Local refhash = {repo.list_refs()[1][f'{remote}:{args.UPDATE}']}")
         print(f"Remote refhash = {repo.remote_list_refs(remote)[1][args.UPDATE]}")
     if same:
-        print(f"{args.UPDATE} is already up to date!")
-        return 2
+        print(f"{args.UPDATE} is already up to date, refreshing!")
+        #return 2
+    else:
+        # download the update
+        download(args, repo, remote, args.UPDATE)
 
-    # do the update
-    download(args, repo, remote, args.UPDATE)
     DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{args.UPDATE}"
 
     # clean out the data dir
@@ -384,9 +385,6 @@ def mode_update(repo, args, remote="Official"):
         opts1 = "-rf"
         opts2 = "-p"
     subprocess.run(f"rm {opts1} {DATADIR}/rofs".split(), check=True)
-
-    # make the data dir again
-    subprocess.run(f"mkdir {opts2} {DATADIR}/rofs".split(), check=True)
 
     # checkout branch to tree
     refhash = repo.remote_list_refs(remote)[1][args.UPDATE]
