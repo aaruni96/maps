@@ -12,7 +12,8 @@ jobs:
         run: echo "${{github.ref_name}}"
   pkg-repm:
     name: RPM Package
-    container: fedora-latest
+    runs-on: ubuntu-latest
+    container: fedora:latest
     steps:
       - uses: actions/checkout@v4
       - name: Install devscripts
