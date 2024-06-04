@@ -370,7 +370,6 @@ def mode_update(repo, args, remote="Official"):
         print(f"Remote refhash = {repo.remote_list_refs(remote)[1][args.UPDATE]}")
     if same:
         print(f"{args.UPDATE} is already up to date, refreshing!")
-        #return 2
     else:
         # download the update
         download(args, repo, remote, args.UPDATE)
@@ -380,10 +379,8 @@ def mode_update(repo, args, remote="Official"):
     # clean out the data dir
     if VERBOSE:
         opts1 = "-rvf"
-        opts2 = "-pv"
     else:
         opts1 = "-rf"
-        opts2 = "-p"
     subprocess.run(f"rm {opts1} {DATADIR}/rofs".split(), check=True)
 
     # checkout branch to tree
