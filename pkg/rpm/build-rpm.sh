@@ -2,6 +2,8 @@
 
 set -e
 
+MAPSDIR=$(pwd)
+
 echo "Setting up rpmbuild dir"
 rpmdev-setuptree
 
@@ -9,8 +11,7 @@ echo "cd to rpmbuild"
 cd "$HOME/rpmbuild"
 ls
 
-echo "cloning maps"
-git clone "https://github.com/aaruni96/maps"
+mv -v $MAPSDIR ./
 ls 
 
 VERSION=$(cat maps/Readme.md | grep -i 'version' | head -n 1 | sed 's/^.*version-//' | sed 's/-.*//').0.1
