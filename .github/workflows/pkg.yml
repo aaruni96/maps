@@ -17,7 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install devscripts
-        run: sudo dbf install -y rpmdevtools rpmlint
+        run: sudo dnf install -y rpmdevtools rpmlint
       - name: Run RPM script
         run: bash pkg/rpm/build-rpm.sh
       - name: Upload new rpm
