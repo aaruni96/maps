@@ -38,4 +38,6 @@ ls "maps-$VERSION/pkg"
 ls "maps-$VERSION/pkg/rpm"
 cp -v maps-$VERSION/pkg/rpm/maps.spec SPECS/maps.spec
 
-rpmbuild -bb ~/rpmbuild/SPECS/maps.spec
+rpmbuild -bb SPECS/maps.spec
+
+cp -v RPMS/noarch/maps*.rpm /tmp
