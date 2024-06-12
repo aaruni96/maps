@@ -1,6 +1,6 @@
 name: Run the Release
 
-permission:
+permissions:
   contents: write
 
 on:
