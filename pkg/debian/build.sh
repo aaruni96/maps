@@ -1,19 +1,10 @@
 #!/bin/bash
+
 # step 1: grab the thingy
 
-#wget 'https://github.com/aaruni96/maps/archive/refs/tags/v0.1.tar.gz' -O maps.tar.gz
+echo "Grabbing package"
 
-#Tar the thingy
-
-OWD=$(pwd | sed "s/^.*\///") 
-cd ..
-tar -czf /tmp/maps.tar.gz $OWD
-
-#go to tempdir
-
-mkdir -p /tmp/maps-build-temp
-cd /tmp/maps-build-temp
-mv /tmp/maps.tar.gz ./
+wget "https://github.com/aaruni96/maps/archive/refs/tags/$1.tar.gz" -O maps.tar.gz
 
 # unpack
 
@@ -21,12 +12,14 @@ tar -xf maps.tar.gz
 
 # grab version
 
-VERSION=$(cat maps/Readme.md | grep -i 'version' | head -n 1 | sed 's/^.*version-//' | sed 's/-.*//')
+VERSION=$(cat maps*/Readme.md | grep -i 'version' | head -n 1 | sed 's/^.*version-//' | sed 's/-.*//')
+
+echo "Maps version ${VERSION}"
 
 #rename
 
 mv -v maps.tar.gz "maps_${VERSION}.orig.tar.gz"
-mv -v "maps" "maps_${VERSION}"
+mv -v "maps-${VERSION}" "maps_${VERSION}"
 
 # setup the debian specific dirs
 
@@ -36,17 +29,15 @@ cd "maps_${VERSION}" && mkdir -pv "debian/source"
 
 echo "3.0 (quilt)" > "debian/source/format"
 
-echo "maps (0.1-2) UNRELEASED; urgency=medium
+echo "maps (0.1-2) UNRELEASED; urgency=medium" > "debian/changelog"
 
-  * Update to v0.1
+git log --oneline --pretty="* %s" $2..$1 >> "debian/changelog"
 
-  * Initial release.
+echo " -- Aaruni Kaushik  <akaushik@mathematik.uni-kl.de>  $(date +'%a, %d %b %Y %H:%M:%S %z')" >> "debian/changelog"
 
- -- Aaruni Kaushik  <akaushik@mathematik.uni-kl.de>  $(date +'%a, %d %b %Y %H:%M:%S %z')" > "debian/changelog"
+ # add control
 
-# add control
-
-echo 'Source: maps
+ echo 'Source: maps
 Maintainer: Aaruni Kaushik <akaushik@mathematik.uni-kl.de>
 Section: misc
 Priority: optional
@@ -88,9 +79,9 @@ License: GPL-3.0
  On Debian systems, the complete text of the GNU General
  Public License can be found in `/usr/share/common-licenses/GPL-3.`' > "debian/copyright"
 
-# debian.dirs
+ # debian.dirs
 
-echo "usr/bin
+ echo "usr/bin
 usr/share/bash-completion/completions" > "debian/maps.dirs"
 
 # debian rules
@@ -104,4 +95,18 @@ override_dh_auto_install:
 
 # try building, see what happens
 
+echo "Building now...!"
+
+sleep 2
+
 debuild -us -uc
+
+echo "Making artifact directory"
+
+cd ..
+
+mkdir -pv artifact
+
+echo "Copying deb package to artifacts!"
+
+cp -v maps*.deb artifact/
