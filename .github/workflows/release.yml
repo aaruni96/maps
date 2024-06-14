@@ -15,8 +15,6 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-        with:
-          path: "REPO"
       - name:  Install DEB deps
         run: |
           sudo apt update
