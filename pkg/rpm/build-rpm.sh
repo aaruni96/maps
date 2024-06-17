@@ -11,7 +11,7 @@ echo "cd to rpmbuild"
 cd "$HOME/rpmbuild"
 ls
 
-mv -v $MAPSDIR ./
+cp -v $MAPSDIR ./
 ls 
 
 VERSION=$(cat maps/Readme.md | grep -i 'version' | head -n 1 | sed 's/^.*version-//' | sed 's/-.*//').0.1
