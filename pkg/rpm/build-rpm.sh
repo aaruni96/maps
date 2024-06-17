@@ -40,5 +40,5 @@ cp -v maps-$VERSION/pkg/rpm/maps.spec SPECS/maps.spec
 
 rpmbuild -bb SPECS/maps.spec
 
-mkdir -pv /tpm/RELEASE/
+mkdir -pv /tmp/RELEASE/
 cp -v RPMS/noarch/maps*.rpm /tmp/RELEASE/
