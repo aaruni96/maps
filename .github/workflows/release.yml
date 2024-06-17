@@ -15,6 +15,10 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+      - name: Arch PKGBUILD
+        run: |
+          mkdir -pv /tmp/RELEASE
+          cp -v pkg/arch/PKGBUILD /tmp/RELEASE/
       - name:  Install DEB deps
         run: |
           sudo apt update
