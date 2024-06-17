@@ -5,7 +5,7 @@ set -e
 MAPSDIR=$(pwd)
 
 echo "Setting up rpmbuild dir"
-rpmdev-setuptree
+mkdir -pv $HOME/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
 
 echo "cd to rpmbuild"
 cd "$HOME/rpmbuild"
