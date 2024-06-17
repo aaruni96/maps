@@ -1,0 +1,48 @@
+name: Run the Release
+
+permissions:
+  contents: write
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  Create_Packages:
+    name: "Create Packages"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Arch PKGBUILD
+        run: |
+          mkdir -pv /tmp/RELEASE
+          cp -v pkg/arch/PKGBUILD /tmp/RELEASE/
+      - name:  Install DEB deps
+        run: |
+          sudo apt update
+          sudo apt install devscripts libcairo2-dev git gcc python3 python3-dev libgirepository1.0-dev libostree-dev fuse-overlayfs python3-venv libcap-dev autoconf python3-gi python3-tomli debhelper-compat
+      - name: Run DEB pkg script
+        run: |
+          pwd
+          ls
+          ls pkg
+          ls pkg/debian
+          bash pkg/debian/build-debian.sh
+          mkdir -pv /tmp/RELEASE
+          mv -v /tmp/maps-build-temp/maps*.deb /tmp/RELEASE/
+      - name: Install RPM deps
+        run: |
+          sudo apt install rpm
+      - name: Run RPM pkg script
+        run: |
+          pwd
+          ls
+          ls pkg
+          ls pkg/rpm
+          bash pkg/rpm/build-rpm.sh
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: /tmp/RELEASE/*
