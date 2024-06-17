@@ -28,6 +28,16 @@ jobs:
           bash pkg/debian/build-debian.sh
           mkdir -pv /tmp/RELEASE
           mv -v /tmp/maps-build-temp/maps*.deb /tmp/RELEASE/
+      - name: Install RPM deps
+        run: |
+          sudo apt install rpm
+      - name: Run RPM pkg script
+        run: |
+          pwd
+          ls
+          ls pkg
+          ls pkg/rpm
+          bash pkg/rpm/build-rpm.sh
       - name: Release
         uses: softprops/action-gh-release@v1
         with:
