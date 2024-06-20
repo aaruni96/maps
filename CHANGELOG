@@ -1,0 +1,44 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project tries to adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+## [Unreleased]
+
+### Added
+ - Add changelog!
+ - Add option to update runtime
+ - Add CI scripts to build release packages
+
+### Changed
+ - Build bubblewrap using meson/ninja
+ - Suppress mkdir error except in Verbose
+ - Suppress bubblewrap compilation except in Verbose
+ - Handle edge case of live already being mounted
+ - Use `umount` instead of `fusermount` to unmount live
+
+### Changed
+
+## [0.1] - 2024-02-12
+
+### New
+ - BASH Completion script
+ - Add License
+ - Preliminary work for building deb packages
+ - Spinner to indicate download activity
+
+### Changed
+ - UI rewrite
+ - Fix --version flag
+ - Nicer location for bubblewrap
+ - Renamed script to maps from maps.py
+ - Uninstalling runtimes now frees up disk space
+ - Change invocation of bubblewrap to keep up with changes in bubblewrap
+
+
+## [0.1-alpha] - 2023-11-22
+
+### Added
+ - Initial release!
