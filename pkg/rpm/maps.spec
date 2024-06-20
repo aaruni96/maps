@@ -32,3 +32,12 @@ cp src/completion.bash $RPM_BUILD_ROOT/%{_datadir}/bash-completion/completions/%
 
 
 %changelog
+
+* WHEN? Aaruni Kaushik <akaushik@mathematik.uni-kl.de> 0.2.0.1
+- Update to version 0.2
+
+* Mon Feb 12 2024 Aaruni Kaushk <akaushik@mathematik.uni-kl.de> 0.1.0.2
+- Update to version 0.1
+
+* Wed Nov 22 2023 Aaruni Kaushik <akaushik@mathematik.uni-kl.de> 0.1.0.1
+- Initial alpha release
