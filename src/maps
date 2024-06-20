@@ -220,7 +220,7 @@ def mode_run(args):
         print(f"Attempting to run {DATADIR}...")
     if not os.path.isdir(DATADIR):
         raise AssertionError(f"Data directory does not exist. Is {args.RUN} installed ?")
-    
+
     # check if live is already mounted
     # this can happen as an unclean exit from a previous attempt or any other random error
     # we need to check for this, otherwise trying to mount fails
@@ -240,10 +240,8 @@ def mode_run(args):
         print("Please verify that no other session is currently using this runtime, then execute "
               f"the following command and try again and try again!\n\n\tumount {DATADIR}/live\n")
         raise AssertionError("live directory must be unmounted!")
-    else:
-        if VERBOSE:
-            print("live is not a mountpoint. Continuing normally...")
-
+    if VERBOSE:
+        print("live is not a mountpoint. Continuing normally...")
 
     # setup live directory
     if VERBOSE:
@@ -291,7 +289,7 @@ def mode_run(args):
     # can this fail? how do we handle that scenario?
     if VERBOSE:
         print("Cleaning up overlay structure...")
-    subprocess.run(["fusermount", "-u", f"{DATADIR}/live"], check=False)
+    subprocess.run(["umount", f"{DATADIR}/live"], check=False)
     # stop ignoring SIGINT
     signal.signal(signal.SIGINT, OG_SIGINT_HANLDER)
 
