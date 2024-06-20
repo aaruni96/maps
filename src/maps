@@ -15,7 +15,7 @@ gi.require_version("OSTree", "1.0")
 from gi.repository import OSTree, GLib
 
 VERSION = '0.1'
-BWRAP_DEFAULT = f"{os.getenv('HOME')}/.var/org.mardi.maps/deps/bubblewrap/bwrap"
+BWRAP_DEFAULT = f"{os.getenv('HOME')}/.var/org.mardi.maps/deps/bubblewrap/_builddir/bwrap"
 if os.getenv('BWRAP_CMD') is not None:
     BWRAP = str(os.getenv('BWRAP_CMD'))
 else:
@@ -114,25 +114,36 @@ def sanity_checks(parsers):
 
 def program_init(repopath):
     """Init function verifies requirements, sets up the repo. Returns the OSTree Repo."""
+    if VERBOSE:
+        print("Ensuring bubblewrap exists...")
     # step 1 : check bwrap, and overlayfs-fuse are installed
     if (BWRAP == BWRAP_DEFAULT) and not os.path.isfile(BWRAP):
+        print("Bubblewrap was not found, and is being automatically installed....")
         # clone and compile bubblewrap
+        opt1 = "-q"
+        opt2 = "1>/dev/null"
         if VERBOSE:
             print("Cloning bubblewrap...")
-        subprocess.run(["git", "clone", "https://github.com/aaruni96/bubblewrap.git", BWRAP[0:-5]],
-                       check=False)
-        subprocess.run(f"cd {BWRAP[0:-5]} && git checkout ak/sigint", shell=True, check=False)
+            opt1 = ""
+            opt2 = ""
+        subprocess.run(f"git clone {opt1} https://github.com/aaruni96/bubblewrap.git "
+                       "{BWRAP[0:-15]}", shell=True, check=False)
+        subprocess.run(f"cd {BWRAP[0:-15]} && git checkout {opt1} ak/sigint", shell=True,
+                       check=True)
         if VERBOSE:
             print("Compiling bubblewrap...")
-        rstatus = subprocess.run(f"cd {BWRAP[0:-5]} && ./autogen.sh && ./configure && make -j",
-                                 shell=True, check=False)
-        if rstatus.returncode != 0:
-            subprocess.run(f"cd {BWRAP[0:-5]} && make -j", shell=True, check=False)
+        subprocess.run(f"cd {BWRAP[0:-15]} && meson _builddir {opt2} "
+                       f"&& meson compile -C _builddir {opt2}", shell=True, check=False)
+        print("Bubblewrap installed!")
     assert os.path.isfile(BWRAP)
+    if VERBOSE:
+        print("Bubblewrap okay!")
     assert os.path.isfile(OVERLAYFS)
+    if VERBOSE:
+        print("Overlayfs okay!")
     # step 2 : create the directory
     if VERBOSE:
-        print("Ensuring repo directory exists...")
+        print("Ensuring ostree repo directory exists...")
         opts = "-pv"
     else:
         opts = "-p"
