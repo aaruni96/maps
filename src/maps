@@ -127,7 +127,7 @@ def program_init(repopath):
             opt1 = ""
             opt2 = ""
         subprocess.run(f"git clone {opt1} https://github.com/aaruni96/bubblewrap.git "
-                       "{BWRAP[0:-15]}", shell=True, check=False)
+                       f"{BWRAP[0:-15]}", shell=True, check=False)
         subprocess.run(f"cd {BWRAP[0:-15]} && git checkout {opt1} ak/sigint", shell=True,
                        check=True)
         if VERBOSE:
