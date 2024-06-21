@@ -1,5 +1,5 @@
 Name:           maps
-Version:        0.1.0.1
+Version:        0.2.0.1
 Release:        1%{?dist}
 Summary:        Mathematical Packaging System
 BuildArch:      noarch
@@ -8,7 +8,7 @@ License:        GPL3
 URL:            https://github.com/mardi4NFDI/maps
 Source0:        %{name}-%{version}.tar.gz
 
-Requires:       git cairo-devel gcc python3-devel gobject-introspection-devel ostree-devel fuse-overlayfs libcap-devel autoconf cairo-gobject-devel bash-completion python-tomli
+Requires:       git cairo-devel gcc python3-devel gobject-introspection-devel ostree-devel fuse-overlayfs libcap-devel autoconf cairo-gobject-devel bash-completion python-tomli meson
 
 %description
 MaPS helps mathematicians create and publish software runtimes, as well as deploy and run software inside published runtimes
@@ -33,7 +33,7 @@ cp src/completion.bash $RPM_BUILD_ROOT/%{_datadir}/bash-completion/completions/%
 
 %changelog
 
-* WHEN? Aaruni Kaushik <akaushik@mathematik.uni-kl.de> 0.2.0.1
+* Fru Jun 21 2024 Aaruni Kaushik <akaushik@mathematik.uni-kl.de> 0.2.0.1
 - Update to version 0.2
 
 * Mon Feb 12 2024 Aaruni Kaushk <akaushik@mathematik.uni-kl.de> 0.1.0.2
