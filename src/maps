@@ -348,13 +348,17 @@ def download(args, repo, remote, refname, cerror=0):
 def uninstall_runtime(repo, args):
     """Function to remove a runtime from both the local disk checkout, and the local repo"""
     # Check if runtime is checked out
-    FLAG1 = False
-    FLAG2 = False
-    DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{args.UNINSTALL}"
+    FLAG_DIREXISTS = False
+    FLAG_REFEXISTS = False
+    if ':' in args.UNINSTALL:
+        remote, uninstall = args.UNINSTALL.split(':')
+    else:
+        uninstall = args.UNINSTALL
+    DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{uninstall}"
     if VERBOSE:
-        print(f"Trying to remove {args.UNINSTALL}...")
+        print(f"Trying to remove {uninstall}...")
     if os.path.isdir(DATADIR):
-        FLAG1 = True
+        FLAG_DIREXISTS = True
         if VERBOSE:
             print("Deleting files...")
             opts = '-rvf'
@@ -363,21 +367,23 @@ def uninstall_runtime(repo, args):
         subprocess.run(f"rm {opts} {DATADIR}".split(), check=True)
 
     for runtime in repo.list_refs()[1].keys():
-        if args.UNINSTALL in runtime:
-            FLAG2 = True
+        if uninstall in runtime:
+            FLAG_REFEXISTS = True
             remote = None
             if ':' in runtime:
                 remote, runtime = runtime.split(':')
             if VERBOSE:
                 print("Marking branch for deletion from repo...")
             repo.set_ref_immediate(remote, runtime, None, None)
+            if VERBOSE:
+                print("Pruning repo...")
             repo.prune(OSTree.RepoPruneFlags(2), -1, None)
             break
 
-    if not (FLAG1 and FLAG2):
-        print(f"Error, {args.UNINSTALL} isn't deployed and thus cannot be uninstalled!")
+    if not (FLAG_DIREXISTS and FLAG_REFEXISTS):
+        print(f"Error, {uninstall} isn't deployed and thus cannot be uninstalled!")
     else:
-        print(f"Uninstalled {args.UNINSTALL} !")
+        print(f"Uninstalled {uninstall} !")
 
     sys.exit()
 
