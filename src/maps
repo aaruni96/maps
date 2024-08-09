@@ -449,36 +449,40 @@ def mode_deploy(repo, args):
     else:
         print("Error: runtime not found! Use list mode --list to view available runtimes.")
         sys.exit(1)
+
     DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{args.DEPLOY}"
     PDATADIR = '/'.join(DATADIR.split('/')[0:-1])
-    if VERBOSE:
-        print("Setting up direcotires...")
-        opts1 = '-pv'
-        opts2 = '-v'
-        opts3 = ''
-    else:
-        opts1 = '-p'
-        opts2 = ''
-        opts3 = '2>/dev/null'
-    subprocess.run(f"mkdir {opts1} {PDATADIR}".split(), check=True)
-    ret = subprocess.run(f"mkdir {opts2} {DATADIR} {opts3}", shell=True, check=False)
-    subprocess.run(f"mkdir {opts1} {DATADIR}/rwfs".split(), check=True)
-    subprocess.run(f"mkdir {opts1} {DATADIR}/tmpfs".split(), check=True)
-    subprocess.run(f"mkdir {opts1} {DATADIR}/live".split(), check=True)
-    if ret.returncode != 0:
+
+    # check if update
+    if os.path.exists(DATADIR):
         print("Directory already exists, trying to update...")
         ret = mode_update(repo, args)
         if ret == 1:
             raise AssertionError("Error: Unknown error!")
-        if ret == 2:
-            print(f"{args.DEPLOY} already installed and up to date.... nothing to do!")
         return
+
     # download
     for remote in repo.remote_list():
         if args.DEPLOY in repo.remote_list_refs(remote)[1]:
             refhash = repo.remote_list_refs(remote)[1][args.DEPLOY]
+            if VERBOSE:
+                print(f"Downloading {refhash}...")
             download(args, repo, remote, args.DEPLOY)
             break
+
+    # setup directories
+    if VERBOSE:
+        print("Setting up direcotires...")
+        opts1 = '-pv'
+    else:
+        opts1 = '-p'
+    subprocess.run(f"mkdir {opts1} {PDATADIR}".split(), check=True)
+    subprocess.run(f"mkdir {opts1} {DATADIR}", shell=True, check=True)
+    subprocess.run(f"mkdir {opts1} {DATADIR}/rwfs".split(), check=True)
+    subprocess.run(f"mkdir {opts1} {DATADIR}/tmpfs".split(), check=True)
+    subprocess.run(f"mkdir {opts1} {DATADIR}/live".split(), check=True)
+
+    # checkout from local repo
     tfd = os.open(DATADIR, os.O_RDONLY)
     osopts = blank_options()
     osopts.bareuseronly_dirs = True

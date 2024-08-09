@@ -11,6 +11,7 @@ and this project tries to adhere to [Semantic Versioning](https://semver.org/spe
 
 ### Changed
  - Improved logic for uninstall
+ - Bugfix: interruptible downloads
 
 ### Removed
 
