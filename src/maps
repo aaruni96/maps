@@ -96,7 +96,8 @@ def addCLI():
     return parser, parser_runtime, parser_remote, parser_pack
 
 
-def sanity_checks(parsers):
+def sanity_checks(parsers: tuple[argparse.ArgumentParser, argparse.ArgumentParser,
+                                 argparse.ArgumentParser, argparse.ArgumentParser]):
     """Some simply sanity checks, before the program proceeds"""
     if len(sys.argv) == 1:
         parsers[0].print_help()
@@ -112,7 +113,7 @@ def sanity_checks(parsers):
         sys.exit(1)
 
 
-def program_init(repopath):
+def program_init(repopath: str):
     """Init function verifies requirements, sets up the repo. Returns the OSTree Repo."""
     if VERBOSE:
         print("Ensuring bubblewrap exists...")
@@ -173,7 +174,7 @@ def program_init(repopath):
     return repo
 
 
-def make_remote_ref_list(repo, remote):
+def make_remote_ref_list(repo: OSTree.Repo, remote: str):
     """Given a repo and a remote, return a list of refs in the remote of that repo"""
     if remote is None:
         return []
@@ -189,7 +190,7 @@ def make_remote_ref_list(repo, remote):
     return remote_refs
 
 
-def mode_list(repo):
+def mode_list(repo: OSTree.Repo):
     """Prints a list of available refs"""
     print("Available runtimes are :")
     refs = list(repo.list_refs()[1].keys())
@@ -206,7 +207,7 @@ def mode_list(repo):
                 print(f"\t - {ref}")
 
 
-def mode_remotes(repo, args):
+def mode_remotes(repo: OSTree.Repo, args):  # todo: type for args?
     """Administrative mode for remotes of the repo"""
     if args.LIST is not False:
         for remote in repo.remote_list():
@@ -223,7 +224,7 @@ def mode_remotes(repo, args):
         return
 
 
-def mode_run(args):
+def mode_run(args):  # todo: type for args?
     """Function to execute a published environment"""
     # check if the path exists
     DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{args.RUN}"
@@ -305,7 +306,7 @@ def mode_run(args):
     signal.signal(signal.SIGINT, OG_SIGINT_HANLDER)
 
 
-def zipped_pull(zarglist):
+def zipped_pull(zarglist: list):
     """Simple wrapper function to repo.pull()"""
     repo = zarglist[0]
     remote = zarglist[1]
@@ -317,7 +318,7 @@ def zipped_pull(zarglist):
     repo.pull_with_options(remote, options, progress, None)
 
 
-def download(args, repo, remote, refname, cerror=0):
+def download(args, repo: OSTree.Repo, remote: str, refname: str, cerror: int = 0):
     """Function to download a repo from remote"""
     with concurrent.futures.ThreadPoolExecutor() as executor:
         progress = OSTree.AsyncProgress.new()
@@ -345,7 +346,7 @@ def download(args, repo, remote, refname, cerror=0):
 
 
 # Uninstall
-def uninstall_runtime(repo, args):
+def uninstall_runtime(repo: OSTree.repo, args):  # todo: type for args?
     """Function to remove a runtime from both the local disk checkout, and the local repo"""
     # Check if runtime is checked out
     FLAG_DIREXISTS = False
@@ -389,7 +390,7 @@ def uninstall_runtime(repo, args):
 
 
 # Update
-def mode_update(repo, args, remote="Official"):
+def mode_update(repo: OSTree.Repo, args, remote: str = "Official"):  # todo: type for args?
     """Function to update a runtime identifier to its recent version (if any)"""
     if not args.UPDATE:
         args.UPDATE = args.DEPLOY
@@ -438,7 +439,7 @@ def mode_update(repo, args, remote="Official"):
 
 
 # Deploy Mode
-def mode_deploy(repo, args):
+def mode_deploy(repo: OSTree.Repo, args):  # todo: type for args?
     """Function to deploy from repo to local disk"""
 
     if args.DEPLOY in [j for remotes in repo.remote_list()
@@ -520,7 +521,7 @@ def blank_options():
 
 
 # Package Mode
-def mode_package(repo, args):
+def mode_package(repo: OSTree.Repo, args):  # todo: type for args?
     """Function for package mode. Not intended to be used by "end users" """
     if args.DIR is not None:
         refhash = ''
@@ -589,7 +590,7 @@ def mode_package(repo, args):
             print(list(refs.keys()))
 
 
-def commit(zarglist):
+def commit(zarglist: list):
     """
     Function commits a tree to a repo in branch asynchronously,
     so spinner can be animated in the main thread to show activity.
@@ -618,7 +619,7 @@ def commit(zarglist):
     repo.commit_transaction(None)
 
 
-def reset(runtime):
+def reset(runtime: str):
     """
     Function resets a runtime, simply by deleting the contents of the "rwfs" dir.
     """
@@ -633,7 +634,7 @@ def reset(runtime):
 
 
 # runtime mode: the default path for execution
-def mode_runtime(repo, args):
+def mode_runtime(repo: OSTree.Repo, args):  # todo: type for args?
     """
     Runtime mode, the default path for execution, and the "end user" mode.
     """
