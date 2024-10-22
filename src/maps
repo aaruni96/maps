@@ -33,7 +33,7 @@ HOME = os.getenv('HOME')
 KEEP_FREE_SPACE = 3
 VERBOSE = False
 OG_SIGINT_HANLDER = signal.getsignal(signal.SIGINT)
-TUSTARGET = "http://192.168.122.60:8080"
+TUSTARGET = "http://0.0.0.0:8080"
 AUTH = os.getenv("MTDAUTH")
 
 
@@ -417,40 +417,12 @@ def mode_update(repo, args, remote="Official"):
     return 0
 
 
-# Deploy Mode
-def mode_deploy(repo, args):
-    """Function to deploy from repo to local disk"""
-
-    if args.DEPLOY in [j for remotes in repo.remote_list()
-                       for j in make_remote_ref_list(repo, remotes)]:
-        pass
-    elif args.DEPLOY in list(repo.list_refs()[1].keys()):
-        refhash = repo.list_refs()[1][args.DEPLOY]
-    else:
-        print("Error: runtime not found! Use list mode --list to view available runtimes.")
-        sys.exit(1)
-
-    DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{args.DEPLOY}"
+def checkout(repo, runtime):
+    DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{runtime}"
     PDATADIR = '/'.join(DATADIR.split('/')[0:-1])
-
-    # check if update
-    if os.path.exists(DATADIR):
-        print("Directory already exists, trying to update...")
-        ret = mode_update(repo, args)
-        if ret == 1:
-            raise AssertionError("Error: Unknown error!")
-        return
-
-    # download
     for remote in repo.remote_list():
-        if args.DEPLOY in repo.remote_list_refs(remote)[1]:
-            refhash = repo.remote_list_refs(remote)[1][args.DEPLOY]
-            if VERBOSE:
-                print(f"Downloading {refhash}...")
-            download(args, repo, remote, args.DEPLOY)
-            break
-
-    # setup directories
+        if runtime in repo.remote_list_refs(remote)[1]:
+            refhash = repo.remote_list_refs(remote)[1][runtime]
     if VERBOSE:
         print("Setting up direcotires...")
         opts1 = '-pv'
@@ -470,6 +442,45 @@ def mode_deploy(repo, args):
     if VERBOSE:
         print(f"Checking out tree from repo to {DATADIR}/rofs ...")
     repo.checkout_at(osopts, tfd, "rofs", refhash, None)
+
+
+# Deploy Mode
+def mode_deploy(repo, args):
+    """Function to deploy from repo to local disk"""
+
+    if args.DEPLOY in [j for remotes in repo.remote_list()
+                       for j in make_remote_ref_list(repo, remotes)]:
+        pass
+    elif args.DEPLOY in list(repo.list_refs()[1].keys()):
+        refhash = repo.list_refs()[1][args.DEPLOY]
+    else:
+        print("Error: runtime not found! Use list mode --list to view available runtimes.")
+        sys.exit(1)
+
+    DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{args.DEPLOY}"
+    PDATADIR = '/'.join(DATADIR.split('/')[0:-1])
+
+    # check if update
+    if os.path.exists(DATADIR):
+        print("Directory already exists, trying to update...")
+        if VERBOSE:
+            print(f"Data directory is {DATADIR}")
+        ret = mode_update(repo, args)
+        if ret == 1:
+            raise AssertionError("Error: Unknown error!")
+        return
+
+    # download
+    for remote in repo.remote_list():
+        if args.DEPLOY in repo.remote_list_refs(remote)[1]:
+            refhash = repo.remote_list_refs(remote)[1][args.DEPLOY]
+            if VERBOSE:
+                print(f"Downloading {refhash}...")
+            download(args, repo, remote, args.DEPLOY)
+            break
+
+    # setup directories
+    checkout(repo, args.DEPLOY)
     print(f"Success... {args.DEPLOY} is now ready to use!")
 
 
@@ -651,7 +662,7 @@ def byteSI(inbytes):
     return f"{rem:.2f} {suf}"
 
 
-def tus_upload(filename, storage_file):
+def tus_upload(filename, storage_file, runtime):
     """
     tus upload subroutine
     """
@@ -660,16 +671,21 @@ def tus_upload(filename, storage_file):
     headers = {'Authentication': f'Basic {AUTH}', 'Tus-Resumable': '1.0.0'}
     upclient = client.TusClient(f'{TUSTARGET}/files/', headers=headers)
     storage = filestorage.FileStorage(storage_file)
-    uploader = upclient.uploader(filename, store_url=True,
-                                 url_storage=storage, chunk_size=chunksize)
+    uploader = upclient.uploader(filename, store_url=True, url_storage=storage,
+                                 metadata={'runtime':runtime}, chunk_size=chunksize)
 
     # going to need some try-catch here instead of just crashing
     # if auth or network fails
     print(f"Uploading {filename}")
     if not uploader.url:
-        print("Created URL")
-        uploader.upload_chunk()
+        try:
+            uploader.upload_chunk()
+        except Exception as e:
+            print("Upload failed!")
+            print(f"Error {e.status_code}: {e.response_content.decode()}")
+            return False
         uploader.create_url()
+        print("Created URL")
 
     offset = uploader.get_offset()
     uploader.offset = offset
@@ -723,6 +739,10 @@ def upload(repo, runtime):
     TARPATH = f"{DATADIR}/{runtime}.tar.gz"
     STORAGEFILE = f"{DATADIR}/tustorage"
 
+    # if runtime is not checked out, do it
+    if not os.path.isdir(RUNTIMEDIR):
+        checkout(repo, runtime)
+
     if VERBOSE:
         print("Making tarball...")
         opts = "-cvzf"
@@ -731,7 +751,7 @@ def upload(repo, runtime):
 
     subprocess.run(f"tar {opts} {TARPATH} {RUNTIMEDIR}".split(), check=True)
 
-    if tus_upload(TARPATH, STORAGEFILE) != 0:
+    if tus_upload(TARPATH, STORAGEFILE, runtime) != 0:
         print("something very bad happened")
         return -1
 
