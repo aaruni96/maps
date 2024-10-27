@@ -725,6 +725,29 @@ def tus_upload(filename, storage_file, runtime):
     return 0
 
 
+def needs_tar(repo, runtime):
+    # TODO: add verbose output
+    refhash = repo.list_refs()[1][runtime]
+    DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps"
+    tarpath = f"{DATADIR}/{runtime}.tar.gz"
+    tardbpath = f"{DATADIR}/tardb.toml"
+    if not os.path.isfile(tarpath):
+        return True
+    tarhash = subprocess.check_output(["md5sum", tarpath]).decode().split()[0]
+    if not os.path.isfile(tardbpath):
+        # db didn't exist, clearly needs tar
+        # also needs creating db
+        with open(tardbpath, 'w', encoding="ascii") as tardbfile:
+            tardbfile.write(f'"{refhash}"="{tarhash}"\n')
+        return True
+    with open(tardbpath, 'rb') as tardbfile:
+        x = tomli.load(tardbfile)
+        if refhash in x.keys():
+            if x[refhash] == tarhash:
+                return False
+    return True
+
+
 def upload(repo, runtime):
     """
     Given a local runtime, tar it and upload it. (Try)
@@ -749,13 +772,15 @@ def upload(repo, runtime):
     if not os.path.isdir(RUNTIMEDIR):
         checkout(repo, runtime)
 
-    if VERBOSE:
-        print("Making tarball...")
-        opts = "-cvzf"
-    else:
-        opts = "-czf"
+    # if the refhash matches tar hash, don't re-tar
+    if needs_tar(repo, runtime):
+        if VERBOSE:
+            print("Making tarball...")
+            opts = "-cvzf"
+        else:
+            opts = "-czf"
 
-    subprocess.run(f"tar {opts} {TARPATH} {RUNTIMEDIR}".split(), check=True)
+        subprocess.run(f"tar {opts} {TARPATH} {RUNTIMEDIR}".split(), check=True)
 
     if tus_upload(TARPATH, STORAGEFILE, runtime) != 0:
         print("something very bad happened")
