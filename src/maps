@@ -418,6 +418,7 @@ def mode_update(repo, args, remote="Official"):
 
 
 def checkout(repo, runtime):
+    """Function to checkout an already fetched runtime from the OSTREE repository to filesystem."""
     DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{runtime}"
     PDATADIR = '/'.join(DATADIR.split('/')[0:-1])
     refhash = ""
@@ -463,7 +464,6 @@ def mode_deploy(repo, args):
         sys.exit(1)
 
     DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{args.DEPLOY}"
-    PDATADIR = '/'.join(DATADIR.split('/')[0:-1])
 
     # check if update
     if os.path.exists(DATADIR):
@@ -677,7 +677,7 @@ def tus_upload(filename, storage_file, runtime):
     upclient = client.TusClient(f'{TUSTARGET}/files/', headers=headers)
     storage = filestorage.FileStorage(storage_file)
     uploader = upclient.uploader(filename, store_url=True, url_storage=storage,
-                                 metadata={'runtime':runtime}, chunk_size=chunksize)
+                                 metadata={'runtime': runtime}, chunk_size=chunksize)
 
     # going to need some try-catch here instead of just crashing
     # if auth or network fails
