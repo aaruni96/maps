@@ -420,11 +420,16 @@ def mode_update(repo, args, remote="Official"):
 def checkout(repo, runtime):
     DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{runtime}"
     PDATADIR = '/'.join(DATADIR.split('/')[0:-1])
+    refhash = ""
     for remote in repo.remote_list():
         if runtime in repo.remote_list_refs(remote)[1]:
             refhash = repo.remote_list_refs(remote)[1][runtime]
+    if refhash == "":
+        # refhash was not found in remote_list (obviously)
+        refhash = repo.list_refs()[1][runtime]
+
     if VERBOSE:
-        print("Setting up direcotires...")
+        print("Setting up directories...")
         opts1 = '-pv'
     else:
         opts1 = '-p'
