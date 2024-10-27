@@ -16,7 +16,7 @@ from math import log10, floor
 import tomli
 import gi
 from progress.bar import Bar
-from tusclient import client
+from tusclient import client, exceptions
 from tusclient.storage import filestorage
 gi.require_version("OSTree", "1.0")
 from gi.repository import OSTree, GLib
@@ -685,9 +685,10 @@ def tus_upload(filename, storage_file, runtime):
     if not uploader.url:
         try:
             uploader.upload_chunk()
-        except Exception as e:
+        except exceptions.TusCommunicationError as e:
             print("Upload failed!")
-            print(f"Error {e.status_code}: {e.response_content.decode()}")
+            if e.status_code is not None and e.response_content is not None:
+                print(f"Error {e.status_code}: {e.response_content.decode()}")
             return False
         uploader.create_url()
         print("Created URL")
