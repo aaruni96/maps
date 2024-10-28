@@ -20,7 +20,6 @@ if os.getenv('BWRAP_CMD') is not None:
     BWRAP = str(os.getenv('BWRAP_CMD'))
 else:
     BWRAP = BWRAP_DEFAULT
-OVERLAYFS = '/usr/bin/fuse-overlayfs'
 OSTREE_REPO_MODE_BARE_USER = 2
 SPINNER = itertools.cycle(['-', '\\', '|', '/'])
 HOME = os.getenv('HOME')
@@ -116,7 +115,7 @@ def program_init(repopath):
     """Init function verifies requirements, sets up the repo. Returns the OSTree Repo."""
     if VERBOSE:
         print("Ensuring bubblewrap exists...")
-    # step 1 : check bwrap, and overlayfs-fuse are installed
+    # step 1 : check bwrap is installed
     if (BWRAP == BWRAP_DEFAULT) and not os.path.isfile(BWRAP):
         print("Bubblewrap was not found, and is being automatically installed....")
         # clone and compile bubblewrap
@@ -138,9 +137,6 @@ def program_init(repopath):
     assert os.path.isfile(BWRAP)
     if VERBOSE:
         print("Bubblewrap okay!")
-    assert os.path.isfile(OVERLAYFS)
-    if VERBOSE:
-        print("Overlayfs okay!")
     # step 2 : create the directory
     if VERBOSE:
         print("Ensuring ostree repo directory exists...")
