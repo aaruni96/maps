@@ -232,35 +232,6 @@ def mode_run(args):
     if not os.path.isdir(DATADIR):
         raise AssertionError(f"Data directory does not exist. Is {args.RUN} installed ?")
 
-    # check if live is already mounted
-    # this can happen as an unclean exit from a previous attempt or any other random error
-    # we need to check for this, otherwise trying to mount fails
-    if VERBOSE:
-        print("Checking status of live....")
-    # the utility `mountpoint`` comes from the package util-linux, a "standard package" to be
-    # distributed with the linux kernel
-    ret = subprocess.run(f"mountpoint -q {DATADIR}/live", shell=True, check=False)
-    if VERBOSE:
-        print(f"Return code is {ret.returncode}")
-    if ret.returncode == 0:
-        if VERBOSE:
-            print("Live is already a mount!!")
-        print(f"ERROR: {DATADIR}/live is already a mount!\n"
-              "This may be the case if the previous runtime quit uncleanly, or the runtime is "
-              "already running in another session!")
-        print("Please verify that no other session is currently using this runtime, then execute "
-              f"the following command and try again and try again!\n\n\tumount {DATADIR}/live\n")
-        raise AssertionError("live directory must be unmounted!")
-    if VERBOSE:
-        print("live is not a mountpoint. Continuing normally...")
-
-    # setup live directory
-    if VERBOSE:
-        print("Setting up overlay structure...")
-    subprocess.run(["fuse-overlayfs", "-o", f"lowerdir={DATADIR}/rofs", "-o",
-                    f"upperdir={DATADIR}/rwfs", "-o", f"workdir={DATADIR}/tmpfs",
-                    f"{DATADIR}/live"], check=True)
-
     # ensure share source and targets exist
     if VERBOSE:
         print("Making sure Public directories exist...")
@@ -290,17 +261,15 @@ def mode_run(args):
     # ignore SIGINT
     signal.signal(signal.SIGINT, signal.SIG_IGN)
     rstatus = subprocess.run((f"{BWRAP} --forward-signals --unshare-user --unshare-pid "
-                              f"--bind {DATADIR}/live / --bind {HOME}/Public {senv['HOME']}/Public"
+                              f"--overlay-src {DATADIR}/rofs --overlay {DATADIR}/rwfs "
+                              f"{DATADIR}/tmpfs /  --bind {HOME}/Public {senv['HOME']}/Public"
                               " --die-with-parent --proc /proc --dev /dev --uid 0 --gid 0 "
-                              f"{command}").split(),
+                              f"{command} --verbose").split(),
                              env=senv, check=False)
     if rstatus.returncode != 0:
         print(f"Sandbox exited with return code {rstatus.returncode}")
-    # when the sandbox exits, cleanup
-    # can this fail? how do we handle that scenario?
-    if VERBOSE:
-        print("Cleaning up overlay structure...")
-    subprocess.run(["umount", f"{DATADIR}/live"], check=False)
+    elif VERBOSE:
+        print("Sandbox exited successfully!")
     # stop ignoring SIGINT
     signal.signal(signal.SIGINT, OG_SIGINT_HANLDER)
 
