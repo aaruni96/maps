@@ -34,6 +34,8 @@ KEEP_FREE_SPACE = 3
 VERBOSE = False
 OG_SIGINT_HANLDER = signal.getsignal(signal.SIGINT)
 TUSTARGET = "http://0.0.0.0:8080"
+if os.getenv("MAPS_UPLOAD_SERVER") is not None:
+    TUSTARGET = str(os.getenv("MAPS_UPLOAD_SERVER"))
 AUTH = os.getenv("MTDAUTH")
 
 
