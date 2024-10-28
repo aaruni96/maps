@@ -12,6 +12,7 @@ and this project tries to adhere to [Semantic Versioning](https://semver.org/spe
 ### Changed
  - Improved logic for uninstall
  - Bugfix: interruptible downloads
+ - Use native overlayfs instead of fuse implementation. Requires Linux kernel 5.11+
 
 ### Removed
 
