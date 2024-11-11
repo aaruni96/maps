@@ -8,6 +8,7 @@ and this project tries to adhere to [Semantic Versioning](https://semver.org/spe
 ## [Upcoming]
 
 ### Added
+ - Include sysfs in the runtime as read-only
 
 ### Changed
  - Improved logic for uninstall
