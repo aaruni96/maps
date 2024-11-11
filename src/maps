@@ -258,10 +258,10 @@ def mode_run(args):
     signal.signal(signal.SIGINT, signal.SIG_IGN)
     rstatus = subprocess.run((f"{BWRAP} --forward-signals --unshare-user --unshare-pid "
                               f"--overlay-src {DATADIR}/rofs --overlay {DATADIR}/rwfs "
-                              f"{DATADIR}/tmpfs /  --bind {HOME}/Public {senv['HOME']}/Public"
-                              " --die-with-parent --proc /proc --dev /dev --uid 0 --gid 0 "
-                              f"{command} --verbose").split(),
-                             env=senv, check=False)
+                              f"{DATADIR}/tmpfs /  --bind {HOME}/Public {senv['HOME']}/Public "
+                              f"--ro-bind /sys /sys --die-with-parent --proc /proc --dev /dev "
+                              f"--uid 0 --gid 0 {command} --verbose").split(), env=senv,
+                             check=False)
     if rstatus.returncode != 0:
         print(f"Sandbox exited with return code {rstatus.returncode}")
     elif VERBOSE:
@@ -523,10 +523,9 @@ def mode_package(repo, args):
         senv["LC_ALL"] = "C"
         # ignore SIGINT
         signal.signal(signal.SIGINT, signal.SIG_IGN)
-        rstatus = subprocess.run([BWRAP, "--forward-signals", "--unshare-user", "--unshare-pid",
-                                  "--bind", args.LOCATION, "/", "--proc", "/proc", "--dev", "/dev",
-                                  "--die-with-parent", "--uid", "0", "--gid", "0", "bash",
-                                  "--norc"],
+        rstatus = subprocess.run((f"{BWRAP} --forward-signals --unshare-user --unshare-pid --bind "
+                                  f"{args.LOCATION} / --proc /proc --dev /dev --ro-bind /sys /sys "
+                                  f"--die-with-parent --uid 0 --gid 0 bash --norc").split(),
                                  env=senv, check=False)
         if VERBOSE:
             print("Exiting sandbox...")
