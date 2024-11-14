@@ -727,16 +727,13 @@ def tus_upload(filename, storage_file, runtime):
     return 0
 
 
-def needs_tar(repo, runtime):
+def needs_tar(refhash, tarpath, datadir):
     """
     Given a repo and a runtime, function checks if a hash for that runtime already exists.
     If the hash already exists, it returns false (i.e, we don't need to tar the runtime).
     Otherwise, it returns true.
     """
-    refhash = repo.list_refs()[1][runtime]
-    DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps"
-    tarpath = f"{DATADIR}/{runtime}.tar.gz"
-    tardbpath = f"{DATADIR}/tardb.toml"
+    tardbpath = f"{datadir}/tardb.toml"
     if not os.path.isfile(tarpath):
         if VERBOSE:
             print("Tarfile doesn't already exist. Needs tar-ing!")
@@ -767,6 +764,17 @@ def needs_tar(repo, runtime):
     return True
 
 
+def add_hash_to_db(refhash, tarpath, datadir):
+    """
+    Adds the md5hash of tarpath to tardb
+    """
+    tardbpath = f"{datadir}/tardb.toml"
+    tarhash = subprocess.check_output(["md5sum", tarpath]).decode().split()[0]
+    with open(tardbpath, 'a', encoding="ascii") as tardbfile:
+        # assuming nobody has written a line without '\n' to the file
+        tardbfile.write(f'"{refhash}"="{tarhash}"\n')
+
+
 def upload(repo, runtime):
     """
     Given a local runtime, tar it and upload it. (Try)
@@ -786,13 +794,14 @@ def upload(repo, runtime):
     RUNTIMEDIR = f"{DATADIR}/{runtime}"
     TARPATH = f"{DATADIR}/{runtime}.tar.gz"
     STORAGEFILE = f"{DATADIR}/tustorage"
+    REFHASH = repo.list_refs()[1][runtime]
 
     # if runtime is not checked out, do it
     if not os.path.isdir(RUNTIMEDIR):
         checkout(repo, runtime)
 
     # if the refhash matches tar hash, don't re-tar
-    if needs_tar(repo, runtime):
+    if needs_tar(REFHASH, TARPATH, DATADIR):
         if VERBOSE:
             print("Making tarball...")
             opts = "-cvzf"
@@ -800,7 +809,7 @@ def upload(repo, runtime):
             opts = "-czf"
 
         subprocess.run(f"tar {opts} {TARPATH} {RUNTIMEDIR}".split(), check=True)
-        # TODO: add this tarhash to tardb
+        add_hash_to_db(REFHASH, TARPATH, DATADIR)
 
     if tus_upload(TARPATH, STORAGEFILE, runtime) != 0:
         print("something very bad happened")
