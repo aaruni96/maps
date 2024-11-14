@@ -733,17 +733,25 @@ def needs_tar(repo, runtime):
     If the hash already exists, it returns false (i.e, we don't need to tar the runtime).
     Otherwise, it returns true.
     """
-    # TODO: add verbose output
     refhash = repo.list_refs()[1][runtime]
     DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps"
     tarpath = f"{DATADIR}/{runtime}.tar.gz"
     tardbpath = f"{DATADIR}/tardb.toml"
     if not os.path.isfile(tarpath):
+        if VERBOSE:
+            print("Tarfile doesn't already exist. Needs tar-ing!")
         return True
+    if VERBOSE:
+        print(f"Generting a has for tarfile {tarpath}")
     tarhash = subprocess.check_output(["md5sum", tarpath]).decode().split()[0]
+    if VERBOSE:
+        print(f"Tar's hash is {tarhash}")
     if not os.path.isfile(tardbpath):
         # db didn't exist, clearly needs tar
         # also needs creating db
+        if VERBOSE:
+            print(f"Hash db not found! Creating at {tardbpath}")
+            print(f"Writing hash to db for {tarpath}")
         with open(tardbpath, 'w', encoding="ascii") as tardbfile:
             tardbfile.write(f'"{refhash}"="{tarhash}"\n')
         return True
@@ -751,7 +759,11 @@ def needs_tar(repo, runtime):
         x = tomli.load(tardbfile)
         if refhash in x.keys():
             if x[refhash] == tarhash:
+                if VERBOSE:
+                    print("Hash found in db!")
                 return False
+    if VERBOSE:
+        print("Hash not found in DB. We need to retar.")
     return True
 
 
