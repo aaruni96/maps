@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """This module provides package management functionality for MaRDI"""
+# standard imports
 import os
 import sys
 import time
@@ -9,8 +10,14 @@ import subprocess
 import tempfile
 import argparse
 import concurrent.futures
+from math import log10, floor
+
+# third party imports
 import tomli
 import gi
+from progress.bar import Bar
+from tusclient import client, exceptions
+from tusclient.storage import filestorage
 gi.require_version("OSTree", "1.0")
 from gi.repository import OSTree, GLib
 
@@ -26,6 +33,10 @@ HOME = os.getenv('HOME')
 KEEP_FREE_SPACE = 3
 VERBOSE = False
 OG_SIGINT_HANLDER = signal.getsignal(signal.SIGINT)
+TUSTARGET = "http://0.0.0.0:8080"
+if os.getenv("MAPS_UPLOAD_SERVER") is not None:
+    TUSTARGET = str(os.getenv("MAPS_UPLOAD_SERVER"))
+AUTH = os.getenv("MTDAUTH")
 
 
 # Define a CLI
@@ -91,12 +102,14 @@ def addCLI():
     parser_pack.add_argument('-v', '--verbose', dest='VERBOSE', action='store_true',
                              help="enable verbose output")
     parser_pack.add_argument('--repo', dest='REPO', help="Repository to use")
+    parser_pack.add_argument('-u', '--upload', dest='UPLOAD', metavar="RUNTIME", action='store',
+                             default=False, help="Upload RUNTIME for publishing.")
 
     return parser, parser_runtime, parser_remote, parser_pack
 
 
 def sanity_checks(parsers):
-    """Some simply sanity checks, before the program proceeds"""
+    """Some simple sanity checks, before the program proceeds"""
     if len(sys.argv) == 1:
         parsers[0].print_help()
         sys.exit(1)
@@ -151,8 +164,7 @@ def program_init(repopath):
     config_path = f"{repopath}/repo/config"
     config_exists = os.path.isfile(config_path)
     fd = os.open(repopath, os.O_RDONLY)
-    repo = OSTree.Repo.create_at(fd, repo,
-                                 OSTree.RepoMode(OSTREE_REPO_MODE_BARE_USER),
+    repo = OSTree.Repo.create_at(fd, repo, OSTree.RepoMode(OSTREE_REPO_MODE_BARE_USER),
                                  GLib.Variant('a{sv}', {}), None)
     # if we just created a repo (and thus config), configure how we reserve free space
     if not config_exists:
@@ -165,7 +177,8 @@ def program_init(repopath):
         if VERBOSE:
             print("Automatically adding official remote")
         repo.remote_add("Official", "https://repo.oscar-system.org/",
-                        GLib.Variant('a{sv}', {"gpg-verify": GLib.Variant('b', False)}), None)
+                        GLib.Variant('a{sv}', {"gpg-verify": GLib.Variant('b', False)}),
+                        None)
     return repo
 
 
@@ -181,7 +194,12 @@ def make_remote_ref_list(repo, remote):
             print(f"Repo {repo} has no remote {remote}!")
             return []
     remote_refs = []
-    remote_refs.extend(list(repo.remote_list_refs(remote)[1].keys()))
+    try:
+        remote_refs.extend(list(repo.remote_list_refs(remote)[1].keys()))
+    except GLib.Error as e:
+        print(f"Error in make_remote_ref_list:\n\n\t{e}.\n\nCould not fetch remotes. "
+              "Reporting local refs only. ")
+        return []
     return remote_refs
 
 
@@ -220,7 +238,7 @@ def mode_remotes(repo, args):
 
 
 def mode_run(args):
-    """Function to execute a published environment"""
+    """Function to execute a deployed environment"""
     # check if the path exists
     DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{args.RUN}"
     if VERBOSE:
@@ -402,42 +420,20 @@ def mode_update(repo, args, remote="Official"):
     return 0
 
 
-# Deploy Mode
-def mode_deploy(repo, args):
-    """Function to deploy from repo to local disk"""
-
-    if args.DEPLOY in [j for remotes in repo.remote_list()
-                       for j in make_remote_ref_list(repo, remotes)]:
-        pass
-    elif args.DEPLOY in list(repo.list_refs()[1].keys()):
-        refhash = repo.list_refs()[1][args.DEPLOY]
-    else:
-        print("Error: runtime not found! Use list mode --list to view available runtimes.")
-        sys.exit(1)
-
-    DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{args.DEPLOY}"
+def checkout(repo, runtime):
+    """Function to checkout an already fetched runtime from the OSTREE repository to filesystem."""
+    DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{runtime}"
     PDATADIR = '/'.join(DATADIR.split('/')[0:-1])
-
-    # check if update
-    if os.path.exists(DATADIR):
-        print("Directory already exists, trying to update...")
-        ret = mode_update(repo, args)
-        if ret == 1:
-            raise AssertionError("Error: Unknown error!")
-        return
-
-    # download
+    refhash = ""
     for remote in repo.remote_list():
-        if args.DEPLOY in repo.remote_list_refs(remote)[1]:
-            refhash = repo.remote_list_refs(remote)[1][args.DEPLOY]
-            if VERBOSE:
-                print(f"Downloading {refhash}...")
-            download(args, repo, remote, args.DEPLOY)
-            break
+        if runtime in repo.remote_list_refs(remote)[1]:
+            refhash = repo.remote_list_refs(remote)[1][runtime]
+    if refhash == "":
+        # refhash was not found in remote_list (obviously)
+        refhash = repo.list_refs()[1][runtime]
 
-    # setup directories
     if VERBOSE:
-        print("Setting up direcotires...")
+        print("Setting up directories...")
         opts1 = '-pv'
     else:
         opts1 = '-p'
@@ -455,6 +451,44 @@ def mode_deploy(repo, args):
     if VERBOSE:
         print(f"Checking out tree from repo to {DATADIR}/rofs ...")
     repo.checkout_at(osopts, tfd, "rofs", refhash, None)
+
+
+# Deploy Mode
+def mode_deploy(repo, args):
+    """Function to deploy from repo to local disk"""
+
+    if args.DEPLOY in [j for remotes in repo.remote_list()
+                       for j in make_remote_ref_list(repo, remotes)]:
+        pass
+    elif args.DEPLOY in list(repo.list_refs()[1].keys()):
+        refhash = repo.list_refs()[1][args.DEPLOY]
+    else:
+        print("Error: runtime not found! Use list mode --list to view available runtimes.")
+        sys.exit(1)
+
+    DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{args.DEPLOY}"
+
+    # check if update
+    if os.path.exists(DATADIR):
+        print("Directory already exists, trying to update...")
+        if VERBOSE:
+            print(f"Data directory is {DATADIR}")
+        ret = mode_update(repo, args)
+        if ret == 1:
+            raise AssertionError("Error: Unknown error!")
+        return
+
+    # download
+    for remote in repo.remote_list():
+        if args.DEPLOY in repo.remote_list_refs(remote)[1]:
+            refhash = repo.remote_list_refs(remote)[1][args.DEPLOY]
+            if VERBOSE:
+                print(f"Downloading {refhash}...")
+            download(args, repo, remote, args.DEPLOY)
+            break
+
+    # setup directories
+    checkout(repo, args.DEPLOY)
     print(f"Success... {args.DEPLOY} is now ready to use!")
 
 
@@ -552,6 +586,9 @@ def mode_package(repo, args):
             print("Currently available refs: ")
             print(list(refs.keys()))
 
+    if args.UPLOAD:
+        upload(repo, args.UPLOAD)
+
 
 def commit(zarglist):
     """
@@ -619,6 +656,167 @@ def mode_runtime(repo, args):
         mode_deploy(repo, args)
     elif args.UPDATE:
         mode_update(repo, args)
+
+
+def byteSI(inbytes):
+    """
+    Given bytes, turn it into K/M/G bytes. Only kind of accurate.
+    """
+    scale = {0: '', 1: 'K', 2: 'M', 3: 'G'}
+    exp = log10(inbytes)
+    exp = int(exp / 3)
+    suf = scale[exp]
+    rem = inbytes / (1024 ** exp)
+    return f"{rem:.2f} {suf}"
+
+
+def tus_upload(filename, storage_file, runtime):
+    """
+    tus upload subroutine
+    """
+    filesize = os.path.getsize(filename)
+    chunksize = 1024 * 256  # chunksize in bytes
+    headers = {'Authentication': f'Basic {AUTH}', 'Tus-Resumable': '1.0.0'}
+    upclient = client.TusClient(f'{TUSTARGET}/files/', headers=headers)
+    storage = filestorage.FileStorage(storage_file)
+    uploader = upclient.uploader(filename, store_url=True, url_storage=storage,
+                                 metadata={'runtime': runtime}, chunk_size=chunksize)
+
+    # going to need some try-catch here instead of just crashing
+    # if auth or network fails
+    print(f"Uploading {filename}")
+    if not uploader.url:
+        try:
+            uploader.upload_chunk()
+        except exceptions.TusCommunicationError as e:
+            print("Upload failed!")
+            if e.status_code is not None and e.response_content is not None:
+                print(f"Error {e.status_code}: {e.response_content.decode()}")
+            return False
+        uploader.create_url()
+        print("Created URL")
+
+    offset = uploader.get_offset()
+    uploader.offset = offset
+
+    if VERBOSE:
+        print(f"Current offset is {offset}")
+        print(f"Total file size is {filesize}")
+        print("=================")
+
+    progressBar = Bar("Uploading", max=floor(filesize / chunksize))
+    progressBar.suffix = '%(percent).1d%%'
+    progressBar.index = int(offset / chunksize)
+    progressBar.start()
+    progressBar.update()
+    acc = 0
+    while offset < filesize:
+        told = time.time()
+        uploader.upload_chunk()
+        tnew = time.time()
+        rate = chunksize / (tnew - told)
+        if acc == 0:
+            progressBar.suffix = f'%(percent).1d%% | %(eta)ds remaining | {byteSI(rate)}B/s'
+        acc = acc + 1
+        if acc == 1000:
+            progressBar.suffix = f'%(percent).1d%% | %(eta)ds remaining | {byteSI(rate)}B/s'
+            acc = 1
+        offset = uploader.offset
+        progressBar.next()
+    progressBar.finish()
+
+    return 0
+
+
+def needs_tar(refhash, tarpath, datadir):
+    """
+    Given a repo and a runtime, function checks if a hash for that runtime already exists.
+    If the hash already exists, it returns false (i.e, we don't need to tar the runtime).
+    Otherwise, it returns true.
+    """
+    tardbpath = f"{datadir}/tardb.toml"
+    if not os.path.isfile(tarpath):
+        if VERBOSE:
+            print("Tarfile doesn't already exist. Needs tar-ing!")
+        return True
+    if VERBOSE:
+        print(f"Generting a has for tarfile {tarpath}")
+    tarhash = subprocess.check_output(["md5sum", tarpath]).decode().split()[0]
+    if VERBOSE:
+        print(f"Tar's hash is {tarhash}")
+    if not os.path.isfile(tardbpath):
+        # db didn't exist, clearly needs tar
+        # also needs creating db
+        if VERBOSE:
+            print(f"Hash db not found! Creating at {tardbpath}")
+            print(f"Writing hash to db for {tarpath}")
+        with open(tardbpath, 'w', encoding="ascii") as tardbfile:
+            tardbfile.write(f'"{refhash}"="{tarhash}"\n')
+        return True
+    with open(tardbpath, 'rb') as tardbfile:
+        x = tomli.load(tardbfile)
+        if refhash in x.keys():
+            if x[refhash] == tarhash:
+                if VERBOSE:
+                    print("Hash found in db!")
+                return False
+    if VERBOSE:
+        print("Hash not found in DB. We need to retar.")
+    return True
+
+
+def add_hash_to_db(refhash, tarpath, datadir):
+    """
+    Adds the md5hash of tarpath to tardb
+    """
+    tardbpath = f"{datadir}/tardb.toml"
+    tarhash = subprocess.check_output(["md5sum", tarpath]).decode().split()[0]
+    with open(tardbpath, 'a', encoding="ascii") as tardbfile:
+        # assuming nobody has written a line without '\n' to the file
+        tardbfile.write(f'"{refhash}"="{tarhash}"\n')
+
+
+def upload(repo, runtime):
+    """
+    Given a local runtime, tar it and upload it. (Try)
+    """
+    if AUTH is None:
+        raise AssertionError("MTDAUTH not set! Cannot upload without authentication!")
+    runtimes = list(repo.list_refs()[1].keys())
+    if VERBOSE:
+        print("Available local runtimes are:")
+        for i in runtimes:
+            print(i)
+    if runtime not in runtimes:
+        print("We only allow publishing locally made runtimes!")
+        sys.exit(1)
+
+    DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps"
+    RUNTIMEDIR = f"{DATADIR}/{runtime}"
+    TARPATH = f"{DATADIR}/{runtime}.tar.gz"
+    STORAGEFILE = f"{DATADIR}/tustorage"
+    REFHASH = repo.list_refs()[1][runtime]
+
+    # if runtime is not checked out, do it
+    if not os.path.isdir(RUNTIMEDIR):
+        checkout(repo, runtime)
+
+    # if the refhash matches tar hash, don't re-tar
+    if needs_tar(REFHASH, TARPATH, DATADIR):
+        if VERBOSE:
+            print("Making tarball...")
+            opts = "-cvzf"
+        else:
+            opts = "-czf"
+
+        subprocess.run(f"tar {opts} {TARPATH} {RUNTIMEDIR}".split(), check=True)
+        add_hash_to_db(REFHASH, TARPATH, DATADIR)
+
+    if tus_upload(TARPATH, STORAGEFILE, runtime) != 0:
+        print("something very bad happened")
+        return -1
+
+    return 0
 
 
 # Main function
