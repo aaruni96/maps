@@ -9,6 +9,7 @@ and this project tries to adhere to [Semantic Versioning](https://semver.org/spe
 
 ### Added
  - Include sysfs in the runtime as read-only
+ - Add option to upload runtime for publishing
 
 ### Changed
  - Improved logic for uninstall

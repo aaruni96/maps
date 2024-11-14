@@ -49,6 +49,9 @@ _maps_completions()
                 COMPREPLY=($(compgen -o dirnames -- "$cur"))
                 return
             fi
+            if [ $prev == "-u" -o $prev == "--upload" ]; then
+                COMPREPLY=($(compgen -W "$($words --list-local)" -- $cur))
+            fi
         fi
     fi
 
@@ -66,7 +69,7 @@ _maps_completions()
 
     if [ $prev == "package" ]; then
         if [ $cword -eq 2 ]; then
-            COMPREPLY=($(compgen -W "-h --help -c --commit -i --initialize -s --sandbox -v --verbose" -- $cur))
+            COMPREPLY=($(compgen -W "-h --help -c --commit -i --initialize -s --sandbox -v --verbose -u --upload" -- $cur))
             return
         fi
     fi
