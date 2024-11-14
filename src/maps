@@ -196,7 +196,7 @@ def make_remote_ref_list(repo, remote):
     try:
         remote_refs.extend(list(repo.remote_list_refs(remote)[1].keys()))
     except GLib.Error as e:
-        print(f"Error in make_remote_ref_list: {e.message}. Could not fetch remotes. "
+        print(f"Error in make_remote_ref_list:\n\n\t{e}.\n\nCould not fetch remotes. "
               "Reporting local refs only. ")
         return []
     return remote_refs
@@ -703,11 +703,11 @@ def tus_upload(filename, storage_file, runtime):
         print(f"Total file size is {filesize}")
         print("=================")
 
-    bar = Bar("Uploading", max=floor(filesize / chunksize))
-    bar.suffix = '%(percent).1d%%'
-    bar.index = int(offset / chunksize)
-    bar.start()
-    bar.update()
+    progressBar = Bar("Uploading", max=floor(filesize / chunksize))
+    progressBar.suffix = '%(percent).1d%%'
+    progressBar.index = int(offset / chunksize)
+    progressBar.start()
+    progressBar.update()
     acc = 0
     while offset < filesize:
         told = time.time()
@@ -715,19 +715,24 @@ def tus_upload(filename, storage_file, runtime):
         tnew = time.time()
         rate = chunksize / (tnew - told)
         if acc == 0:
-            bar.suffix = f'%(percent).1d%% | %(eta)ds remaining | {byteSI(rate)}B/s'
+            progressBar.suffix = f'%(percent).1d%% | %(eta)ds remaining | {byteSI(rate)}B/s'
         acc = acc + 1
         if acc == 1000:
-            bar.suffix = f'%(percent).1d%% | %(eta)ds remaining | {byteSI(rate)}B/s'
+            progressBar.suffix = f'%(percent).1d%% | %(eta)ds remaining | {byteSI(rate)}B/s'
             acc = 1
         offset = uploader.offset
-        bar.next()
-    bar.finish()
+        progressBar.next()
+    progressBar.finish()
 
     return 0
 
 
 def needs_tar(repo, runtime):
+    """
+    Given a repo and a runtime, function checks if a hash for that runtime already exists.
+    If the hash already exists, it returns false (i.e, we don't need to tar the runtime).
+    Otherwise, it returns true.
+    """
     # TODO: add verbose output
     refhash = repo.list_refs()[1][runtime]
     DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps"
@@ -761,9 +766,9 @@ def upload(repo, runtime):
         print("Available local runtimes are:")
         for i in runtimes:
             print(i)
-    if not runtime in runtimes:
+    if runtime not in runtimes:
         print("We only allow publishing locally made runtimes!")
-        exit(1)
+        sys.exit(1)
 
     DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps"
     RUNTIMEDIR = f"{DATADIR}/{runtime}"
@@ -783,6 +788,7 @@ def upload(repo, runtime):
             opts = "-czf"
 
         subprocess.run(f"tar {opts} {TARPATH} {RUNTIMEDIR}".split(), check=True)
+        # TODO: add this tarhash to tardb
 
     if tus_upload(TARPATH, STORAGEFILE, runtime) != 0:
         print("something very bad happened")

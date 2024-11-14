@@ -16,7 +16,7 @@ jobs:
       - name: Install dependencies
         run: sudo apt-get install libcairo2-dev gcc python3-dev libgirepository1.0-dev libostree-dev fuse-overlayfs libcap-dev autoconf && python -m pip install -r requirements.txt && python -m pip install pylint
       - name: pylint
-        run: pylint -d C0413,C0103,R0912,R0915,W0603 src/maps
+        run: pylint --rcfile pylint.toml src/maps
 
   flake8-lint:
     runs-on: ubuntu-latest
