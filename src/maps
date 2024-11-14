@@ -102,7 +102,8 @@ def addCLI():
     parser_pack.add_argument('-v', '--verbose', dest='VERBOSE', action='store_true',
                              help="enable verbose output")
     parser_pack.add_argument('--repo', dest='REPO', help="Repository to use")
-    parser_pack.add_argument('-u', '--upload', dest='UPLOAD', action='store', default=False)
+    parser_pack.add_argument('-u', '--upload', dest='UPLOAD', metavar="RUNTIME", action='store',
+                             default=False, help="Upload RUNTIME for publishing.")
 
     return parser, parser_runtime, parser_remote, parser_pack
 
