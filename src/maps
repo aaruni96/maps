@@ -371,6 +371,31 @@ def uninstall_runtime(repo, args):
     sys.exit()
 
 
+def validate_runtime_name(runtime_id: str):
+    """
+    Function to validate that a given runtime ID conforms to naming rules
+    """
+    if VERBOSE:
+        print("Validating runtime name...")
+    # name must be split into name/platform/version
+    # so, slash split string must have length 3
+    assert len(runtime_id.split('/')) == 3, "Must have 3 parts in runtime identifier"
+    if VERBOSE:
+        print("Name has 3 parts separated with '/'!")
+
+    # first part must be in rDNS. For now, it means that dot split string must have length
+    # greater than or equal to 3. most commonly, it will be 3
+    assert len(runtime_id.split('/')[0].split('.')) >= 3, "First part must be in reverse DNS format"
+    if VERBOSE:
+        print("First part is in rDNS!")
+
+    # validate platform. for now, only x86_64 is supported
+    assert runtime_id.split('/')[1] == 'x86_64'
+    if VERBOSE:
+        print(f"Platform is '{runtime_id.split('/')[1]}'!")
+        print("Name validated!")
+
+
 # Update
 def mode_update(repo, args, remote="Official"):
     """Function to update a runtime identifier to its recent version (if any)"""
@@ -569,6 +594,8 @@ def mode_package(repo, args):
         signal.signal(signal.SIGINT, OG_SIGINT_HANLDER)
     if args.COMMIT is not False:
         # we are given TREE and BRANCH. All we have to do is commit TREE to BRANCH
+        # first validate that BRANCH follows a naming scheme we like
+        validate_runtime_name(args.COMMIT[1])
         with concurrent.futures.ThreadPoolExecutor() as executor:
             future = executor.submit(commit, [repo, args.COMMIT[0], args.COMMIT[1]])
             print(f"Committing {args.COMMIT[0]} as {args.COMMIT[1]}. Please wait...")
@@ -782,6 +809,9 @@ def upload(repo, runtime):
     """
     if AUTH is None:
         raise AssertionError("MTDAUTH not set! Cannot upload without authentication!")
+    # just to be sure
+    # second name validation right before upload
+    validate_runtime_name(runtime)
     runtimes = list(repo.list_refs()[1].keys())
     if VERBOSE:
         print("Available local runtimes are:")
