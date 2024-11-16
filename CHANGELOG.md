@@ -15,6 +15,7 @@ and this project tries to adhere to [Semantic Versioning](https://semver.org/spe
  - Improved logic for uninstall
  - Bugfix: interruptible downloads
  - Use native overlayfs instead of fuse implementation. Requires Linux kernel 5.11+
+ - Improved handling of bwrap as a dependency
 
 ### Removed
 

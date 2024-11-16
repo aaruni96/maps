@@ -126,22 +126,38 @@ def sanity_checks(parsers):
 
 def program_init(repopath):
     """Init function verifies requirements, sets up the repo. Returns the OSTree Repo."""
+    opt1 = "-q"
+    opt2 = "1>/dev/null"
+    opt3 = ""
     if VERBOSE:
+        opt1 = ""
+        opt2 = ""
+        opt3 = "-v"
         print("Ensuring bubblewrap exists...")
     # step 1 : check bwrap is installed
     if (BWRAP == BWRAP_DEFAULT) and not os.path.isfile(BWRAP):
         print("Bubblewrap was not found, and is being automatically installed....")
-        # clone and compile bubblewrap
-        opt1 = "-q"
-        opt2 = "1>/dev/null"
-        if VERBOSE:
-            print("Cloning bubblewrap...")
-            opt1 = ""
-            opt2 = ""
-        subprocess.run(f"git clone {opt1} https://github.com/aaruni96/bubblewrap.git "
-                       f"{BWRAP[0:-15]}", shell=True, check=False)
-        subprocess.run(f"cd {BWRAP[0:-15]} && git checkout {opt1} ak/sigint", shell=True,
-                       check=True)
+        # bubblewrap directory exists
+        # try cd and get fetch
+        if os.path.isdir(BWRAP[0:-15]):
+            if VERBOSE:
+                print("Bubblewrap directory found. Refreshing...")
+            subprocess.run(f"cd {BWRAP[0:-15]} && git fetch {opt1} --all --prune && git checkout "
+                           f"{opt1} --force ak/sigint && git reset {opt1} --hard ak/sigint",
+                           shell=True, check=True)
+            if VERBOSE:
+                print("Deleting _builddir...")
+            subprocess.run(f"rm -rf {opt3} {BWRAP[0:-15]}/_builddir".split(), check=True)
+        # bubblewrap directory does not exist
+        # clone bubblewrap
+        else:
+            if VERBOSE:
+                print("Cloning bubblewrap...")
+            subprocess.run(f"git clone {opt1} https://github.com/aaruni96/bubblewrap.git "
+                           f"{BWRAP[0:-15]}", shell=True, check=False)
+            subprocess.run(f"cd {BWRAP[0:-15]} && git checkout {opt1} ak/sigint", shell=True,
+                           check=True)
+        # compile bwrap
         if VERBOSE:
             print("Compiling bubblewrap...")
         subprocess.run(f"cd {BWRAP[0:-15]} && meson _builddir {opt2} "
