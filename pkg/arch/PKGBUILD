@@ -15,6 +15,7 @@ depends=('base-devel'
          'meson'
          'python-tomli'
          'python-gobject'
+         'python-progress'
          # deps for tuspy
          'python-aiohappyeyeballs'
          'python-aiohttp'
