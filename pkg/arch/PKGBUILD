@@ -12,8 +12,26 @@ depends=('base-devel'
          'gobject-introspection-runtime'
          'python3'
          'ostree'
-         'fuse-overlayfs'
+         'meson'
          'python-tomli'
+         'python-gobject'
+         'python-progress'
+         # deps for tuspy
+         'python-aiohappyeyeballs'
+         'python-aiohttp'
+         'python-aiosignal'
+         'python-attrs'
+         'python-certifi'
+         'python-charset-normalizer'
+         'python-frozenlist'
+         'python-idna'
+         'python-multidict'
+         'python-requests'
+         'python-urllib3'
+         'python-yarl'
+         'python-tinydb' #AUR
+         ##python-propcache
+         ##python-tuspy
          )
 conflicts=('maps')
 provides=('maps')

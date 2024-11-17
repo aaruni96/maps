@@ -36,29 +36,22 @@ cd "maps_${VERSION}" && mkdir -pv "debian/source"
 
 echo "3.0 (quilt)" > "debian/source/format"
 
-cp -v pkg/debian/changelog debian/changelog
+cp -v "pkg/debian/changelog" "debian/changelog"
 
 # add control
 
-cp -v pkg/debian/control debian/control
+cp -v "pkg/debian/control" "debian/control"
 
 # add copyright
 
-cp -v pkg/debian/copyright debian/copyright
+cp -v "pkg/debian/copyright" "debian/copyright"
 
 # debian.dirs
-
-echo "usr/bin" > "debian/maps.dirs"
-echo "usr/share/bash-completion/completions" >> "debian/maps.dirs"
+cp -v "pkg/debian/maps.dirs" "debian/maps.dirs"
 
 # debian rules
 
-echo '#!/usr/bin/make -f
-%:
-	dh $@
-
-override_dh_auto_install:
-	$(MAKE) DESTDIR=$$(pwd)/debian/maps prefix=/usr install' > "debian/rules"
+cp -v "pkg/debian/rules" "debian/rules"
 
 # try building, see what happens
 

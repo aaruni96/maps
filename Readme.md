@@ -1,6 +1,6 @@
 # MaPS - MaRDI Packaging System
 
-![](https://img.shields.io/badge/version-0.3--dev-blue)
+![](https://img.shields.io/badge/version-0.3-blue)
 
 ## Introduction
 
@@ -92,4 +92,3 @@ All code must conform to these settings of pylint and flake8 (enforced by CI):
 pylint -d C0413,C0103,R0912,R0915,W0603 src/maps
 flake8 --max-line-length 100 --ignore=E402 src/maps
 ```
-
