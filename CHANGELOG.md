@@ -11,6 +11,9 @@ and this project tries to adhere to [Semantic Versioning](https://semver.org/spe
 
 ### Changed
 
+ - Bugfix: Fixed a regression (because of native overlayfs' other implications) which broke command
+   defined in manifest
+
 ### Removed
 
 ## [0.3] - 2024-11-17

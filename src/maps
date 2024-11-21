@@ -269,11 +269,14 @@ def mode_run(args):
     else:
         opts = '-p'
     subprocess.run(f"mkdir {opts} {os.getenv('HOME')}/Public".split(), check=True)
-    subprocess.run(f"mkdir {opts} {DATADIR}/live/home/runtime/Public".split(), check=True)
 
     # check for manifest file
-    if os.path.isfile(f"{DATADIR}/live/manifest.toml"):
-        with open(f"{DATADIR}/live/manifest.toml", 'rb') as manifest_file:
+    if os.path.isfile(f"{DATADIR}/rwfs/manifest.toml"):
+        with open(f"{DATADIR}/rwfs/manifest.toml", 'rb') as manifest_file:
+            command = tomli.load(manifest_file)
+            command = command['Core']["command"]
+    elif os.path.isfile(f"{DATADIR}/rofs/manifest.toml"):
+        with open(f"{DATADIR}/rofs/manifest.toml", 'rb') as manifest_file:
             command = tomli.load(manifest_file)
             command = command['Core']["command"]
     else:
@@ -294,7 +297,7 @@ def mode_run(args):
                               f"--overlay-src {DATADIR}/rofs --overlay {DATADIR}/rwfs "
                               f"{DATADIR}/tmpfs /  --bind {HOME}/Public {senv['HOME']}/Public "
                               f"--ro-bind /sys /sys --die-with-parent --proc /proc --dev /dev "
-                              f"--uid 0 --gid 0 {command} --verbose").split(), env=senv,
+                              f"--uid 0 --gid 0 {command}").split(), env=senv,
                              check=False)
     if rstatus.returncode != 0:
         print(f"Sandbox exited with return code {rstatus.returncode}")
@@ -482,7 +485,6 @@ def checkout(repo, runtime):
     subprocess.run(f"mkdir {opts1} {DATADIR}", shell=True, check=True)
     subprocess.run(f"mkdir {opts1} {DATADIR}/rwfs".split(), check=True)
     subprocess.run(f"mkdir {opts1} {DATADIR}/tmpfs".split(), check=True)
-    subprocess.run(f"mkdir {opts1} {DATADIR}/live".split(), check=True)
 
     # checkout from local repo
     tfd = os.open(DATADIR, os.O_RDONLY)
@@ -672,7 +674,7 @@ def reset(runtime):
         opts = '-rvf'
     else:
         opts = '-rf'
-    subprocess.run(f"rm {opts} {DATADIR}/live/*".split(), check=True)
+    subprocess.run(f"rm {opts} {DATADIR}/rwfs/*".split(), check=True)
     print(f"{runtime} reset successfully!")
 
 
