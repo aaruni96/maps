@@ -10,6 +10,8 @@ and this project tries to adhere to [Semantic Versioning](https://semver.org/spe
 ### Added
 
 - Add profile for AppArmor.
+- **BREAKING** : Added ability to disambiguate based on remotes. This changes how the files are
+  organized on disk. Remove `$HOME/.var/org.mardi.maps` to refresh if you run into problems.
 
 ### Changed
 

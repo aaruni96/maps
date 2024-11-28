@@ -255,12 +255,29 @@ def mode_remotes(repo, args):
 
 def mode_run(args):
     """Function to execute a deployed environment"""
+
+    # what if args.RUN is 'Official:bla/bla/bla' ?
+    splitargsrun = args.RUN.split(':')
+    if len(splitargsrun) == 2:
+        reponame = splitargsrun[0]
+        runtimename = splitargsrun[1]
+        if VERBOSE:
+            print(f"Repo name is {reponame} and runtime name is {runtimename}")
+    else:
+        runtimename = splitargsrun[0]
+        # for now, assume that reponame is then official
+        # TODO: something
+        reponame = "Official"
+        if VERBOSE:
+            print(f"No repo specified, and runtime name is {runtimename}")
+
     # check if the path exists
-    DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{args.RUN}"
+    DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{reponame}/{runtimename}"
     if VERBOSE:
         print(f"Attempting to run {DATADIR}...")
     if not os.path.isdir(DATADIR):
-        raise AssertionError(f"Data directory does not exist. Is {args.RUN} installed ?")
+        raise AssertionError(f"Data directory does not exist. Is {reponame}:{runtimename} installed"
+                             " ?")
 
     # ensure share source and targets exist
     if VERBOSE:
@@ -286,7 +303,7 @@ def mode_run(args):
     if command == '':
         raise ValueError
     # launch sandbox
-    print(f"Launching {args.RUN}...")
+    print(f"Launching {runtimename}...")
     senv = os.environ
     senv["HOME"] = "/home/runtime"
     senv["PS1"] = "\\u@runtime:\\w# "
@@ -322,8 +339,9 @@ def uninstall_runtime(repo, args):
     if ':' in args.UNINSTALL:
         remote, uninstall = args.UNINSTALL.split(':')
     else:
+        remote = "Official"
         uninstall = args.UNINSTALL
-    DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{uninstall}"
+    DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{remote}/{uninstall}"
     if VERBOSE:
         print(f"Trying to remove {uninstall}...")
     if os.path.isdir(DATADIR):
@@ -388,26 +406,30 @@ def mode_update(repo, repopath, args, remote="Official"):
     if not args.UPDATE:
         args.UPDATE = args.DEPLOY
     # check if ref is installed
-    installed = args.UPDATE in [key.split(':')[-1] for key in repo.list_refs()[1].keys()]
+    if ':' in args.UPDATE:
+        remote, runtime = args.UPDATE.split(':')
+    else:
+        runtime = args.UPDATE
+    installed = runtime in [key.split(':')[-1] for key in repo.list_refs()[1].keys()]
     if VERBOSE:
         print(f"List of installed runtimes is {repo.list_refs()[1].keys()}")
     if not installed:
-        print(f"{args.UPDATE} is not installed, hence cannot be updated! Try --deploy instead")
+        print(f"{runtime} is not installed, hence cannot be updated! Try --deploy instead")
         return 1
 
     # check if we need an update
-    same = repo.list_refs()[1][f'{remote}:{args.UPDATE}'] ==\
-        repo.remote_list_refs(remote)[1][args.UPDATE]
+    same = repo.list_refs()[1][f'{remote}:{runtime}'] ==\
+        repo.remote_list_refs(remote)[1][runtime]
     if VERBOSE:
-        print(f"Local refhash = {repo.list_refs()[1][f'{remote}:{args.UPDATE}']}")
-        print(f"Remote refhash = {repo.remote_list_refs(remote)[1][args.UPDATE]}")
+        print(f"Local refhash = {repo.list_refs()[1][f'{remote}:{runtime}']}")
+        print(f"Remote refhash = {repo.remote_list_refs(remote)[1][runtime]}")
     if same:
-        print(f"{args.UPDATE} is already up to date, refreshing!")
+        print(f"{runtime} is already up to date, refreshing!")
     else:
         # download the update
-        download(repopath, remote, args.UPDATE)
+        download(repopath, remote, runtime)
 
-    DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{args.UPDATE}"
+    DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{remote}/{runtime}"
 
     # clean out the data dir
     if VERBOSE:
@@ -417,7 +439,7 @@ def mode_update(repo, repopath, args, remote="Official"):
     subprocess.run(f"rm {opts1} {DATADIR}/rofs".split(), check=True)
 
     # checkout branch to tree
-    refhash = repo.remote_list_refs(remote)[1][args.UPDATE]
+    refhash = repo.remote_list_refs(remote)[1][runtime]
     tfd = os.open(DATADIR, os.O_RDONLY)
     osopts = blank_options()
     osopts.bareuseronly_dirs = True
@@ -433,7 +455,11 @@ def mode_update(repo, repopath, args, remote="Official"):
 
 def checkout(repo, runtime):
     """Function to checkout an already fetched runtime from the OSTREE repository to filesystem."""
-    DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{runtime}"
+    if ':' in runtime:
+        remote, runtime = runtime.split(':')
+    else:
+        remote = "Official"
+    DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{remote}/{runtime}"
     PDATADIR = '/'.join(DATADIR.split('/')[0:-1])
     refhash = ""
     for remote in repo.remote_list():
@@ -467,16 +493,22 @@ def checkout(repo, runtime):
 def mode_deploy(repo, repopath, args):
     """Function to deploy from repo to local disk"""
 
-    if args.DEPLOY in [j for remotes in repo.remote_list()
-                       for j in make_remote_ref_list(repo, remotes)]:
+    if ':' in args.DEPLOY:
+        remote, runtime = args.DEPLOY.split(':')
+    else:
+        remote = "Official"
+        runtime = args.DEPLOY
+
+    # check that runtime exists in remote
+    if runtime in make_remote_ref_list(repo, remote):
         pass
-    elif args.DEPLOY in list(repo.list_refs()[1].keys()):
+    elif runtime in list(repo.list_refs()[1].keys()):
         refhash = repo.list_refs()[1][args.DEPLOY]
     else:
         print("Error: runtime not found! Use list mode --list to view available runtimes.")
         sys.exit(1)
 
-    DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{args.DEPLOY}"
+    DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{remote}/{runtime}"
 
     # check if update
     if os.path.exists(DATADIR):
@@ -635,7 +667,11 @@ def reset(runtime):
     """
     Function resets a runtime, simply by deleting the contents of the "rwfs" dir.
     """
-    DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{runtime}"
+    if ':' in runtime:
+        remote, runtime = runtime.split(':')
+    else:
+        remote = "Official"
+    DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{remote}/{runtime}"
     if VERBOSE:
         print(f"Resetting {runtime}...")
         opts = '-rvf'
