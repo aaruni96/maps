@@ -22,13 +22,15 @@ MaPS helps mathematicians create and publish software runtimes, as well as deplo
 %install
 rm -rf $RPM_BUILD_ROOT
 mkdir -p $RPM_BUILD_ROOT/%{_bindir} $RPM_BUILD_ROOT/%{_datadir}/bash-completion/completions
-cp src/%{name} $RPM_BUILD_ROOT/%{_bindir}
-cp src/completion.bash $RPM_BUILD_ROOT/%{_datadir}/bash-completion/completions/%{name}
+install -Dm 755 src/%{name} $RPM_BUILD_ROOT/%{_bindir}
+install -Dm 644 src/completion.bash $RPM_BUILD_ROOT/%{_datadir}/bash-completion/completions/%{name}
+install -Dm 644 src/usr.bin.%{name} $RPM_BUILD_ROOT/%{_sysconfdir}/apparmor.d/usr.bin.%{name}
 
 
 %files
 %{_bindir}/%{name}
 %{_datadir}/bash-completion/completions/%{name}
+%{_sysconfdir}/apparmor.d/usr.bin.%{name}
 
 
 

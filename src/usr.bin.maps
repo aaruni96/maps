@@ -1,0 +1,7 @@
+abi <abi/4.0>,
+include <tunables/global>
+
+profile maps /usr/bin/maps flags=(unconfined) {
+  userns,
+  include if exists <local/bwrap>
+}

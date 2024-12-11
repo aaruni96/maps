@@ -53,6 +53,10 @@ cp -v "pkg/debian/maps.dirs" "debian/maps.dirs"
 
 cp -v "pkg/debian/rules" "debian/rules"
 
+# postinst
+
+cp -v "pkg/debian/postinst" "debian/postinst"
+
 # try building, see what happens
 
 debuild -us -uc

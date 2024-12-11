@@ -49,4 +49,5 @@ pkgver() {
 package(){
     install -Dm 755 "$srcdir/maps/src/maps" "$pkgdir/usr/bin/maps"
     install -Dm 644 "$srcdir/maps/src/completion.bash" "$pkgdir/usr/share/bash-completion/completions/maps"
+    install -Dm 644 "$srcdir/maps/src/usr.bin.maps" "$pkgdir/etc/apparmor.d/usr.bin.maps"
 }
