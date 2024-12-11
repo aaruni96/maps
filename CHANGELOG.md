@@ -9,6 +9,8 @@ and this project tries to adhere to [Semantic Versioning](https://semver.org/spe
 
 ### Added
 
+ - Add profile for AppArmor.
+
 ### Changed
 
  - Bugfix: Fixed a regression (because of native overlayfs' other implications) which broke command
