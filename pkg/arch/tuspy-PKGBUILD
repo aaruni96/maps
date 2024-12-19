@@ -1,3 +1,4 @@
+# Maintainer: Aaruni Kaushik <akaushik@mathematik.uni-kl.de>
 _name=tuspy
 pkgname="python-${_name}"
 pkgver=1.1.0
