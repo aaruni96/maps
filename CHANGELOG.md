@@ -16,6 +16,8 @@ and this project tries to adhere to [Semantic Versioning](https://semver.org/spe
  - Bugfix: Fixed a regression (because of native overlayfs' other implications) which broke command
    defined in manifest
  - Packaging: Fixed packaging for arch based.
+ - Use `ostree` binary to pull files instead of the `ostree` library. This shows progress on
+   downloading files.
 
 ### Removed
 
