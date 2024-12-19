@@ -8,7 +8,7 @@ License:        GPL3
 URL:            https://github.com/mardi4NFDI/maps
 Source0:        %{name}-%{version}.tar.gz
 
-Requires:       git cairo-devel gcc python3-devel gobject-introspection-devel ostree-devel python3-progress libcap-devel autoconf cairo-gobject-devel bash-completion python-tomli meson
+Requires:       git cairo-devel gcc python3-devel gobject-introspection-devel ostree ostree-devel python3-progress libcap-devel autoconf cairo-gobject-devel bash-completion python-tomli meson
 #TODO: needs python3-tuspy
 
 %description
@@ -22,13 +22,15 @@ MaPS helps mathematicians create and publish software runtimes, as well as deplo
 %install
 rm -rf $RPM_BUILD_ROOT
 mkdir -p $RPM_BUILD_ROOT/%{_bindir} $RPM_BUILD_ROOT/%{_datadir}/bash-completion/completions
-cp src/%{name} $RPM_BUILD_ROOT/%{_bindir}
-cp src/completion.bash $RPM_BUILD_ROOT/%{_datadir}/bash-completion/completions/%{name}
+install -Dm 755 src/%{name} $RPM_BUILD_ROOT/%{_bindir}
+install -Dm 644 src/completion.bash $RPM_BUILD_ROOT/%{_datadir}/bash-completion/completions/%{name}
+install -Dm 644 src/usr.bin.%{name} $RPM_BUILD_ROOT/%{_sysconfdir}/apparmor.d/usr.bin.%{name}
 
 
 %files
 %{_bindir}/%{name}
 %{_datadir}/bash-completion/completions/%{name}
+%{_sysconfdir}/apparmor.d/usr.bin.%{name}
 
 
 
