@@ -307,43 +307,10 @@ def mode_run(args):
     signal.signal(signal.SIGINT, OG_SIGINT_HANLDER)
 
 
-def zipped_pull(zarglist):
-    """Simple wrapper function to repo.pull()"""
-    repo = zarglist[0]
-    remote = zarglist[1]
-    refname = zarglist[2]
-    progress = zarglist[3]
-    options = GLib.Variant('a{sv}',
-                           {"refs": GLib.Variant('as', [refname]),
-                            "flags": GLib.Variant('i', OSTree.RepoPullFlags(4))})
-    repo.pull_with_options(remote, options, progress, None)
-
-
-def download(args, repo, remote, refname, cerror=0):
+def download(repopath, remote, target):
     """Function to download a repo from remote"""
-    with concurrent.futures.ThreadPoolExecutor() as executor:
-        progress = OSTree.AsyncProgress.new()
-        future = executor.submit(zipped_pull, [repo, remote, refname, progress])
-        print(f"Downloading {refname} from {remote}. This may take some time.\nPlease wait...")
-        while True:
-            sys.stdout.write(next(SPINNER))
-            sys.stdout.flush()
-            time.sleep(0.2)
-            sys.stdout.write('\b')
-            if future.done():
-                sys.stdout.flush()
-                break
-        if progress.get_status() is None:
-            print(f"Error, {future.exception()}")
-            cerror = cerror + 1
-            # if cerror > 10:
-            #    print("10 consecutive network failures. Bailing!")
-            #    future.result()
-            print(f"Retrying... ({cerror}/??)")
-            download(args, repo, remote, refname, cerror)
-        else:
-            cerror = 0
-            print(progress.get_status())
+
+    subprocess.run(f"ostree --repo={repopath} pull '{remote}:{target}'", check=True, shell=True)
 
 
 # Uninstall
@@ -416,7 +383,7 @@ def validate_runtime_name(runtime_id: str):
 
 
 # Update
-def mode_update(repo, args, remote="Official"):
+def mode_update(repo, repopath, args, remote="Official"):
     """Function to update a runtime identifier to its recent version (if any)"""
     if not args.UPDATE:
         args.UPDATE = args.DEPLOY
@@ -438,7 +405,7 @@ def mode_update(repo, args, remote="Official"):
         print(f"{args.UPDATE} is already up to date, refreshing!")
     else:
         # download the update
-        download(args, repo, remote, args.UPDATE)
+        download(repopath, remote, args.UPDATE)
 
     DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{args.UPDATE}"
 
@@ -497,7 +464,7 @@ def checkout(repo, runtime):
 
 
 # Deploy Mode
-def mode_deploy(repo, args):
+def mode_deploy(repo, repopath, args):
     """Function to deploy from repo to local disk"""
 
     if args.DEPLOY in [j for remotes in repo.remote_list()
@@ -516,7 +483,7 @@ def mode_deploy(repo, args):
         print("Directory already exists, trying to update...")
         if VERBOSE:
             print(f"Data directory is {DATADIR}")
-        ret = mode_update(repo, args)
+        ret = mode_update(repo, repopath, args)
         if ret == 1:
             raise AssertionError("Error: Unknown error!")
         return
@@ -527,7 +494,7 @@ def mode_deploy(repo, args):
             refhash = repo.remote_list_refs(remote)[1][args.DEPLOY]
             if VERBOSE:
                 print(f"Downloading {refhash}...")
-            download(args, repo, remote, args.DEPLOY)
+            download(repopath, remote, args.DEPLOY)
             break
 
     # setup directories
@@ -571,7 +538,7 @@ def mode_package(repo, args):
             if VERBOSE:
                 print("base/x86_64/debian not found locally, fetching...")
             refhash = repo.remote_list_refs("Official")[1]['base/x86_64/debian']
-            download(args, repo, "Official", "base/x86_64/debian")
+            download(repo, "Official", "base/x86_64/debian")
         else:
             refhash = repo.list_refs()[1]['Official:base/x86_64/debian']
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -679,7 +646,7 @@ def reset(runtime):
 
 
 # runtime mode: the default path for execution
-def mode_runtime(repo, args):
+def mode_runtime(repo, repopath, args):
     """
     Runtime mode, the default path for execution, and the "end user" mode.
     """
@@ -698,9 +665,9 @@ def mode_runtime(repo, args):
     elif args.RUN:
         mode_run(args)
     elif args.DEPLOY:
-        mode_deploy(repo, args)
+        mode_deploy(repo, repopath, args)
     elif args.UPDATE:
-        mode_update(repo, args)
+        mode_update(repo, repopath, args)
 
 
 def byteSI(inbytes):
@@ -910,7 +877,7 @@ def main():
 
     # Run mode
     if args.SubPars_NAME == 'runtime':
-        mode_runtime(repo, args)
+        mode_runtime(repo, repopath, args)
     elif args.SubPars_NAME == 'remote':
         mode_remotes(repo, args)
     elif args.SubPars_NAME == 'package':
