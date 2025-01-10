@@ -280,7 +280,7 @@ def mode_run(args):
             command = tomli.load(manifest_file)
             command = command['Core']["command"]
     else:
-        command = "bash --norc"
+        command = "bash"
     if args.COMMAND:
         command = args.COMMAND
     if command == '':
@@ -293,7 +293,7 @@ def mode_run(args):
     # ignore SIGINT
     signal.signal(signal.SIGINT, signal.SIG_IGN)
     rstatus = subprocess.run((f"{BWRAP} --forward-signals --unshare-user --unshare-pid "
-                              f"--unshare-uts --hostname=runtime --overlay-src {DATADIR}/rofs "
+                              f"--unshare-uts --hostname runtime --overlay-src {DATADIR}/rofs "
                               f"--overlay {DATADIR}/rwfs {DATADIR}/tmpfs /  --bind {HOME}/Public "
                               f"{senv['HOME']}/Public --ro-bind /sys /sys --die-with-parent "
                               f"--proc /proc --dev /dev --uid 0 --gid 0 {command}").split(),
@@ -566,9 +566,9 @@ def mode_package(repo, repopath, args):
         # ignore SIGINT
         signal.signal(signal.SIGINT, signal.SIG_IGN)
         rstatus = subprocess.run((f"{BWRAP} --forward-signals --unshare-user --unshare-pid "
-                                  f"--unshare-uts --hostname=runtime --bind {args.LOCATION} / "
+                                  f"--unshare-uts --hostname runtime --bind {args.LOCATION} / "
                                   f"--proc /proc --dev /dev --ro-bind /sys /sys --die-with-parent "
-                                  f"--uid 0 --gid 0 bash --norc").split(), env=senv, check=False)
+                                  f"--uid 0 --gid 0 bash").split(), env=senv, check=False)
         if VERBOSE:
             print("Exiting sandbox...")
         if rstatus.returncode != 0:
