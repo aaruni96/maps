@@ -18,8 +18,7 @@ and this project tries to adhere to [Semantic Versioning](https://semver.org/spe
 - Packaging: Fixed packaging for arch based.
 - Use `ostree` binary to pull files instead of the `ostree` library. This shows progress on
   downloading files.
-
-### Removed
+- Use `--unshare-uts` to set hostname instead of by hacking an environment variable.
 
 ## [0.3] - 2024-11-17
 
@@ -33,8 +32,6 @@ and this project tries to adhere to [Semantic Versioning](https://semver.org/spe
 - Bugfix: interruptible downloads
 - Use native overlayfs instead of fuse implementation. Requires Linux kernel 5.11+
 - Improved handling of bwrap as a dependency
-
-### Removed
 
 ## [0.2] - 2024-06-20
 
