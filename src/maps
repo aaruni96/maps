@@ -528,7 +528,7 @@ def blank_options():
 
 
 # Package Mode
-def mode_package(repo, args):
+def mode_package(repo, repopath, args):
     """Function for package mode. Not intended to be used by "end users" """
     if args.DIR is not None:
         refhash = ''
@@ -537,7 +537,7 @@ def mode_package(repo, args):
             if VERBOSE:
                 print("base/x86_64/debian not found locally, fetching...")
             refhash = repo.remote_list_refs("Official")[1]['base/x86_64/debian']
-            download(repo, "Official", "base/x86_64/debian")
+            download(repopath, "Official", "base/x86_64/debian")
         else:
             refhash = repo.list_refs()[1]['Official:base/x86_64/debian']
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -879,7 +879,7 @@ def main():
     elif args.SubPars_NAME == 'remote':
         mode_remotes(repo, args)
     elif args.SubPars_NAME == 'package':
-        mode_package(repo, args)
+        mode_package(repo, repopath, args)
     else:
         raise ValueError("Impossible case!")
 
