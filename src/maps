@@ -253,6 +253,43 @@ def mode_remotes(repo, args):
         return
 
 
+def disambiguate_repo(repo:OSTree.Repo, rrstring:str, installed:bool = True):
+    if ':' in rrstring:
+        remote, runtime = rrstring.split(':')
+        return remote, runtime
+
+    # if not, check all repo / runtimes to find a unique set
+    found = False
+    if not installed:
+        #installed runtimes
+        installed_runtimes = repo.list_refs()[1].keys()
+        for i in installed_runtimes:
+            if rrstring == i.split(':')[-1]:
+                if found:
+                    #error
+                    pass
+                else:
+                    found = True
+                    runtime = i
+        
+        if found:
+            # found something with the same name installed, assume we want that, with a warning
+            print(f"warning, possibly ambigious name. Assuming {runtime}")
+            return i.split(':')
+
+        #all known remotes
+        remotes = repo.remote_list()
+        for remote in remotes:
+            remote_refs = make_remote_ref_list(repo, remote)
+            if remote_refs:
+                for ref in sorted(remote_refs):
+                    print(f"{ref}")
+    exit()
+        
+
+
+
+
 def mode_run(args):
     """Function to execute a deployed environment"""
 
@@ -910,6 +947,9 @@ def main():
         repopath = args.REPO
 
     repo = program_init(repopath)
+
+    disambiguate_repo(repo, rrstring='org.stupid.you/x86_64/customtest-vibrant', installed=False)
+    exit()
 
     # Run mode
     if args.SubPars_NAME == 'runtime':
