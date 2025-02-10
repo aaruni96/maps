@@ -288,8 +288,8 @@ def disambiguate_runtime(repo: OSTree.Repo, rrstring: str, installed: bool = Tru
 
         if found:
             # found something with the same name installed, assume we want that, with a warning
-            print(f"warning, possibly ambigious name. Assuming {runtime}")
-            return runtime.split(':')
+            print(f"warning, possibly ambigious name. Assuming {remote}:{runtime}")
+            return remote, runtime
 
         # all known remotes
         remotes = repo.remote_list()
@@ -301,6 +301,7 @@ def disambiguate_runtime(repo: OSTree.Repo, rrstring: str, installed: bool = Tru
                     if not found:
                         found = True
                         remote = sremote
+                        runtime = rrstring
                     else:
                         print(f"Could not disambiguate {rrstring}!\nFound in at least two "
                               f"remotes {remote} and {sremote}, maybe more! Please specify your"
@@ -412,6 +413,7 @@ def uninstall_runtime(repo, args):
     DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{remote}/{runtime}"
     if VERBOSE:
         print(f"Trying to remove {remote}:{runtime}...")
+    print(DATADIR)
     if os.path.isdir(DATADIR):
         FLAG_DIREXISTS = True
         if VERBOSE:
@@ -424,9 +426,10 @@ def uninstall_runtime(repo, args):
     for sruntime in repo.list_refs()[1].keys():
         if runtime in sruntime:
             FLAG_REFEXISTS = True
-            remote = None
             if VERBOSE:
                 print("Marking branch for deletion from repo...")
+            print(remote, runtime)
+            print('==================================')
             repo.set_ref_immediate(remote, runtime, None, None)
             if VERBOSE:
                 print("Pruning repo...")
@@ -434,11 +437,11 @@ def uninstall_runtime(repo, args):
             break
 
     if not (FLAG_DIREXISTS and FLAG_REFEXISTS):
-        print(f"Error, {args.UNINSTALL} isn't deployed and thus cannot be uninstalled!")
+        print(f"Error, {remote}:{runtime} isn't deployed and thus cannot be uninstalled!")
+        sys.exit(2)
     else:
         print(f"Uninstalled {runtime} !")
 
-    sys.exit()
 
 
 def validate_runtime_name(runtime_id: str):
@@ -579,13 +582,9 @@ def mode_deploy(repo, repopath, args):
         return
 
     # download
-    for remote in repo.remote_list():
-        if args.DEPLOY in repo.remote_list_refs(remote)[1]:
-            refhash = repo.remote_list_refs(remote)[1][args.DEPLOY]
-            if VERBOSE:
-                print(f"Downloading {refhash}...")
-            download(repopath, remote, args.DEPLOY)
-            break
+    if VERBOSE:
+        print(f"Downloading {remote}:{runtime}...")
+    download(repopath, remote, runtime)
 
     # setup directories
     checkout(repo, remote, runtime)
