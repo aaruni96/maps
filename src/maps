@@ -521,18 +521,14 @@ def mode_update(repo, repopath, args, remote=""):
     return 0
 
 
-def checkout(repo, runtime):
+def checkout(repo, remote, runtime):
     """Function to checkout an already fetched runtime from the OSTREE repository to filesystem."""
-    if ':' in runtime:
-        remote, runtime = runtime.split(':')
-    else:
-        remote = "Official"
     DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{remote}/{runtime}"
     PDATADIR = '/'.join(DATADIR.split('/')[0:-1])
     refhash = ""
-    for remote in repo.remote_list():
-        if runtime in repo.remote_list_refs(remote)[1]:
-            refhash = repo.remote_list_refs(remote)[1][runtime]
+    for sremote in repo.remote_list():
+        if runtime in repo.remote_list_refs(sremote)[1]:
+            refhash = repo.remote_list_refs(sremote)[1][runtime]
     if refhash == "":
         # refhash was not found in remote_list (obviously)
         refhash = repo.list_refs()[1][runtime]
@@ -594,8 +590,8 @@ def mode_deploy(repo, repopath, args):
             break
 
     # setup directories
-    checkout(repo, args.DEPLOY)
-    print(f"Success... {args.DEPLOY} is now ready to use!")
+    checkout(repo, remote, runtime)
+    print(f"Success... {remote}:{runtime} is now ready to use!")
 
 
 def blank_options():
@@ -902,15 +898,16 @@ def upload(repo, runtime):
         print("We only allow publishing locally made runtimes!")
         sys.exit(1)
 
+    remote = "Local"
     DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps"
-    RUNTIMEDIR = f"{DATADIR}/{runtime}"
-    TARPATH = f"{DATADIR}/{runtime}.tar.gz"
+    RUNTIMEDIR = f"{DATADIR}/{remote}/{runtime}"
+    TARPATH = f"{DATADIR}/{remote}/{runtime}.tar.gz"
     STORAGEFILE = f"{DATADIR}/tustorage"
     REFHASH = repo.list_refs()[1][runtime]
 
     # if runtime is not checked out, do it
     if not os.path.isdir(RUNTIMEDIR):
-        checkout(repo, runtime)
+        checkout(repo, remote, runtime)
 
     # if the refhash matches tar hash, don't re-tar
     if needs_tar(REFHASH, TARPATH, DATADIR):
