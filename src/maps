@@ -240,7 +240,7 @@ def mode_remotes(repo, args):
     """Administrative mode for remotes of the repo"""
     if args.LIST is not False:
         for remote in repo.remote_list():
-            print(remote)
+            print(f"{remote}: {repo.remote_get_url(remote)[1]}")
         return
     if args.REMOTE is not False:
         repo.remote_add(args.REMOTE[0], args.REMOTE[1],
@@ -253,14 +253,104 @@ def mode_remotes(repo, args):
         return
 
 
-def mode_run(args):
+def disambiguate_runtime(repo: OSTree.Repo, rrstring: str, installed: bool = True):
+    """Tries to disambiguate input into remote:runtime."""
+    if ':' in rrstring:
+        remote, runtime = rrstring.split(':')
+        if VERBOSE:
+            print(f"Remote explicitly specified as {remote}.")
+        return remote, runtime
+
+    # if not, check all repo / runtimes to find a unique set
+    if VERBOSE:
+        print("Remote not explicitly specified. Attempting to disambiguate...")
+    found = False
+    remote = ''
+    runtime = ''
+
+    if not installed:
+        # installed should be false for things like depoly
+        # so we search *everywhere*, even in the local repository
+        # this is to address the edge case when something is fetched into the local repo
+        # but not checked out to user filesystem yet
+        installed_runtimes = repo.list_refs()[1].keys()
+        for i in installed_runtimes:
+            if rrstring == i.split(':')[-1]:
+                if found:
+                    print(f"Could not disambiguate {rrstring}!\nFound in at least two remotes "
+                          f"{remote} and {i.split(':')[0]}, maybe more! Please spicfy your runtime "
+                          f"in the form \n\n\tremote:runtime\n\nFor example\n\n\t{remote}:{runtime}"
+                          "\n")
+                    sys.exit(1)
+                else:
+                    found = True
+                    remote, runtime = i.split(':')
+
+        if found:
+            # found something with the same name installed, assume we want that, with a warning
+            print(f"warning, possibly ambigious name. Assuming {runtime}")
+            return runtime.split(':')
+
+        # all known remotes
+        remotes = repo.remote_list()
+        for sremote in remotes:
+            remote_refs = make_remote_ref_list(repo, sremote)
+            for ref in sorted(remote_refs):
+                if rrstring == ref:
+                    # found a target
+                    if not found:
+                        found = True
+                        remote = sremote
+                    else:
+                        print(f"Could not disambiguate {rrstring}!\nFound in at least two "
+                              f"remotes {remote} and {sremote}, maybe more! Please specify your"
+                              " runtime in the form \n\n\tremote:runtime\n\nFor example\n\n\t"
+                              f"{remote}:{rrstring}\n")
+                        sys.exit(1)
+        if found:
+            if VERBOSE:
+                print(f"Disambiguated {rrstring} into {remote}:{runtime}!")
+            return remote, runtime
+
+        print(f"Unable to disambiguate {rrstring}! Returning garbage...")
+        return ["notfound", "notfound"]
+    # else installed is true
+    # so we are disambiguating for run
+    # search only in the installed runtimes
+    # error if we don't find anything
+    installed_runtimes = repo.list_refs()[1].keys()
+    for i in installed_runtimes:
+        if rrstring == i.split(':')[-1]:
+            if found:
+                print(f"Could not disambiguate {rrstring}!\nFound in at least two remotes "
+                      f"{remote} and {i.split(':')[0]}, maybe more! Please spicfy your runtime "
+                      f"in the form \n\n\tremote:runtime\n\nFor example\n\n\t{remote}:{runtime}"
+                      "\n")
+                sys.exit(1)
+            else:
+                found = True
+                remote, runtime = i.split(':')
+    if found:
+        if VERBOSE:
+            print(f"Disambiguated {rrstring} into {remote}:{runtime}!")
+        return remote, runtime
+
+    print(f"Unable to disambiguate {rrstring}! Returning garbage...")
+    return ["notfound", "notfound"]
+
+
+def mode_run(repo, args):
     """Function to execute a deployed environment"""
+
+    remote, runtime = disambiguate_runtime(repo, args.RUN, installed=True)
+
     # check if the path exists
-    DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{args.RUN}"
+    DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{remote}/{runtime}"
     if VERBOSE:
         print(f"Attempting to run {DATADIR}...")
     if not os.path.isdir(DATADIR):
-        raise AssertionError(f"Data directory does not exist. Is {args.RUN} installed ?")
+        raise AssertionError(f"Data directory does not exist. Is {remote}:{runtime} installed"
+                             " ?")
 
     # ensure share source and targets exist
     if VERBOSE:
@@ -286,7 +376,7 @@ def mode_run(args):
     if command == '':
         raise ValueError
     # launch sandbox
-    print(f"Launching {args.RUN}...")
+    print(f"Launching {remote}:{runtime}...")
     senv = os.environ
     senv["HOME"] = "/home/runtime"
     senv["LC_ALL"] = "C"
@@ -318,13 +408,10 @@ def uninstall_runtime(repo, args):
     # Check if runtime is checked out
     FLAG_DIREXISTS = False
     FLAG_REFEXISTS = False
-    if ':' in args.UNINSTALL:
-        remote, uninstall = args.UNINSTALL.split(':')
-    else:
-        uninstall = args.UNINSTALL
-    DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{uninstall}"
+    remote, runtime = disambiguate_runtime(repo, args.UNINSTALL, installed=True)
+    DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{remote}/{runtime}"
     if VERBOSE:
-        print(f"Trying to remove {uninstall}...")
+        print(f"Trying to remove {remote}:{runtime}...")
     if os.path.isdir(DATADIR):
         FLAG_DIREXISTS = True
         if VERBOSE:
@@ -334,12 +421,10 @@ def uninstall_runtime(repo, args):
             opts = '-rf'
         subprocess.run(f"rm {opts} {DATADIR}".split(), check=True)
 
-    for runtime in repo.list_refs()[1].keys():
-        if uninstall in runtime:
+    for sruntime in repo.list_refs()[1].keys():
+        if runtime in sruntime:
             FLAG_REFEXISTS = True
             remote = None
-            if ':' in runtime:
-                remote, runtime = runtime.split(':')
             if VERBOSE:
                 print("Marking branch for deletion from repo...")
             repo.set_ref_immediate(remote, runtime, None, None)
@@ -349,9 +434,9 @@ def uninstall_runtime(repo, args):
             break
 
     if not (FLAG_DIREXISTS and FLAG_REFEXISTS):
-        print(f"Error, {uninstall} isn't deployed and thus cannot be uninstalled!")
+        print(f"Error, {args.UNINSTALL} isn't deployed and thus cannot be uninstalled!")
     else:
-        print(f"Uninstalled {uninstall} !")
+        print(f"Uninstalled {runtime} !")
 
     sys.exit()
 
@@ -382,31 +467,35 @@ def validate_runtime_name(runtime_id: str):
 
 
 # Update
-def mode_update(repo, repopath, args, remote="Official"):
+def mode_update(repo, repopath, args, remote=""):
     """Function to update a runtime identifier to its recent version (if any)"""
     if not args.UPDATE:
         args.UPDATE = args.DEPLOY
     # check if ref is installed
-    installed = args.UPDATE in [key.split(':')[-1] for key in repo.list_refs()[1].keys()]
+    if remote == "":
+        remote, runtime = disambiguate_runtime(repo, args.UPDATE, installed=True)
+    else:
+        runtime = args.UPDATE.split(':')[-1]
+    installed = runtime in [key.split(':')[-1] for key in repo.list_refs()[1].keys()]
     if VERBOSE:
         print(f"List of installed runtimes is {repo.list_refs()[1].keys()}")
     if not installed:
-        print(f"{args.UPDATE} is not installed, hence cannot be updated! Try --deploy instead")
+        print(f"{runtime} is not installed, hence cannot be updated! Try --deploy instead")
         return 1
 
     # check if we need an update
-    same = repo.list_refs()[1][f'{remote}:{args.UPDATE}'] ==\
-        repo.remote_list_refs(remote)[1][args.UPDATE]
+    same = repo.list_refs()[1][f'{remote}:{runtime}'] ==\
+        repo.remote_list_refs(remote)[1][runtime]
     if VERBOSE:
-        print(f"Local refhash = {repo.list_refs()[1][f'{remote}:{args.UPDATE}']}")
-        print(f"Remote refhash = {repo.remote_list_refs(remote)[1][args.UPDATE]}")
+        print(f"Local refhash = {repo.list_refs()[1][f'{remote}:{runtime}']}")
+        print(f"Remote refhash = {repo.remote_list_refs(remote)[1][runtime]}")
     if same:
-        print(f"{args.UPDATE} is already up to date, refreshing!")
+        print(f"{runtime} is already up to date, refreshing!")
     else:
         # download the update
-        download(repopath, remote, args.UPDATE)
+        download(repopath, remote, runtime)
 
-    DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{args.UPDATE}"
+    DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{remote}/{runtime}"
 
     # clean out the data dir
     if VERBOSE:
@@ -416,7 +505,7 @@ def mode_update(repo, repopath, args, remote="Official"):
     subprocess.run(f"rm {opts1} {DATADIR}/rofs".split(), check=True)
 
     # checkout branch to tree
-    refhash = repo.remote_list_refs(remote)[1][args.UPDATE]
+    refhash = repo.remote_list_refs(remote)[1][runtime]
     tfd = os.open(DATADIR, os.O_RDONLY)
     osopts = blank_options()
     osopts.bareuseronly_dirs = True
@@ -430,14 +519,14 @@ def mode_update(repo, repopath, args, remote="Official"):
     return 0
 
 
-def checkout(repo, runtime):
+def checkout(repo, remote, runtime):
     """Function to checkout an already fetched runtime from the OSTREE repository to filesystem."""
-    DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{runtime}"
+    DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{remote}/{runtime}"
     PDATADIR = '/'.join(DATADIR.split('/')[0:-1])
     refhash = ""
-    for remote in repo.remote_list():
-        if runtime in repo.remote_list_refs(remote)[1]:
-            refhash = repo.remote_list_refs(remote)[1][runtime]
+    for sremote in repo.remote_list():
+        if runtime in repo.remote_list_refs(sremote)[1]:
+            refhash = repo.remote_list_refs(sremote)[1][runtime]
     if refhash == "":
         # refhash was not found in remote_list (obviously)
         refhash = repo.list_refs()[1][runtime]
@@ -466,23 +555,25 @@ def checkout(repo, runtime):
 def mode_deploy(repo, repopath, args):
     """Function to deploy from repo to local disk"""
 
-    if args.DEPLOY in [j for remotes in repo.remote_list()
-                       for j in make_remote_ref_list(repo, remotes)]:
+    remote, runtime = disambiguate_runtime(repo, args.DEPLOY, installed=False)
+
+    # check that runtime exists in remote
+    if runtime in make_remote_ref_list(repo, remote):
         pass
-    elif args.DEPLOY in list(repo.list_refs()[1].keys()):
+    elif runtime in list(repo.list_refs()[1].keys()):
         refhash = repo.list_refs()[1][args.DEPLOY]
     else:
         print("Error: runtime not found! Use list mode --list to view available runtimes.")
         sys.exit(1)
 
-    DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{args.DEPLOY}"
+    DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{remote}/{runtime}"
 
     # check if update
     if os.path.exists(DATADIR):
         print("Directory already exists, trying to update...")
         if VERBOSE:
             print(f"Data directory is {DATADIR}")
-        ret = mode_update(repo, repopath, args)
+        ret = mode_update(repo, repopath, args, remote=remote)
         if ret == 1:
             raise AssertionError("Error: Unknown error!")
         return
@@ -497,8 +588,8 @@ def mode_deploy(repo, repopath, args):
             break
 
     # setup directories
-    checkout(repo, args.DEPLOY)
-    print(f"Success... {args.DEPLOY} is now ready to use!")
+    checkout(repo, remote, runtime)
+    print(f"Success... {remote}:{runtime} is now ready to use!")
 
 
 def blank_options():
@@ -629,11 +720,12 @@ def commit(zarglist):
     repo.commit_transaction(None)
 
 
-def reset(runtime):
+def reset(repo, runtime):
     """
     Function resets a runtime, simply by deleting the contents of the "rwfs" dir.
     """
-    DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{runtime}"
+    remote, runtime = disambiguate_runtime(repo, runtime, installed=True)
+    DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{remote}/{runtime}"
     if VERBOSE:
         print(f"Resetting {runtime}...")
         opts = '-rvf'
@@ -648,7 +740,6 @@ def mode_runtime(repo, repopath, args):
     """
     Runtime mode, the default path for execution, and the "end user" mode.
     """
-
     if args.LIST:
         mode_list(repo)
     elif args.LIST_LOCAL:
@@ -657,11 +748,11 @@ def mode_runtime(repo, repopath, args):
             for ref in sorted(refs):
                 print(f"{ref.split(':')[-1]}")
     elif args.RESET:
-        reset(args.RESET)
+        reset(repo, args.RESET)
     elif args.UNINSTALL:
         uninstall_runtime(repo, args)
     elif args.RUN:
-        mode_run(args)
+        mode_run(repo, args)
     elif args.DEPLOY:
         mode_deploy(repo, repopath, args)
     elif args.UPDATE:
@@ -804,15 +895,16 @@ def upload(repo, runtime):
         print("We only allow publishing locally made runtimes!")
         sys.exit(1)
 
+    remote = "Local"
     DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps"
-    RUNTIMEDIR = f"{DATADIR}/{runtime}"
-    TARPATH = f"{DATADIR}/{runtime}.tar.gz"
+    RUNTIMEDIR = f"{DATADIR}/{remote}/{runtime}"
+    TARPATH = f"{DATADIR}/{remote}/{runtime}.tar.gz"
     STORAGEFILE = f"{DATADIR}/tustorage"
     REFHASH = repo.list_refs()[1][runtime]
 
     # if runtime is not checked out, do it
     if not os.path.isdir(RUNTIMEDIR):
-        checkout(repo, runtime)
+        checkout(repo, remote, runtime)
 
     # if the refhash matches tar hash, don't re-tar
     if needs_tar(REFHASH, TARPATH, DATADIR):
