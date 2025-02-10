@@ -295,19 +295,18 @@ def disambiguate_runtime(repo: OSTree.Repo, rrstring: str, installed: bool = Tru
         remotes = repo.remote_list()
         for sremote in remotes:
             remote_refs = make_remote_ref_list(repo, sremote)
-            if remote_refs:
-                for ref in sorted(remote_refs):
-                    if rrstring == ref:
-                        # found a target
-                        if not found:
-                            found = True
-                            remote = sremote
-                        else:
-                            print(f"Could not disambiguate {rrstring}!\nFound in at least two "
-                                  f"remotes {remote} and {sremote}, maybe more! Please specify your"
-                                  " runtime in the form \n\n\tremote:runtime\n\nFor example\n\n\t"
-                                  f"{remote}:{rrstring}\n")
-                            sys.exit(1)
+            for ref in sorted(remote_refs):
+                if rrstring == ref:
+                    # found a target
+                    if not found:
+                        found = True
+                        remote = sremote
+                    else:
+                        print(f"Could not disambiguate {rrstring}!\nFound in at least two "
+                                f"remotes {remote} and {sremote}, maybe more! Please specify your"
+                                " runtime in the form \n\n\tremote:runtime\n\nFor example\n\n\t"
+                                f"{remote}:{rrstring}\n")
+                        sys.exit(1)
         if found:
             if VERBOSE:
                 print(f"Disambiguated {rrstring} into {remote}:{runtime}!")
