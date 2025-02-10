@@ -303,9 +303,9 @@ def disambiguate_runtime(repo: OSTree.Repo, rrstring: str, installed: bool = Tru
                         remote = sremote
                     else:
                         print(f"Could not disambiguate {rrstring}!\nFound in at least two "
-                                f"remotes {remote} and {sremote}, maybe more! Please specify your"
-                                " runtime in the form \n\n\tremote:runtime\n\nFor example\n\n\t"
-                                f"{remote}:{rrstring}\n")
+                              f"remotes {remote} and {sremote}, maybe more! Please specify your"
+                              " runtime in the form \n\n\tremote:runtime\n\nFor example\n\n\t"
+                              f"{remote}:{rrstring}\n")
                         sys.exit(1)
         if found:
             if VERBOSE:
