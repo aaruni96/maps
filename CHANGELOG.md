@@ -12,6 +12,7 @@ and this project tries to adhere to [Semantic Versioning](https://semver.org/spe
 - Add profile for AppArmor.
 - **BREAKING** : Added ability to disambiguate based on remotes. This changes how the files are
   organized on disk. Remove `$HOME/.var/org.mardi.maps` to refresh if you run into problems.
+- Added testsuite!
 
 ### Changed
 
@@ -48,8 +49,6 @@ and this project tries to adhere to [Semantic Versioning](https://semver.org/spe
 - Suppress bubblewrap compilation except in Verbose
 - Handle edge case of live already being mounted
 - Use `umount` instead of `fusermount` to unmount live
-
-### Changed
 
 ## [0.1] - 2024-02-12
 
