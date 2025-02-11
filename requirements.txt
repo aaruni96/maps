@@ -1,4 +1,5 @@
-PyGObject==3.44.1
+PyGObject==3.50.0
 tomli==2.0.1
 tuspy==1.0.3
 progress==1.6
+pytest==8.3.4
