@@ -443,7 +443,6 @@ def uninstall_runtime(repo, args):
         print(f"Uninstalled {runtime} !")
 
 
-
 def validate_runtime_name(runtime_id: str):
     """
     Function to validate that a given runtime ID conforms to naming rules
@@ -564,7 +563,7 @@ def mode_deploy(repo, repopath, args):
     if runtime in make_remote_ref_list(repo, remote):
         pass
     elif runtime in list(repo.list_refs()[1].keys()):
-        refhash = repo.list_refs()[1][args.DEPLOY]
+        pass
     else:
         print("Error: runtime not found! Use list mode --list to view available runtimes.")
         sys.exit(1)
