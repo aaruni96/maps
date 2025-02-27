@@ -383,11 +383,18 @@ def mode_run(repo, args):
     senv["LC_ALL"] = "C"
     # ignore SIGINT
     signal.signal(signal.SIGINT, signal.SIG_IGN)
-    rstatus = subprocess.run((f"{BWRAP} --forward-signals --unshare-user --unshare-pid "
-                              f"--unshare-uts --hostname runtime --overlay-src {DATADIR}/rofs "
-                              f"--overlay {DATADIR}/rwfs {DATADIR}/tmpfs /  --bind {HOME}/Public "
-                              f"{senv['HOME']}/Public --ro-bind /sys /sys --die-with-parent "
-                              f"--proc /proc --dev /dev --uid 0 --gid 0 {command}").split(),
+
+    # construct bwrapstring
+    bwrapstring = f'{BWRAP} --forward-signals --unshare-user --unshare-pid --unshare-uts '\
+                  f'--hostname runtime --bind {args.LOCATION} / --proc /proc --dev /dev '\
+                  f'--ro-bind /sys /sys --die-with-parent --disable-userns --uid 0 --gid 0 '
+    if senv['XDG_SESSION_TYPE'] == 'wayland':
+        bwrapstring = bwrapstring + f'--dir {senv["XDG_RUNTIME_DIR"]} --ro-bind ' + \
+            f'{senv["XDG_RUNTIME_DIR"]}/wayland-1 ' + \
+            f'{senv["XDG_RUNTIME_DIR"]}/wayland-1 '
+    bwrapstring = bwrapstring + command
+
+    rstatus = subprocess.run(bwrapstring.split(),
                              env=senv, check=False)
     if rstatus.returncode != 0:
         print(f"Sandbox exited with return code {rstatus.returncode}")
@@ -651,10 +658,19 @@ def mode_package(repo, repopath, args):
         senv["LC_ALL"] = "C"
         # ignore SIGINT
         signal.signal(signal.SIGINT, signal.SIG_IGN)
-        rstatus = subprocess.run((f"{BWRAP} --forward-signals --unshare-user --unshare-pid "
-                                  f"--unshare-uts --hostname runtime --bind {args.LOCATION} / "
-                                  f"--proc /proc --dev /dev --ro-bind /sys /sys --die-with-parent "
-                                  f"--uid 0 --gid 0 bash").split(), env=senv, check=False)
+
+        # Construct bwrap command
+        bwrapstring = f'{BWRAP} --forward-signals --unshare-user --unshare-pid --unshare-uts '\
+                      f'--hostname runtime --bind {args.LOCATION} / --proc /proc --dev /dev '\
+                      f'--ro-bind /sys /sys --die-with-parent --disable-userns --uid 0 --gid 0 '
+
+        if senv['XDG_SESSION_TYPE'] == 'wayland':
+            bwrapstring = bwrapstring + f'--dir {senv["XDG_RUNTIME_DIR"]} --ro-bind ' + \
+                f'{senv["XDG_RUNTIME_DIR"]}/wayland-1 ' + \
+                f'{senv["XDG_RUNTIME_DIR"]}/wayland-1 '
+        bwrapstring = bwrapstring + "bash"
+
+        rstatus = subprocess.run(bwrapstring.split(), env=senv, check=False)
         if VERBOSE:
             print("Exiting sandbox...")
         if rstatus.returncode != 0:
