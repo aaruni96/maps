@@ -982,9 +982,9 @@ def upload(repo, runtime):
     if needs_tar(REFHASH, TARPATH, DATADIR):
         if VERBOSE:
             print("Making tarball...")
-            opts = "-cvzf"
+            opts = "-cv --use-compress-program=pigz -f"
         else:
-            opts = "-czf"
+            opts = "-c --use-compress-program=pigz -f"
 
         subprocess.run(f"tar {opts} {TARPATH} {RUNTIMEDIR}".split(), check=True)
         add_hash_to_db(REFHASH, TARPATH, DATADIR)
