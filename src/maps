@@ -356,6 +356,7 @@ def make_bwrap_command(location, command):
     elif session == 'x11':
         senv['XAUTHORITY'] = '/home/runtime/.Xauthority'
         senv['HOST'] = 'runtime'
+        senv['PS1'] = '${debian_chroot:+($debian_chroot)}\\u@runtime:\\@\\$'
         bwrapstring += f'--ro-bind {senv["HOME"]}/.Xauthority /home/runtime/.Xauthority ' \
                        '--ro-bind /tmp/.X11-unix/X0 /tmp/.X11-unix/X0 '
     bwrapstring += command
