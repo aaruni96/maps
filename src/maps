@@ -284,7 +284,11 @@ def disambiguate_runtime(repo: OSTree.Repo, rrstring: str, installed: bool = Tru
                     sys.exit(1)
                 else:
                     found = True
-                    remote, runtime = i.split(':')
+                    if ':' in i:
+                        remote, runtime = i.split(':')
+                    else:
+                        remote = '_local'
+                        runtime = i
 
         if found:
             # found something with the same name installed, assume we want that, with a warning
@@ -330,7 +334,11 @@ def disambiguate_runtime(repo: OSTree.Repo, rrstring: str, installed: bool = Tru
                 sys.exit(1)
             else:
                 found = True
-                remote, runtime = i.split(':')
+                if ':' in i:
+                    remote, runtime = i.split(':')
+                else:
+                    remote = "_local"
+                    runtime = i
     if found:
         if VERBOSE:
             print(f"Disambiguated {rrstring} into {remote}:{runtime}!")
@@ -645,9 +653,10 @@ def mode_deploy(repo, repopath, args):
         return
 
     # download
-    if VERBOSE:
-        print(f"Downloading {remote}:{runtime}...")
-    download(repopath, remote, runtime)
+    if remote != '_local':
+        if VERBOSE:
+            print(f"Downloading {remote}:{runtime}...")
+        download(repopath, remote, runtime)
 
     # setup directories
     checkout(repo, remote, runtime)

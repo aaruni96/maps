@@ -23,6 +23,7 @@ and this project tries to adhere to [Semantic Versioning](https://semver.org/spe
 - Use `ostree` binary to pull files instead of the `ostree` library. This shows progress on
   downloading files.
 - Use `--unshare-uts` to set hostname instead of by hacking an environment variable.
+- Bugfix: Fixed a regression which broke running of local runtimes.
 
 ## [0.3] - 2024-11-17
 
