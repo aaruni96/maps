@@ -26,6 +26,7 @@ and this project tries to adhere to [Semantic Versioning](https://semver.org/spe
 - Bugfix: Fixed a regression which broke running of local runtimes.
 - Use default maps upload server
 - Improve upload subroutines
+- Bugfix: Fixed a regression which broke running of local runtimes.
 
 ## [0.3] - 2024-11-17
 
