@@ -340,6 +340,73 @@ def disambiguate_runtime(repo: OSTree.Repo, rrstring: str, installed: bool = Tru
     return ["notfound", "notfound"]
 
 
+def make_bwrap_command(location, command):
+    """
+    Subroutine builds the bubblewrap command to execute
+    """
+    senv = os.environ
+    bwrapstring = f'{BWRAP} --forward-signals --unshare-user --unshare-pid --unshare-uts ' \
+                  '--unshare-ipc --disable-userns --die-with-parent --uid 0 --gid 0 ' \
+                  f'--bind {location} / --proc /proc --dev /dev --ro-bind /sys /sys --tmpfs /tmp '
+    session = senv['XDG_SESSION_TYPE']
+    if session == 'wayland':
+        rundir = senv["XDG_RUNTIME_DIR"]
+        bwrapstring += f'--dir {rundir} --hostname runtime ' \
+                       f'--ro-bind {rundir}/wayland-1 {rundir}/wayland-1 '
+    elif session == 'x11':
+        senv['XAUTHORITY'] = '/home/runtime/.Xauthority'
+        senv['HOST'] = 'runtime'
+        bwrapstring += f'--ro-bind {senv["HOME"]}/.Xauthority /home/runtime/.Xauthority ' \
+                       '--ro-bind /tmp/.X11-unix/X0 /tmp/.X11-unix/X0 '
+    bwrapstring += command
+    senv["HOME"] = "/home/runtime"
+    senv["LC_ALL"] = "C"
+    senv['USER'] = 'root'
+    senv['SHELL'] = '/usr/bin/bash'
+    senv['PATH'] = '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:'\
+                   '/usr/local/games'
+    try:
+        senv.pop("VIRTUAL_ENV")
+    except KeyError:
+        pass
+    try:
+        senv.pop("SESSION_MANAGER")
+    except KeyError:
+        pass
+    try:
+        senv.pop("XDG_SESSION_PATH")
+    except KeyError:
+        pass
+    try:
+        senv.pop("LOGNAME")
+    except KeyError:
+        pass
+    try:
+        senv.pop("SSH_AUTH_SOCK")
+    except KeyError:
+        pass
+    try:
+        senv.pop("XDG_GREETER_DATA_DIR")
+    except KeyError:
+        pass
+    try:
+        senv.pop("XDG_SEAT_PATH")
+    except KeyError:
+        pass
+    try:
+        senv.pop("GEM_HOME")
+    except KeyError:
+        pass
+    try:
+        senv.pop("MAIL")
+    except KeyError:
+        pass
+    if VERBOSE:
+        print("Bubblewrap command is")
+        print(bwrapstring)
+    return bwrapstring, senv
+
+
 def mode_run(repo, args):
     """Function to execute a deployed environment"""
 
@@ -378,22 +445,10 @@ def mode_run(repo, args):
         raise ValueError
     # launch sandbox
     print(f"Launching {remote}:{runtime}...")
-    senv = os.environ
-    senv["HOME"] = "/home/runtime"
-    senv["LC_ALL"] = "C"
+    # construct bwrapstring
+    bwrapstring, senv = make_bwrap_command(f"{DATADIR}/rofs", command)
     # ignore SIGINT
     signal.signal(signal.SIGINT, signal.SIG_IGN)
-
-    # construct bwrapstring
-    bwrapstring = f'{BWRAP} --forward-signals --unshare-user --unshare-pid --unshare-uts '\
-                  f'--hostname runtime --bind {args.LOCATION} / --proc /proc --dev /dev '\
-                  f'--ro-bind /sys /sys --die-with-parent --disable-userns --uid 0 --gid 0 '
-    if senv['XDG_SESSION_TYPE'] == 'wayland':
-        bwrapstring = bwrapstring + f'--dir {senv["XDG_RUNTIME_DIR"]} --ro-bind ' + \
-            f'{senv["XDG_RUNTIME_DIR"]}/wayland-1 ' + \
-            f'{senv["XDG_RUNTIME_DIR"]}/wayland-1 '
-    bwrapstring = bwrapstring + command
-
     rstatus = subprocess.run(bwrapstring.split(),
                              env=senv, check=False)
     if rstatus.returncode != 0:
@@ -653,23 +708,9 @@ def mode_package(repo, repopath, args):
         # location is a functional tree, we just have to sandbox in it
         # its the user's responsibility to ensure the tree is good
         print(f"Launching a sandbox in {args.LOCATION}...")
-        senv = os.environ
-        senv["HOME"] = "/home/runtime"
-        senv["LC_ALL"] = "C"
+        bwrapstring, senv = make_bwrap_command(args.LOCATION, "/usr/bin/bash")
         # ignore SIGINT
         signal.signal(signal.SIGINT, signal.SIG_IGN)
-
-        # Construct bwrap command
-        bwrapstring = f'{BWRAP} --forward-signals --unshare-user --unshare-pid --unshare-uts '\
-                      f'--hostname runtime --bind {args.LOCATION} / --proc /proc --dev /dev '\
-                      f'--ro-bind /sys /sys --die-with-parent --disable-userns --uid 0 --gid 0 '
-
-        if senv['XDG_SESSION_TYPE'] == 'wayland':
-            bwrapstring = bwrapstring + f'--dir {senv["XDG_RUNTIME_DIR"]} --ro-bind ' + \
-                f'{senv["XDG_RUNTIME_DIR"]}/wayland-1 ' + \
-                f'{senv["XDG_RUNTIME_DIR"]}/wayland-1 '
-        bwrapstring = bwrapstring + "bash"
-
         rstatus = subprocess.run(bwrapstring.split(), env=senv, check=False)
         if VERBOSE:
             print("Exiting sandbox...")
