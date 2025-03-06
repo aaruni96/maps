@@ -360,9 +360,9 @@ def make_bwrap_command(location, command):
         # Dirty hack to get the prompt right on debian-minimal
         senv['HOST'] = 'runtime'
         senv['HOSTNAME'] = 'runtime'
-        senv['PS1'] = '${debian_chroot:+($debian_chroot)}\\u@runtime:\\@\\$'
-        senv['SUDO'] = ""
-        senv['SUDO_PS1'] = ""
+        senv['PS1'] = '${debian_chroot:+($debian_chroot)}\\u@runtime:\\w\\$'
+        senv['SUDO_USER'] = "."
+        senv['SUDO_PS1'] = "."
     bwrapstring += command
     senv["HOME"] = "/home/runtime"
     senv["LC_ALL"] = "C"
