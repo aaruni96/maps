@@ -354,11 +354,15 @@ def make_bwrap_command(location, command):
         bwrapstring += f'--dir {rundir} --hostname runtime ' \
                        f'--ro-bind {rundir}/wayland-1 {rundir}/wayland-1 '
     elif session == 'x11':
-        senv['XAUTHORITY'] = '/home/runtime/.Xauthority'
-        senv['HOST'] = 'runtime'
-        senv['PS1'] = '${debian_chroot:+($debian_chroot)}\\u@runtime:\\@\\$'
-        bwrapstring += f'--ro-bind {senv["HOME"]}/.Xauthority /home/runtime/.Xauthority ' \
+        bwrapstring += f'--ro-bind {senv["XAUTHORITY"]} /home/runtime/.Xauthority ' \
                        '--ro-bind /tmp/.X11-unix/X0 /tmp/.X11-unix/X0 '
+        senv['XAUTHORITY'] = '/home/runtime/.Xauthority'
+        # Dirty hack to get the prompt right on debian-minimal
+        senv['HOST'] = 'runtime'
+        senv['HOSTNAME'] = 'runtime'
+        senv['PS1'] = '${debian_chroot:+($debian_chroot)}\\u@runtime:\\@\\$'
+        senv['SUDO'] = ""
+        senv['SUDO_PS1'] = ""
     bwrapstring += command
     senv["HOME"] = "/home/runtime"
     senv["LC_ALL"] = "C"
