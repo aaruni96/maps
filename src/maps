@@ -461,16 +461,12 @@ def mode_run(repo, args):
     print(f"Launching {remote}:{runtime}...")
     # construct bwrapstring
     bwrapstring, senv = make_bwrap_command(f"{DATADIR}/rofs", command)
-    # ignore SIGINT
-    signal.signal(signal.SIGINT, signal.SIG_IGN)
     rstatus = subprocess.run(bwrapstring.split(),
                              env=senv, check=False)
     if rstatus.returncode != 0:
         print(f"Sandbox exited with return code {rstatus.returncode}")
     elif VERBOSE:
         print("Sandbox exited successfully!")
-    # stop ignoring SIGINT
-    signal.signal(signal.SIGINT, OG_SIGINT_HANLDER)
 
 
 def download(repopath, remote, target):
@@ -724,15 +720,11 @@ def mode_package(repo, repopath, args):
         # its the user's responsibility to ensure the tree is good
         print(f"Launching a sandbox in {args.LOCATION}...")
         bwrapstring, senv = make_bwrap_command(args.LOCATION, "/usr/bin/bash")
-        # ignore SIGINT
-        signal.signal(signal.SIGINT, signal.SIG_IGN)
         rstatus = subprocess.run(bwrapstring.split(), env=senv, check=False)
         if VERBOSE:
             print("Exiting sandbox...")
         if rstatus.returncode != 0:
             print(f"Sandbox exited with return code {rstatus.returncode}")
-        # stop ignoring SIGINT
-        signal.signal(signal.SIGINT, OG_SIGINT_HANLDER)
     if args.COMMIT is not False:
         # we are given TREE and BRANCH. All we have to do is commit TREE to BRANCH
         # first validate that BRANCH follows a naming scheme we like
@@ -746,6 +738,7 @@ def mode_package(repo, repopath, args):
                 time.sleep(0.2)
                 sys.stdout.write('\b')
                 if future.done():
+                    assert future.result() is None
                     sys.stdout.flush()
                     break
             print("Done!")
