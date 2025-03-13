@@ -4,6 +4,7 @@
 import os
 import sys
 import time
+import json
 import itertools
 import signal
 import subprocess
@@ -33,7 +34,7 @@ HOME = os.getenv('HOME')
 KEEP_FREE_SPACE = 3
 VERBOSE = False
 OG_SIGINT_HANLDER = signal.getsignal(signal.SIGINT)
-TUSTARGET = "http://0.0.0.0:8080"
+TUSTARGET = "https://maps.math.rptu.de"
 if os.getenv("MAPS_UPLOAD_SERVER") is not None:
     TUSTARGET = str(os.getenv("MAPS_UPLOAD_SERVER"))
 AUTH = os.getenv("MTDAUTH")
@@ -843,11 +844,13 @@ def tus_upload(filename, storage_file, runtime):
     """
     filesize = os.path.getsize(filename)
     chunksize = 1024 * 256  # chunksize in bytes
-    headers = {'Authentication': f'Basic {AUTH}', 'Tus-Resumable': '1.0.0'}
+    headers = {'Authentication': f'Basic {AUTH}', 'Tus-Resumable': '1.0.0',
+               'User-Agent': f'maps-{VERSION}'}
     upclient = client.TusClient(f'{TUSTARGET}/files/', headers=headers)
     storage = filestorage.FileStorage(storage_file)
     uploader = upclient.uploader(filename, store_url=True, url_storage=storage,
-                                 metadata={'runtime': runtime}, chunk_size=chunksize)
+                                 metadata={'runtime': runtime, 'authentication': AUTH},
+                                 chunk_size=chunksize)
 
     # going to need some try-catch here instead of just crashing
     # if auth or network fails
@@ -870,6 +873,9 @@ def tus_upload(filename, storage_file, runtime):
         print(f"Current offset is {offset}")
         print(f"Total file size is {filesize}")
         print("=================")
+    if offset == filesize:
+        print("Upload already completed!")
+        return 0
 
     progressBar = Bar("Uploading", max=floor(filesize / chunksize))
     progressBar.suffix = '%(percent).1d%%'
@@ -883,10 +889,12 @@ def tus_upload(filename, storage_file, runtime):
         tnew = time.time()
         rate = chunksize / (tnew - told)
         if acc == 0:
-            progressBar.suffix = f'%(percent).1d%% | %(eta)ds remaining | {byteSI(rate)}B/s'
+            progressBar.suffix = f'%(percent).1d%% of {byteSI(filesize)}B | %(eta_td) s remaining' \
+                                 f' | {byteSI(rate)}B/s'
         acc = acc + 1
-        if acc == 1000:
-            progressBar.suffix = f'%(percent).1d%% | %(eta)ds remaining | {byteSI(rate)}B/s'
+        if acc == 5000:
+            progressBar.suffix = f'%(percent).1d%% of {byteSI(filesize)}B | %(eta_td) s remaining' \
+                                 f' | {byteSI(rate)}B/s'
             acc = 1
         offset = uploader.offset
         progressBar.next()
@@ -907,7 +915,7 @@ def needs_tar(refhash, tarpath, datadir):
             print("Tarfile doesn't already exist. Needs tar-ing!")
         return True
     if VERBOSE:
-        print(f"Generting a has for tarfile {tarpath}")
+        print(f"Generting a hash for tarfile {tarpath}")
     tarhash = subprocess.check_output(["md5sum", tarpath]).decode().split()[0]
     if VERBOSE:
         print(f"Tar's hash is {tarhash}")
@@ -976,17 +984,38 @@ def upload(repo, runtime):
     if needs_tar(REFHASH, TARPATH, DATADIR):
         if VERBOSE:
             print("Making tarball...")
-            opts = "-cvzf"
+            opts = "-cv --use-compress-program=pigz -f"
         else:
-            opts = "-czf"
+            opts = "-c --use-compress-program=pigz -f"
 
         subprocess.run(f"tar {opts} {TARPATH} {RUNTIMEDIR}".split(), check=True)
         add_hash_to_db(REFHASH, TARPATH, DATADIR)
 
+    # check storagefile
+    good = 0
+    if os.path.isfile(STORAGEFILE):
+        with open(STORAGEFILE, encoding='UTF-8') as upfile:
+            f = upfile.read()
+            if f == ('', '\n'):
+                good = 1
+                if VERBOSE:
+                    print("Local tus database empty!")
+            else:
+                try:
+                    json.loads(f)
+                except json.decoder.JSONDecodeError:
+                    good = 2
+                    if VERBOSE:
+                        print("Local tus databse malformed!")
+    if good == 1:
+        # empty database, we can delete
+        os.remove(STORAGEFILE)
+    elif good == 2:
+        os.rename(STORAGEFILE, f"{STORAGEFILE}.bak")
+
     if tus_upload(TARPATH, STORAGEFILE, runtime) != 0:
         print("something very bad happened")
         return -1
-
     return 0
 
 
@@ -1013,7 +1042,6 @@ def main():
 
     # Some sanity checks
     sanity_checks(parsers)
-
     global VERBOSE
     VERBOSE = args.VERBOSE
 
@@ -1028,7 +1056,6 @@ def main():
         repopath = f"{data}/ostree/repo"
     else:
         repopath = args.REPO
-
     repo = program_init(repopath)
 
     # Run mode
