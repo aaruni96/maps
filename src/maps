@@ -889,10 +889,12 @@ def tus_upload(filename, storage_file, runtime):
         tnew = time.time()
         rate = chunksize / (tnew - told)
         if acc == 0:
-            progressBar.suffix = f'%(percent).1d%% of {byteSI(filesize)}B | %(eta_td) s remaining | {byteSI(rate)}B/s'
+            progressBar.suffix = f'%(percent).1d%% of {byteSI(filesize)}B | %(eta_td) s remaining' \
+                                 f' | {byteSI(rate)}B/s'
         acc = acc + 1
         if acc == 5000:
-            progressBar.suffix = f'%(percent).1d%% of {byteSI(filesize)}B | %(eta_td) s remaining | {byteSI(rate)}B/s'
+            progressBar.suffix = f'%(percent).1d%% of {byteSI(filesize)}B | %(eta_td) s remaining' \
+                                 f' | {byteSI(rate)}B/s'
             acc = 1
         offset = uploader.offset
         progressBar.next()
