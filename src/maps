@@ -162,7 +162,7 @@ def program_init(repopath):
         if VERBOSE:
             print("Compiling bubblewrap...")
         subprocess.run(f"cd {BWRAP[0:-15]} && meson _builddir {opt2} "
-                       f"&& meson compile -C _builddir {opt2}", shell=True, check=False)
+                       f"&& meson compile -C _builddir {opt2}", shell=True, check=True)
         print("Bubblewrap installed!")
     assert os.path.isfile(BWRAP)
     if VERBOSE:
