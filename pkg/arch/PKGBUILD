@@ -1,7 +1,7 @@
 # Maintainer: Aaruni Kaushik <akaushik@mathematik.uni-kl.de>
 _name=maps
 pkgname=maps
-pkgver=0.3
+pkgver=0.4
 pkgrel=1
 pkgdesc="Sandboxing tool for Mathematical Research Software"
 arch=('x86_64')
@@ -24,11 +24,11 @@ conflicts=('maps')
 provides=('maps')
 optdepends=()
 makedepends=('git')
-source=("${_name}-${pkgver}.tar.gz::${url}/archive/refs/tags/v${pkgver}.tar.gz")
-sha256sums=('c58043b099d5721018b02221afb0621d4deeb3e2bf7bfad0d36f2928ea43f120')
+source=("${pkgname}-${pkgver}.tar.gz::${url}/archive/refs/tags/v${pkgver}.tar.gz")
+sha256sums=('SKIP')
 
 package(){
-    install -Dm 755 "$srcdir/${_name}-${pkgver}/src/maps" "$pkgdir/usr/bin/maps"
-    install -Dm 644 "$srcdir/${_name}-${pkgver}/src/completion.bash" "$pkgdir/usr/share/bash-completion/completions/maps"
-    install -Dm 644 "$srcdir/${_name}-${pkgver}/src/usr.bin.maps" "$pkgdir/etc/apparmor.d/usr.bin.maps"
+    install -Dm 755 "$srcdir/${pkgname}-${pkgver}/src/maps" "$pkgdir/usr/bin/maps"
+    install -Dm 644 "$srcdir/${pkgname}-${pkgver}/src/completion.bash" "$pkgdir/usr/share/bash-completion/completions/maps"
+    install -Dm 644 "$srcdir/${pkgname}-${pkgver}/src/usr.bin.maps" "$pkgdir/etc/apparmor.d/usr.bin.maps"
 }
