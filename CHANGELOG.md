@@ -11,13 +11,15 @@ and this project tries to adhere to [Semantic Versioning](https://semver.org/spe
 
 - Set value of TERM to something included in the runtime. This can be overridden by the env var
   SANDBOX_TERM.
+- Added a `--no-gui` flag to explicitly disable support for GUI applications.
+- Added a `--gui` flag to force enable support for GUI applications
 
 ### Changed
 
 - Bugfix: Fix info message about runtime updates.
 - Bugfix: Add whitespace to runtime prompt.
-
-### Removed
+- Changed GUI mounts to attempt binding, with silently continuing on failure, by
+  default. Use `--gui` to error if GUI mounts fail.
 
 ## [0.4] - 2025-03-13
 
