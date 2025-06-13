@@ -585,7 +585,7 @@ def mode_update(repo, repopath, args, remote=""):
         print(f"Checking out tree from repo to {DATADIR}/rofs ...")
     repo.checkout_at(osopts, tfd, "rofs", refhash, None)
 
-    print(f"Success... {args.DEPLOY} is now updated!")
+    print(f"Success... {args.UPDATE} is now updated!")
 
     return 0
 
