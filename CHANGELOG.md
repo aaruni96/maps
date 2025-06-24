@@ -9,6 +9,9 @@ and this project tries to adhere to [Semantic Versioning](https://semver.org/spe
 
 ### Added
 
+- Set value of TERM to something included in the runtime. This can be overridden by the env var
+  SANDBOX_TERM.
+
 ### Changed
 
 - Bugfix: Fix info message about runtime updates.
