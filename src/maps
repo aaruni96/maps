@@ -38,6 +38,7 @@ TUSTARGET = "https://maps.math.rptu.de"
 if os.getenv("MAPS_UPLOAD_SERVER") is not None:
     TUSTARGET = str(os.getenv("MAPS_UPLOAD_SERVER"))
 AUTH = os.getenv("MTDAUTH")
+TERM = os.getenv("SANDBOX_TERM")
 
 
 # Define a CLI
@@ -379,6 +380,11 @@ def make_bwrap_command(location, command):
     senv['SHELL'] = '/usr/bin/bash'
     senv['PATH'] = '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:'\
                    '/usr/local/games'
+    if TERM is not None:
+        senv['TERM'] = TERM
+    else:
+        senv['TERM'] = 'xterm-256color'
+
     try:
         senv.pop("VIRTUAL_ENV")
     except KeyError:
