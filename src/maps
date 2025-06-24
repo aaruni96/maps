@@ -22,7 +22,7 @@ from tusclient.storage import filestorage
 gi.require_version("OSTree", "1.0")
 from gi.repository import OSTree, GLib
 
-VERSION = '0.4'
+VERSION = '0.5-dev'
 BWRAP_DEFAULT = f"{os.getenv('HOME')}/.var/org.mardi.maps/deps/bubblewrap/_builddir/bwrap"
 if os.getenv('BWRAP_CMD') is not None:
     BWRAP = str(os.getenv('BWRAP_CMD'))
