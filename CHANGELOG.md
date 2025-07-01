@@ -15,6 +15,7 @@ and this project tries to adhere to [Semantic Versioning](https://semver.org/spe
 ### Changed
 
 - Bugfix: Fix info message about runtime updates.
+- Bugfix: Add whitespace to runtime prompt.
 
 ### Removed
 
