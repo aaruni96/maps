@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=MaPS
+Comment= Simple sandboxing tool for scientific applications
+Exec=/usr/bin/maps "--url %U"
+Terminal=true
+Type=Application
+MimeType=x-scheme-handler/maps

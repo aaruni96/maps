@@ -13,6 +13,7 @@ and this project tries to adhere to [Semantic Versioning](https://semver.org/spe
   SANDBOX_TERM.
 - Added a `--no-gui` flag to explicitly disable support for GUI applications.
 - Added a `--gui` flag to force enable support for GUI applications
+- Allow running and deploying runtimes from URL.
 
 ### Changed
 

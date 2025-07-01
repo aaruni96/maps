@@ -16,6 +16,7 @@ from math import log10, floor
 # third party imports
 import tomli
 import gi
+from urllib.parse import urlparse, parse_qs
 from progress.bar import Bar
 from tusclient import client, exceptions
 from tusclient.storage import filestorage
@@ -75,6 +76,8 @@ def addCLI():
                                 default=False, help="Uninstall a runtime")
     parser_runtime.add_argument('--update', dest="UPDATE", action='store',
                                 default=False, help="Update a runtime")
+    parser_runtime.add_argument('--url', dest="URL", action="store",
+                                default=False, help="Deploy and launch a runtime from URL")
     parser_runtime.add_argument('-v', '--verbose', dest='VERBOSE', action='store_true',
                                 help="enable verbose output")
     parser_runtime.add_argument('--no-gui', dest="NOGUI", action='store_true',
@@ -244,11 +247,19 @@ def mode_list(repo):
                 print(f"\t - {ref}")
 
 
+def list_remotes(repo):
+    retval = {}
+    for remote in repo.remote_list():
+        retval[remote] = repo.remote_get_url(remote)[1]
+    return retval
+
+
 def mode_remotes(repo, args):
     """Administrative mode for remotes of the repo"""
     if args.LIST is not False:
-        for remote in repo.remote_list():
-            print(f"{remote}: {repo.remote_get_url(remote)[1]}")
+        remotes = list_remotes(repo)
+        for remote in remotes.keys():
+            print(f"{remote}: {remotes[remote]}")
         return
     if args.REMOTE is not False:
         repo.remote_add(args.REMOTE[0], args.REMOTE[1],
@@ -826,6 +837,65 @@ def reset(repo, runtime):
     print(f"{runtime} reset successfully!")
 
 
+def list_local(repo):
+    refs = list(repo.list_refs()[1].keys())
+    if refs:
+        return refs
+    return []
+
+
+def mode_url(repo, repopath, args):
+    # we must decide how we want the URL to be
+    # probably something simple, like
+    # maps://runtime?run=Remote:runtime.name.tld/arch/version&Remote=https://user:password@blah.com/repo
+    # https://techpiezo.com/linux/create-a-custom-url-protocol-with-xdg-in-ubuntu/
+    #TODO: error handling!
+    o = urlparse(args.URL.replace("'", ""))
+    q = parse_qs(o.query)
+    runtime = q["runtime"][0]
+    remote_name = q["remotename"][0]
+    remote_url = q["remoteurl"][0]
+
+    # step 0: check if we know the remote repo
+    check1 = False
+    check2 = False
+    check3 = False
+    # step 0.1 : do we know the remote name?
+    remotes = list_remotes(repo)
+    check1 = remote_name in list(remotes.keys())
+    
+    if check1:
+        # step 0.2 : does input remote URL match known remote URL?
+        check2 = remote_url == remotes[remote_name]
+
+    check3 = remote_url in list(remotes.values())
+    if check3 and not check2:
+        # we know the remote_url, but the remote_name is different
+        # error out
+        print(f"Remote {remote_name} not recognized, but the URL {remote_url} is known! Please report this as an invalid URL")
+        print(f"Known remotes are ")
+        for i in remotes.keys():
+            print(f"{i}: {remotes[i]}")
+        print(f"Press enter to exit...")
+        input() # just to pause the terminal at this point
+        exit()
+
+    # step 1: check if runtime is already deployed
+    isDeployed = f"{remote_name}:{runtime}" in list_local(repo)
+
+    # step 2: deploy runtime if not deployed
+    if not isDeployed and check1 and check2 and check3:
+        print(f"Deploying {runtime}")
+        args.DEPLOY = f"{remote_name}:{runtime}"
+        mode_deploy(repo, repopath, args)
+        isDeployed = True
+
+    # step 3: run runtime
+    if check1 and check2 and isDeployed:
+        args.RUN = f"{remote_name}:{runtime}"
+        mode_run(repo, args)
+    exit()
+
 # runtime mode: the default path for execution
 def mode_runtime(repo, repopath, args):
     """
@@ -834,10 +904,8 @@ def mode_runtime(repo, repopath, args):
     if args.LIST:
         mode_list(repo)
     elif args.LIST_LOCAL:
-        refs = list(repo.list_refs()[1].keys())
-        if refs:
-            for ref in sorted(refs):
-                print(f"{ref.split(':')[-1]}")
+        for ref in list_local(repo):
+            print(ref)
     elif args.RESET:
         reset(repo, args.RESET)
     elif args.UNINSTALL:
@@ -848,6 +916,8 @@ def mode_runtime(repo, repopath, args):
         mode_deploy(repo, repopath, args)
     elif args.UPDATE:
         mode_update(repo, repopath, args)
+    elif args.URL:
+        mode_url(repo, repopath, args)
 
 
 def byteSI(inbytes):
