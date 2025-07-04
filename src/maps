@@ -852,11 +852,31 @@ def mode_url(repo, repopath, args):
     """
     # we must decide how we want the URL to be
     # probably something simple, like
-    # maps://runtime?run=Remote:runtime.name.tld/arch/version&Remote=https://user:password@blah.com/repo
+# maps://runtime?run=Remote:runtime.name.tld/arch/version&Remote=https://user:password@blah.com/repo
     # https://techpiezo.com/linux/create-a-custom-url-protocol-with-xdg-in-ubuntu/
     # TODO: error handling!
     o = urlparse(args.URL.replace("'", ""))
+    
+    # some very basic error handling
+    # maps should only activate if o.scheme is maps!
+    # in other words, the following check must never fail!
+    assert o.scheme == "maps"
+
+    # for now we only support runtime mode from URL
+    # in fact, I can't think of a reason to support any other mode from the URL
+    # given that we will automatically add a remote and fetch a runtime
+    # if we come across a valid URL but missing remotes / runtimes
+    assert o.netloc == "runtime"
+
     q = parse_qs(o.query)
+    # assert that required entries are available in the parsed query
+    assert 'runtime' in q
+    assert 'remotename' in q
+    assert 'remoteurl' in q
+    # check for optional entries in parsed query
+    if "verbose" in q:
+        global VERBOSE
+        VERBOSE = True
     runtime = q["runtime"][0]
     remote_name = q["remotename"][0]
     remote_url = q["remoteurl"][0]
@@ -885,6 +905,14 @@ def mode_url(repo, repopath, args):
         print("Press enter to exit...")
         input()  # just to pause the terminal at this point
         sys.exit(-9)
+    
+    if not check1 and not check3:
+        # here check2 is always false
+        assert not check2
+        # neither the name, nor the remote URL was known
+        # add those to the local repo
+        args.REMOTE = [remote_name, remote_url]
+        mode_remotes(repo, args)
 
     # step 1: check if runtime is already deployed
     isDeployed = f"{remote_name}:{runtime}" in list_local(repo)
