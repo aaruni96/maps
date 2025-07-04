@@ -913,6 +913,9 @@ def mode_url(repo, repopath, args):
         # add those to the local repo
         args.REMOTE = [remote_name, remote_url]
         mode_remotes(repo, args)
+        check1 = True
+        check2 = True
+        check3 = True
 
     # step 1: check if runtime is already deployed
     isDeployed = f"{remote_name}:{runtime}" in list_local(repo)
