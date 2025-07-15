@@ -24,6 +24,7 @@ mkdir -p $RPM_BUILD_ROOT/%{_bindir} $RPM_BUILD_ROOT/%{_datadir}/bash-completion/
 install -Dm 755 src/%{name} $RPM_BUILD_ROOT/%{_bindir}
 install -Dm 644 src/completion.bash $RPM_BUILD_ROOT/%{_datadir}/bash-completion/completions/%{name}
 install -Dm 644 src/usr.bin.%{name} $RPM_BUILD_ROOT/%{_sysconfdir}/apparmor.d/usr.bin.%{name}
+install -Dm 644 src/%{name}.desktop $RPM_BUILD_ROOT/%{_prefix}/share/applications/%{name}.desktop
 
 
 %files
