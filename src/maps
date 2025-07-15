@@ -845,13 +845,16 @@ def list_local(repo):
         return refs
     return []
 
+def invalid_url_error():
+    print("The URL you have used is invalid. Please report this to the place you got your URL.")
+    print("Press ENTER to continue...")
+    input()
+    sys.exit(-9)    # just a weird error code. I should probably get this more organized
 
 def mode_url(repo, repopath, args):
     """
     URL mode, to deploy and execute runtimes from data given in a URL
     """
-    # we must decide how we want the URL to be
-    # probably something simple, like
 # maps://runtime?run=Remote:runtime.name.tld/arch/version&Remote=https://user:password@blah.com/repo
     # https://techpiezo.com/linux/create-a-custom-url-protocol-with-xdg-in-ubuntu/
     # TODO: fix install script to install the protocol handler
@@ -860,21 +863,28 @@ def mode_url(repo, repopath, args):
     # some very basic error handling
     # maps should only activate if o.scheme is maps!
     # in other words, the following check must never fail!
+    # failing this will cause a crash without an error message
     assert o.scheme == "maps"
 
     # for now we only support runtime mode from URL
     # in fact, I can't think of a reason to support any other mode from the URL
     # given that we will automatically add a remote and fetch a runtime
     # if we come across a valid URL but missing remotes / runtimes
-    assert o.netloc == "runtime"
+    if o.netloc != "runtime":
+        invalid_url_error()
 
     q = parse_qs(o.query)
     # assert that required entries are available in the parsed query
-    assert 'runtime' in q
-    assert 'remotename' in q
-    assert 'remoteurl' in q
+    if "runtime" not in q:
+        invalid_url_error()
+    if "remotename" not in q:
+        invalid_url_error()
+    if "remoteurl" not in q:
+        invalid_url_error()
     # check for optional entries in parsed query
     if "verbose" in q:
+        # this only sets verbose *FROM THIS POINT ON*
+        # not the best, but good enough
         global VERBOSE
         VERBOSE = True
     runtime = q["runtime"][0]
@@ -893,22 +903,21 @@ def mode_url(repo, repopath, args):
         # step 0.2 : does input remote URL match known remote URL?
         check2 = remote_url == remotes[remote_name]
 
+    # step 0.3 : do we know the remote URL ?
     check3 = remote_url in list(remotes.values())
     if check3 and not check2:
         # we know the remote_url, but the remote_name is different
         # error out
-        print(f"Remote {remote_name} not recognized, but the URL {remote_url} is known! Please "
-              "report this as an invalid URL")
+        print(f"Remote {remote_name} not recognized, but the URL {remote_url} is known!")
         print("Known remotes are ")
         for i in remotes.items():
             print(f"{i[0]}: {i[1]}")
-        print("Press enter to exit...")
-        input()  # just to pause the terminal at this point
-        sys.exit(-9)
+        invalid_url_error()
 
     if not check1 and not check3:
         # here check2 is always false
-        assert not check2
+        assert not check2   # failing this assert will crash without an error
+                            # this is fine because this is an impossible case ?
         # neither the name, nor the remote URL was known
         # add those to the local repo
         args.REMOTE = [remote_name, remote_url]
