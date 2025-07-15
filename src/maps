@@ -77,6 +77,10 @@ def addCLI():
                                 default=False, help="Update a runtime")
     parser_runtime.add_argument('-v', '--verbose', dest='VERBOSE', action='store_true',
                                 help="enable verbose output")
+    parser_runtime.add_argument('--no-gui', dest="NOGUI", action='store_true',
+                                default=False, help="Disable GUI")
+    parser_runtime.add_argument('--gui', dest="GUI", action='store_true',
+                                default=False, help="Force enable GUI")
 
     # arguments for remote management
     parser_remote = subparser.add_parser("remote",
@@ -106,6 +110,8 @@ def addCLI():
     parser_pack.add_argument('--repo', dest='REPO', help="Repository to use")
     parser_pack.add_argument('-u', '--upload', dest='UPLOAD', metavar="RUNTIME", action='store',
                              default=False, help="Upload RUNTIME for publishing.")
+    parser_pack.add_argument('--no-gui', dest="NOGUI", action='store_true',
+                             default=False, help="Disable GUI")
 
     return parser, parser_runtime, parser_remote, parser_pack
 
@@ -350,7 +356,7 @@ def disambiguate_runtime(repo: OSTree.Repo, rrstring: str, installed: bool = Tru
     return ["notfound", "notfound"]
 
 
-def make_bwrap_command(location, command):
+def make_bwrap_command(location, command, nogui, gui):
     """
     Subroutine builds the bubblewrap command to execute
     """
@@ -359,20 +365,39 @@ def make_bwrap_command(location, command):
                   '--unshare-ipc --disable-userns --die-with-parent --uid 0 --gid 0 ' \
                   f'--bind {location} / --proc /proc --dev /dev --ro-bind /sys /sys --tmpfs /tmp '
     session = senv['XDG_SESSION_TYPE']
-    if session == 'wayland':
-        rundir = senv["XDG_RUNTIME_DIR"]
-        bwrapstring += f'--dir {rundir} --hostname runtime ' \
-                       f'--ro-bind {rundir}/wayland-1 {rundir}/wayland-1 '
-    elif session == 'x11':
-        bwrapstring += f'--ro-bind {senv["XAUTHORITY"]} /home/runtime/.Xauthority ' \
-                       '--ro-bind /tmp/.X11-unix/X0 /tmp/.X11-unix/X0 '
-        senv['XAUTHORITY'] = '/home/runtime/.Xauthority'
-        # Dirty hack to get the prompt right on debian-minimal
-        senv['HOST'] = 'runtime'
-        senv['HOSTNAME'] = 'runtime'
-        senv['PS1'] = '${debian_chroot:+($debian_chroot)}\\u@runtime:\\w\\$ '
-        senv['SUDO_USER'] = "."
-        senv['SUDO_PS1'] = "."
+    if nogui:
+        if VERBOSE:
+            print("Disabling gui...")
+    else:
+        if session == 'wayland':
+            rundir = senv["XDG_RUNTIME_DIR"]
+            wayland_display = senv["WAYLAND_DISPLAY"]
+            bwrapstring += f'--dir {rundir} --hostname runtime '
+            if gui:
+                bwrapstring += f'--ro-bind {rundir}/{wayland_display} {rundir}/{wayland_display} '
+            else:
+                bwrapstring += f'--ro-bind-try {rundir}/{wayland_display} '\
+                    '{rundir}/{wayland_display} '
+        elif session == 'x11':
+            bwrapstring += f'--ro-bind {senv["XAUTHORITY"]} /home/runtime/.Xauthority '
+            if gui:
+                bwrapstring += '--ro-bind /tmp/.X11-unix/ /tmp/.X11-unix/ '
+            else:
+                bwrapstring += '--ro-bind-try /tmp/.X11-unix/ /tmp/.X11-unix/ '
+            senv['XAUTHORITY'] = '/home/runtime/.Xauthority'
+            # Dirty hack to get the prompt right on debian-minimal
+            senv['HOST'] = 'runtime'
+            senv['HOSTNAME'] = 'runtime'
+            senv['PS1'] = '${debian_chroot:+($debian_chroot)}\\u@runtime:\\w\\$ '
+            senv['SUDO_USER'] = "."
+            senv['SUDO_PS1'] = "."
+        else:
+            if gui:
+                print("GUI was forcefully requested, but neither wayland nor X11 were found!")
+                print("Please report this upstream!")
+                sys.exit(-10)
+            if VERBOSE:
+                print("No graphical environment found! Continuing without graphics....")
     bwrapstring += command
     senv["HOME"] = "/home/runtime"
     senv["LC_ALL"] = "C"
@@ -466,7 +491,7 @@ def mode_run(repo, args):
     # launch sandbox
     print(f"Launching {remote}:{runtime}...")
     # construct bwrapstring
-    bwrapstring, senv = make_bwrap_command(f"{DATADIR}/rofs", command)
+    bwrapstring, senv = make_bwrap_command(f"{DATADIR}/rofs", command, args.NOGUI, args.GUI)
     rstatus = subprocess.run(bwrapstring.split(),
                              env=senv, check=False)
     if rstatus.returncode != 0:
@@ -725,7 +750,7 @@ def mode_package(repo, repopath, args):
         # location is a functional tree, we just have to sandbox in it
         # its the user's responsibility to ensure the tree is good
         print(f"Launching a sandbox in {args.LOCATION}...")
-        bwrapstring, senv = make_bwrap_command(args.LOCATION, "/usr/bin/bash")
+        bwrapstring, senv = make_bwrap_command(args.LOCATION, "/usr/bin/bash", args.NOGUI, args.GUI)
         rstatus = subprocess.run(bwrapstring.split(), env=senv, check=False)
         if VERBOSE:
             print("Exiting sandbox...")
