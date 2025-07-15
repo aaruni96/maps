@@ -12,7 +12,9 @@ import tempfile
 import argparse
 import concurrent.futures
 from math import log10, floor
-from urllib.parse import urlparse, parse_qs
+from urllib import request
+from urllib.error import HTTPError
+from urllib.parse import urlparse, parse_qs, urlencode
 
 # third party imports
 import tomli
@@ -36,10 +38,12 @@ KEEP_FREE_SPACE = 3
 VERBOSE = False
 OG_SIGINT_HANLDER = signal.getsignal(signal.SIGINT)
 TUSTARGET = "https://maps.math.rptu.de"
+PINGTARGET = "https://maps.math.rptu.de"
 if os.getenv("MAPS_UPLOAD_SERVER") is not None:
     TUSTARGET = str(os.getenv("MAPS_UPLOAD_SERVER"))
 AUTH = os.getenv("MTDAUTH")
 TERM = os.getenv("SANDBOX_TERM")
+TELECONSENT = False
 
 
 # Define a CLI
@@ -188,16 +192,16 @@ def program_init(repopath):
     # step 3 : Configure a good known remote, if not already present
     repo = repopath.split('/')[-1]
     repopath = '/'.join(repopath.split('/')[0:-1])
-    config_path = f"{repopath}/repo/config"
-    config_exists = os.path.isfile(config_path)
+    ostree_config_path = f"{repopath}/repo/config"
+    ostree_config_exists = os.path.isfile(ostree_config_path)
     fd = os.open(repopath, os.O_RDONLY)
     repo = OSTree.Repo.create_at(fd, repo, OSTree.RepoMode(OSTREE_REPO_MODE_BARE_USER),
                                  GLib.Variant('a{sv}', {}), None)
     # if we just created a repo (and thus config), configure how we reserve free space
-    if not config_exists:
+    if not ostree_config_exists:
         if VERBOSE:
             print("Just created repo, configuring free space parameters...")
-        with open(config_path, 'a', encoding="utf-8") as fo:
+        with open(ostree_config_path, 'a', encoding="utf-8") as fo:
             fo.write(f'min-free-space-size={KEEP_FREE_SPACE}GB\n')
         repo.reload_config()
     if (not repo.remote_list()) or "Official" not in repo.remote_list():
@@ -206,6 +210,26 @@ def program_init(repopath):
         repo.remote_add("Official", "https://repo.oscar-system.org/",
                         GLib.Variant('a{sv}', {"gpg-verify": GLib.Variant('b', False)}),
                         None)
+    # step 4 : maps config
+    config_path = f"{repopath}/maps_config.toml"
+    config_exists = os.path.isfile(config_path)
+    # maps config doesnt exist, create it
+    global TELECONSENT
+    if not config_exists:
+        if VERBOSE:
+            print("MaPS config file not found. Creating...")
+        telemetry_consent = input("Do you consent to telemetry? More info at url. Y/N?")
+        TELECONSENT = telemetry_consent.strip().lower() == 'y'
+        with open(config_path, 'w', encoding='utf-8') as fo:
+            fo.write("[Core]\ntelemetry=")
+            if TELECONSENT:
+                fo.write("true\n")
+            else:
+                fo.write("false\n")
+    # maps config exists, read the telemetry consent info from it
+    else:
+        with open(config_path, 'rb') as rfo:
+            TELECONSENT = tomli.load(rfo)['Core']['telemetry']
     return repo
 
 
@@ -512,9 +536,31 @@ def mode_run(repo, args):
         print("Sandbox exited successfully!")
 
 
-def download(repopath, remote, target):
-    """Function to download a repo from remote"""
+def telemetry_ping(repo, remote: str, target: str):
+    """
+    Function to transmit telemetry about what runtime is about to be downloaded to server.
+    This happens only if the user has opted into providing telemetry.
+    """
+    # strip password data from remote
+    remotes = list_remotes(repo)
+    o = urlparse(remotes[remote])
+    newo = f"{o.scheme}://"
+    newo += o.netloc.split('@')[1] + o.path
 
+    datadict = urlencode({"reponame": remote, "repourl": newo, "runtime": target}).encode()
+    req = request.Request(f"{PINGTARGET}/ping", data=datadict)
+    try:
+        with request.urlopen(req):
+            pass
+    except HTTPError as e:
+        print("Error while transmitting telemetry:")
+        print(e)
+
+
+def download(repo, repopath, remote, target):
+    """Function to download a repo from remote"""
+    if TELECONSENT:
+        telemetry_ping(repo, remote, target)
     subprocess.run(f"ostree --repo={repopath} pull '{remote}:{target}'", check=True, shell=True)
 
 
@@ -607,7 +653,7 @@ def mode_update(repo, repopath, args, remote=""):
         print(f"{runtime} is already up to date, refreshing!")
     else:
         # download the update
-        download(repopath, remote, runtime)
+        download(repo, repopath, remote, runtime)
 
     DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{remote}/{runtime}"
 
@@ -696,7 +742,7 @@ def mode_deploy(repo, repopath, args):
     if remote != '_local':
         if VERBOSE:
             print(f"Downloading {remote}:{runtime}...")
-        download(repopath, remote, runtime)
+        download(repo, repopath, remote, runtime)
 
     # setup directories
     checkout(repo, remote, runtime)
@@ -739,7 +785,7 @@ def mode_package(repo, repopath, args):
             if VERBOSE:
                 print("base/x86_64/debian not found locally, fetching...")
             refhash = repo.remote_list_refs("Official")[1]['base/x86_64/debian']
-            download(repopath, "Official", "base/x86_64/debian")
+            download(repo, repopath, "Official", "base/x86_64/debian")
         else:
             refhash = repo.list_refs()[1]['Official:base/x86_64/debian']
         with tempfile.TemporaryDirectory() as tmpdir:
