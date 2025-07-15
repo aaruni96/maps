@@ -845,19 +845,24 @@ def list_local(repo):
         return refs
     return []
 
+
 def invalid_url_error():
+    """
+    Prints an error, and then waits for an output
+    Repeated for most errors in the URL mode
+    """
     print("The URL you have used is invalid. Please report this to the place you got your URL.")
     print("Press ENTER to continue...")
     input()
     sys.exit(-9)    # just a weird error code. I should probably get this more organized
 
+
+# maps://runtime?run=Remote:runtime.name.tld/arch/version&Remote=https://user:password@blah.com/repo
+# https://techpiezo.com/linux/create-a-custom-url-protocol-with-xdg-in-ubuntu/
 def mode_url(repo, repopath, args):
     """
     URL mode, to deploy and execute runtimes from data given in a URL
     """
-# maps://runtime?run=Remote:runtime.name.tld/arch/version&Remote=https://user:password@blah.com/repo
-    # https://techpiezo.com/linux/create-a-custom-url-protocol-with-xdg-in-ubuntu/
-    # TODO: fix install script to install the protocol handler
     o = urlparse(args.URL.replace("'", ""))
 
     # some very basic error handling
