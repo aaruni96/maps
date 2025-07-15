@@ -31,4 +31,5 @@ package(){
     install -Dm 755 "$srcdir/${pkgname}-${pkgver}/src/maps" "$pkgdir/usr/bin/maps"
     install -Dm 644 "$srcdir/${pkgname}-${pkgver}/src/completion.bash" "$pkgdir/usr/share/bash-completion/completions/maps"
     install -Dm 644 "$srcdir/${pkgname}-${pkgver}/src/usr.bin.maps" "$pkgdir/etc/apparmor.d/usr.bin.maps"
+    install -DM 644 "$srcdir/${pkgname}-${pkgver}/src/maps.desktop" "$pkgdir/usr/share/applications/maps.desktop"
 }
