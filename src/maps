@@ -392,6 +392,10 @@ def make_bwrap_command(location, command, nogui, gui):
             senv['SUDO_USER'] = "."
             senv['SUDO_PS1'] = "."
         else:
+            if gui:
+                print("GUI was forcefully requested, but neither wayland nor X11 were found!")
+                print("Please report this upstream!")
+                sys.exit(-10)
             if VERBOSE:
                 print("No graphical environment found! Continuing without graphics....")
     bwrapstring += command
