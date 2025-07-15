@@ -218,7 +218,10 @@ def program_init(repopath):
     if not config_exists:
         if VERBOSE:
             print("MaPS config file not found. Creating...")
-        telemetry_consent = input("Do you consent to telemetry? More info at url. Y/N?")
+        if os.getenv("MAPS_NOTELE") is not None:
+            telemetry_consent = 'n'
+        else:
+            telemetry_consent = input("Do you consent to telemetry? More info at url. Y/N?")
         TELECONSENT = telemetry_consent.strip().lower() == 'y'
         with open(config_path, 'w', encoding='utf-8') as fo:
             fo.write("[Core]\ntelemetry=")
