@@ -14,9 +14,19 @@ and this project tries to adhere to [Semantic Versioning](https://semver.org/spe
 - Added a `--no-gui` flag to explicitly disable support for GUI applications.
 - Added a `--gui` flag to force enable support for GUI applications
 - Allow running and deploying runtimes from URL.
-- Added optional telemetry. This is **OPT-IN**, and only provides the name of the remote, the URL of
-  the remote, and name of the runtime being downloaded to the PINGTARGET. This enivornment variable
-  can be overriden to provide internal telemetry.
+- Added optional telemetry. This is **OPT-IN**, and shares limited data. Only the following data is
+  transmitted, only when a new runtime is downloaded :
+  - the name of the remote repository
+  - the URL of the remote repository without username and password
+  - the name of the runtime being downloaded
+
+  The telemetry target can be overridden using the environment variable `TELETARGET`.
+  
+  If telemetry consent was previously given and wishes to be withdrawn, you can set the environment
+  variable `MAPS_NOTELE` to any non blank value.
+  
+  If telemetry consent was previously denied and wishes to be given, you can set the environment
+  variable `MAPS_TELEMETRY_CONSENT` to any non blank value.
 
 ### Changed
 
