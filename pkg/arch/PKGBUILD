@@ -1,7 +1,7 @@
 # Maintainer: Aaruni Kaushik <akaushik@mathematik.uni-kl.de>
 _name=maps
 pkgname=maps
-pkgver=0.4
+pkgver=0.5
 pkgrel=1
 pkgdesc="Sandboxing tool for Mathematical Research Software"
 arch=('x86_64')
