@@ -20,6 +20,7 @@ depends=('base-devel'
          'python-gobject'
          'python-progress'
          'python-tuspy'
+         'xdg-utils'
          )
 conflicts=('maps')
 provides=('maps')
@@ -33,4 +34,5 @@ package(){
     install -Dm 644 "$srcdir/${pkgname}-${pkgver}/src/completion.bash" "$pkgdir/usr/share/bash-completion/completions/maps"
     install -Dm 644 "$srcdir/${pkgname}-${pkgver}/src/usr.bin.maps" "$pkgdir/etc/apparmor.d/usr.bin.maps"
     install -DM 644 "$srcdir/${pkgname}-${pkgver}/src/maps.desktop" "$pkgdir/usr/share/applications/maps.desktop"
+    xdg-mime default maps.desktop x-scheme-handler/maps
 }
