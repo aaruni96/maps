@@ -8,7 +8,7 @@ License:        GPL3
 URL:            https://github.com/mardi4NFDI/maps
 Source0:        %{url}/archive/refs/tags/v%{version}.tar.gz
 
-Requires:       git cairo-devel gcc python3-devel gobject-introspection-devel ostree ostree-devel python3-progress libcap-devel cairo-gobject-devel bash-completion python-tomli meson python3-tuspy
+Requires:       git cairo-devel gcc python3-devel gobject-introspection-devel ostree ostree-devel python3-progress libcap-devel cairo-gobject-devel bash-completion python3-tomli python3-tomli-w meson python3-tuspy
 
 %description
 MaPS helps mathematicians create and publish software runtimes, as well as deploy and run software inside published runtimes
