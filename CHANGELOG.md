@@ -5,6 +5,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project tries to adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5]
+
+### Added
+
+- Set value of TERM to something included in the runtime. This can be overridden by the env var
+  SANDBOX_TERM.
+- Added a `--no-gui` flag to explicitly disable support for GUI applications.
+- Added a `--gui` flag to force enable support for GUI applications
+- Allow running and deploying runtimes from URL.
+- Added optional telemetry. This is **OPT-IN**, and shares limited data. Only the following data is
+  transmitted, only when a new runtime is downloaded :
+  - the name of the remote repository
+  - the URL of the remote repository without username and password
+  - the name of the runtime being downloaded
+
+  The telemetry target can be overridden using the environment variable `TELETARGET`.
+  
+  If telemetry consent was previously given and wishes to be withdrawn, you can set the environment
+  variable `MAPS_NOTELE` to any non blank value.
+  
+  If telemetry consent was previously denied and wishes to be given, you can set the environment
+  variable `MAPS_TELEMETRY_CONSENT` to any non blank value.
+
+### Changed
+
+- Bugfix: Fix info message about runtime updates.
+- Bugfix: Add whitespace to runtime prompt.
+- Changed GUI mounts to attempt binding, with silently continuing on failure, by
+  default. Use `--gui` to error if GUI mounts fail.
+
 ## [0.4] - 2025-03-13
 
 ### Added

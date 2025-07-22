@@ -6,6 +6,8 @@ jobs:
   test:
     runs-on: ubuntu-latest
     name: Tests
+    env:
+      MAPS_NOTELE: 1
     steps:
       - name: Check out source repository
         uses: actions/checkout@v3

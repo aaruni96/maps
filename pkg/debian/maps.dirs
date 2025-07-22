@@ -1,3 +1,4 @@
 usr/bin
 usr/share/bash-completion/completions
 etc/apparmor.d/
+usr/share/applications

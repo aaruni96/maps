@@ -1,8 +1,4 @@
 #!/bin/bash
-# step 1: grab the thingy
-
-#wget 'https://github.com/aaruni96/maps/archive/refs/tags/v0.1.tar.gz' -O maps.tar.gz
-
 #Tar the thingy
 
 OWD=$(pwd | sed "s/^.*\///") 
