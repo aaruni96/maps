@@ -18,6 +18,7 @@ from urllib.parse import urlparse, parse_qs, urlencode
 
 # third party imports
 import tomli
+import tomli_w
 import gi
 from progress.bar import Bar
 from tusclient import client, exceptions
@@ -38,12 +39,21 @@ KEEP_FREE_SPACE = 3
 VERBOSE = False
 OG_SIGINT_HANLDER = signal.getsignal(signal.SIGINT)
 TUSTARGET = "https://maps.math.rptu.de"
-PINGTARGET = "https://maps.math.rptu.de"
 if os.getenv("MAPS_UPLOAD_SERVER") is not None:
     TUSTARGET = str(os.getenv("MAPS_UPLOAD_SERVER"))
+TELETARGET = "https://maps.math.rptu.de"
+if os.getenv("TELETARGET") is not None:
+    TELETARGET = str(os.getenv("TELETARGET"))
 AUTH = os.getenv("MTDAUTH")
 TERM = os.getenv("SANDBOX_TERM")
 TELECONSENT = False
+MAPS_CONFIG = {}
+COLORS = {
+    "OKGREEN": '\033[92m',
+    "WARNING": '\033[93m',
+    "FAIL": '\033[91m',
+    "ENDC": '\033[0m'
+}
 
 
 # Define a CLI
@@ -139,6 +149,42 @@ def sanity_checks(parsers):
         sys.exit(1)
 
 
+def create_config_file(config_path):
+    """
+    Function to create config file at config_path.
+    """
+    if VERBOSE:
+        print("Creating MaPS config file...")
+    if os.getenv("MAPS_NOTELE") is not None and os.getenv("MAPS_NOTELE") != "":
+        telemetry_consent = 'n'
+    elif (
+        os.getenv("MAPS_TELEMETRY_CONSENT") is not None
+        and os.getenv("MAPS_TELEMETRY_CONSENT") != ""
+    ):
+        telemetry_consent = 'y'
+    else:
+        telemessage = (
+            "Would you like to enable anonymous telemtry about the runtimes you "
+            "download? This enables MaPS to report some information about the "
+            "runtime you are about to download to a telemtry server. The following "
+            "information is collected:\n\t- Name of the remote repository"
+            "\n\t- URL of the remote"
+            "\n\t- Name of the runtime"
+            "\n(Y/N)  > "
+        )
+        telemetry_consent = input(f"{telemessage}")
+    consent = telemetry_consent.strip().lower() == 'y'
+    if VERBOSE:
+        if consent:
+            print("Enabling telemetry...")
+        else:
+            print("Disabling telemetry...")
+    with open(config_path, 'wb') as fo:
+        config = {"Core": {"telemetry": consent}}
+        tomli_w.dump(config, fo)
+    return config
+
+
 def program_init(repopath):
     """Init function verifies requirements, sets up the repo. Returns the OSTree Repo."""
     opt1 = "-q"
@@ -211,28 +257,72 @@ def program_init(repopath):
                         GLib.Variant('a{sv}', {"gpg-verify": GLib.Variant('b', False)}),
                         None)
     # step 4 : maps config
+    global MAPS_CONFIG
+    global TELECONSENT
     config_path = f"{repopath}/maps_config.toml"
     config_exists = os.path.isfile(config_path)
     # maps config doesnt exist, create it
-    global TELECONSENT
     if not config_exists:
         if VERBOSE:
-            print("MaPS config file not found. Creating...")
-        if os.getenv("MAPS_NOTELE") is not None:
-            telemetry_consent = 'n'
-        else:
-            telemetry_consent = input("Do you consent to telemetry? More info at url. Y/N?")
-        TELECONSENT = telemetry_consent.strip().lower() == 'y'
-        with open(config_path, 'w', encoding='utf-8') as fo:
-            fo.write("[Core]\ntelemetry=")
-            if TELECONSENT:
-                fo.write("true\n")
-            else:
-                fo.write("false\n")
+            print("MaPS config file not found!")
+        MAPS_CONFIG = create_config_file(config_path)
+        TELECONSENT = MAPS_CONFIG["Core"]["telemetry"]
+
     # maps config exists, read the telemetry consent info from it
     else:
+        if VERBOSE:
+            print("Config file found!")
         with open(config_path, 'rb') as rfo:
-            TELECONSENT = tomli.load(rfo)['Core']['telemetry']
+            MAPS_CONFIG = tomli.load(rfo)
+        # check that the things we want exist
+        if "Core" not in MAPS_CONFIG or "telemetry" not in MAPS_CONFIG["Core"]:
+            if VERBOSE:
+                print(COLORS["FAIL"]
+                      + "Malformed config file! Printing for verification:"
+                      + COLORS["ENDC"])
+                print("---" + COLORS["WARNING"])
+                print(tomli_w.dumps(MAPS_CONFIG).strip() + COLORS["ENDC"])
+                print("---")
+            MAPS_CONFIG = create_config_file(config_path)
+            TELECONSENT = MAPS_CONFIG["Core"]['telemetry']
+        else:
+            if VERBOSE:
+                print("Config file validated! Printing for verification:")
+                print("---" + COLORS["OKGREEN"])
+                print(tomli_w.dumps(MAPS_CONFIG).strip() + COLORS["ENDC"])
+                print("---")
+            TELECONSENT = MAPS_CONFIG["Core"]['telemetry']
+    telemetry_consent = TELECONSENT
+    # check if env vars override config file
+    if (
+        os.getenv("MAPS_TELEMETRY_CONSENT") is not None
+        and os.getenv("MAPS_TELEMETRY_CONSENT") != ""
+        and not TELECONSENT
+    ):
+        inputmessage = "MAPS_TELEMETRY_CONSENT is set, but telemetry was previously disabled!\n"\
+            "Would you like to enable telemetry? (Y/N) > "
+        telemetry_consent = input(inputmessage).strip().lower() == 'y'
+        if telemetry_consent:
+            if VERBOSE:
+                print("Enabling telemetry...")
+    if os.getenv("MAPS_NOTELE") is not None and os.getenv("MAPS_NOTELE") != "" and TELECONSENT:
+        inputmessage = "MAPS_NOTELE is set, but telemetry consent was previously given!\nWould "\
+            "you like to revoke telemetry consent? (Y/N) > "
+        # confusing reuse of variable name "telemetry_consent"
+        # in this case, telemetry_consent is True if the user inputs n
+        # this makes the a common check possible to detect a mistmatch between env var and conf file
+        telemetry_consent = input(inputmessage).strip().lower() == 'n'
+        if telemetry_consent:
+            if VERBOSE:
+                print("Disabling telemetry...")
+    # this is the common check the previous comment talks about
+    if TELECONSENT != telemetry_consent:
+        MAPS_CONFIG["Core"]["telemetry"] = telemetry_consent
+
+    # write updated config to file
+    with open(config_path, 'wb') as fo:
+        tomli_w.dump(MAPS_CONFIG, fo)
+
     return repo
 
 
@@ -539,19 +629,22 @@ def mode_run(repo, args):
         print("Sandbox exited successfully!")
 
 
-def telemetry_ping(repo, remote: str, target: str):
+def transmit_telemetry(repo, remote: str, target: str):
     """
     Function to transmit telemetry about what runtime is about to be downloaded to server.
     This happens only if the user has opted into providing telemetry.
     """
     # strip password data from remote
     remotes = list_remotes(repo)
+    # a remote URL is of the form
+    # http://username:password@domain.tld/path
+    # we just strip out the 'username:password' bit
+    # (everything in front of '@', if it exists).
     o = urlparse(remotes[remote])
     newo = f"{o.scheme}://"
-    newo += o.netloc.split('@')[1] + o.path
-
+    newo += o.netloc.split('@')[-1] + o.path
     datadict = urlencode({"reponame": remote, "repourl": newo, "runtime": target}).encode()
-    req = request.Request(f"{PINGTARGET}/ping", data=datadict)
+    req = request.Request(f"{TELETARGET}/ping", data=datadict)
     try:
         with request.urlopen(req):
             pass
@@ -563,7 +656,7 @@ def telemetry_ping(repo, remote: str, target: str):
 def download(repo, repopath, remote, target):
     """Function to download a repo from remote"""
     if TELECONSENT:
-        telemetry_ping(repo, remote, target)
+        transmit_telemetry(repo, remote, target)
     subprocess.run(f"ostree --repo={repopath} pull '{remote}:{target}'", check=True, shell=True)
 
 
