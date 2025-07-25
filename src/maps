@@ -26,7 +26,7 @@ from tusclient.storage import filestorage
 gi.require_version("OSTree", "1.0")
 from gi.repository import OSTree, GLib
 
-VERSION = '0.6-dev'
+VERSION = '0.6'
 BWRAP_DEFAULT = f"{os.getenv('HOME')}/.var/org.mardi.maps/deps/bubblewrap/_builddir/bwrap"
 if os.getenv('BWRAP_CMD') is not None:
     BWRAP = str(os.getenv('BWRAP_CMD'))
@@ -639,7 +639,7 @@ def mode_run(repo, args):
                 + f"{COLORS['WARNING']}{os.getenv('HOME')}/Public{COLORS['FAIL']} is either a "
                 + f"directory, or does not exist, on a read-write filesystem.{COLORS['ENDC']}"
             )
-        sys.exit(-1)    # lets decide, -1 is for all mkdir errors
+            sys.exit(-1)    # lets decide, -1 is for all mkdir errors
 
     # check for manifest file
     if os.path.isfile(f"{DATADIR}/rwfs/manifest.toml"):
