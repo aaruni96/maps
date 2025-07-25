@@ -1111,7 +1111,7 @@ def mode_export_url(repo: OSTree.Repo, args: argparse.Namespace):
     if '@' in remote_url:
         print(
             f"{COLORS['WARNING']} Warning: sharing a password protected remote, with the password. "
-            + "Please double check!"
+            + f"Please double check! {COLORS['ENDC']}"
         )
     print(f"- Remote name is\t{remote_name}")
     print(f"- Remote URL is\t\t{remote_url}")
