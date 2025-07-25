@@ -1,11 +1,11 @@
 # Maintainer: Aaruni Kaushik <akaushik@mathematik.uni-kl.de>
 _name=maps
 pkgname=maps
-pkgver=0.5
+pkgver=0.6
 pkgrel=1
 pkgdesc="Sandboxing tool for Mathematical Research Software"
 arch=('x86_64')
-url='https://github.com/aaruni96/maps'
+url='https://github.com/MaRDI4NFDI/maps'
 license=('GPL3')
 depends=('base-devel'
          'openssl'
