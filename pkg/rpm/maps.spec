@@ -1,11 +1,11 @@
 Name:           maps
-Version:        0.5
+Version:        0.6
 Release:        1%{?dist}
 Summary:        Mathematical Packaging System
 BuildArch:      noarch
 
 License:        GPL3
-URL:            https://github.com/mardi4NFDI/maps
+URL:            https://github.com/MaRDI4NFDI/maps
 Source0:        %{url}/archive/refs/tags/v%{version}.tar.gz
 
 Requires:       git cairo-devel gcc python3-devel gobject-introspection-devel ostree ostree-devel python3-progress libcap-devel cairo-gobject-devel bash-completion python3-tomli python3-tomli-w meson python3-tuspy xdg-utils
@@ -36,6 +36,9 @@ xdg-mime default maps.desktop x-scheme-handler/maps
 
 
 %changelog
+
+* Sat Jul 26 2025 Aaruni Kaushik <akaushik@mathamtik.uni-kl.de> 0.6.0.1
+- Update to version 0.6
 
 * Tue Jul 22 2025 Aaruni Kaushik <akaushik@mathamtik.uni-kl.de> 0.5.0.1
 - Update to version 0.5
