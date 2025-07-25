@@ -10,6 +10,8 @@ and this project tries to adhere to [Semantic Versioning](https://semver.org/spe
 ### Added
 
 ### Changed
+- Bugfix: Fix a regression where we stopped using overlays
+- Bugfix: Fix a regression where we stopped passing through `$HOME/Public`
 
 ### Removed
 

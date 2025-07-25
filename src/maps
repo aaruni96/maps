@@ -485,14 +485,19 @@ def disambiguate_runtime(repo: OSTree.Repo, rrstring: str, installed: bool = Tru
     return ["notfound", "notfound"]
 
 
-def make_bwrap_command(location, command, nogui, gui):
+def make_bwrap_command(location, overlay, command, nogui, gui):
     """
     Subroutine builds the bubblewrap command to execute
     """
     senv = os.environ
     bwrapstring = f'{BWRAP} --forward-signals --unshare-user --unshare-pid --unshare-uts ' \
-                  '--unshare-ipc --disable-userns --die-with-parent --uid 0 --gid 0 ' \
-                  f'--bind {location} / --proc /proc --dev /dev --ro-bind /sys /sys --tmpfs /tmp '
+                  '--unshare-ipc --disable-userns --die-with-parent --uid 0 --gid 0 '
+    if overlay:
+        bwrapstring += f"--overlay-src {location}/rofs --overlay {location}/rwfs {location}/tmpfs /"
+        bwrapstring += f" --bind {os.getenv('HOME')}/Public /home/runtime/Public"
+    else:
+        bwrapstring += f'--bind {location} /'
+    bwrapstring += ' --proc /proc --dev /dev --ro-bind /sys /sys --tmpfs /tmp '
     session = senv['XDG_SESSION_TYPE']
     if nogui:
         if VERBOSE:
@@ -506,7 +511,7 @@ def make_bwrap_command(location, command, nogui, gui):
                 bwrapstring += f'--ro-bind {rundir}/{wayland_display} {rundir}/{wayland_display} '
             else:
                 bwrapstring += f'--ro-bind-try {rundir}/{wayland_display} '\
-                    '{rundir}/{wayland_display} '
+                    f'{rundir}/{wayland_display} '
         elif session == 'x11':
             bwrapstring += f'--ro-bind {senv["XAUTHORITY"]} /home/runtime/.Xauthority '
             if gui:
@@ -601,6 +606,8 @@ def mode_run(repo, args):
     else:
         opts = '-p'
     subprocess.run(f"mkdir {opts} {os.getenv('HOME')}/Public".split(), check=True)
+    if not os.path.isdir(f"{DATADIR}/rofs/home/runtime/Public"):
+        subprocess.run(f"mkdir {opts} {DATADIR}/rwfs/home/runtime/Public".split(), check=True)
 
     # check for manifest file
     if os.path.isfile(f"{DATADIR}/rwfs/manifest.toml"):
@@ -620,7 +627,7 @@ def mode_run(repo, args):
     # launch sandbox
     print(f"Launching {remote}:{runtime}...")
     # construct bwrapstring
-    bwrapstring, senv = make_bwrap_command(f"{DATADIR}/rofs", command, args.NOGUI, args.GUI)
+    bwrapstring, senv = make_bwrap_command(f"{DATADIR}", True, command, args.NOGUI, args.GUI)
     rstatus = subprocess.run(bwrapstring.split(),
                              env=senv, check=False)
     if rstatus.returncode != 0:
@@ -904,7 +911,8 @@ def mode_package(repo, repopath, args):
         # location is a functional tree, we just have to sandbox in it
         # its the user's responsibility to ensure the tree is good
         print(f"Launching a sandbox in {args.LOCATION}...")
-        bwrapstring, senv = make_bwrap_command(args.LOCATION, "/usr/bin/bash", args.NOGUI, args.GUI)
+        bwrapstring, senv = make_bwrap_command(args.LOCATION, False, "/usr/bin/bash", args.NOGUI,
+                                               args.GUI)
         rstatus = subprocess.run(bwrapstring.split(), env=senv, check=False)
         if VERBOSE:
             print("Exiting sandbox...")
