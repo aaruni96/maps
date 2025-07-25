@@ -842,6 +842,7 @@ def checkout(repo, remote, runtime):
             + f"{COLORS['WARNING']}{DATADIR}{COLORS['FAIL']} is either a "
             + f"directory, or does not exist, on a read-write filesystem.{COLORS['ENDC']}"
         )
+        sys.exit(-1)
 
     # checkout from local repo
     tfd = os.open(DATADIR, os.O_RDONLY)
