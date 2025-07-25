@@ -98,6 +98,8 @@ def addCLI():
                                 default=False, help="Disable GUI")
     parser_runtime.add_argument('--gui', dest="GUI", action='store_true',
                                 default=False, help="Force enable GUI")
+    parser_runtime.add_argument('-e', '--export-url', dest='EXPORTURL', action='store',
+                                default=False, help="Export a runtime as a URL which maps can open")
 
     # arguments for remote management
     parser_remote = subparser.add_parser("remote",
@@ -1097,6 +1099,32 @@ def mode_url(repo, repopath, args):
         mode_run(repo, args)
 
 
+def mode_export_url(repo: OSTree.Repo, args: argparse.Namespace):
+    """
+    Subroutine exports a maps:// URL of the input remote and runtime
+    """
+    a = disambiguate_runtime(repo, args.EXPORTURL, False)
+    remote_name = a[0]
+    remote_url = list_remotes(repo)[a[0]]
+    runtime = a[1]
+    print("Generating a URL with the following info. Please check!")
+    if '@' in remote_url:
+        print(
+            f"{COLORS['WARNING']} Warning: sharing a password protected remote, with the password. "
+            + f"Please double check! {COLORS['ENDC']}"
+        )
+    print(f"- Remote name is\t{remote_name}")
+    print(f"- Remote URL is\t\t{remote_url}")
+    print(f"- Runtime is\t\t{runtime}")
+    urlstring = (
+        "maps://runtime?"
+        + f"remotename={remote_name}&"
+        + f"remoteurl={remote_url}&"
+        + f"runtime={runtime}"
+    )
+    print(f"\n  {urlstring}\n")
+
+
 # runtime mode: the default path for execution
 def mode_runtime(repo, repopath, args):
     """
@@ -1119,6 +1147,8 @@ def mode_runtime(repo, repopath, args):
         mode_update(repo, repopath, args)
     elif args.URL:
         mode_url(repo, repopath, args)
+    elif args.EXPORTURL:
+        mode_export_url(repo, args)
 
 
 def byteSI(inbytes):

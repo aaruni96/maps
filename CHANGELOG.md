@@ -8,6 +8,7 @@ and this project tries to adhere to [Semantic Versioning](https://semver.org/spe
 ## [Upcoming]
 
 ### Added
+- Added `--export-url`, which generates a valid URL which can be shared to deploy and run a runtime.
 
 ### Changed
 - Bugfix: Fix a regression where we stopped using overlays
