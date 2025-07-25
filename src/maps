@@ -235,7 +235,17 @@ def program_init(repopath):
         opts = "-pv"
     else:
         opts = "-p"
-    subprocess.run(f"mkdir {opts} {'/'.join(repopath.split('/'))}".split(), check=True)
+    try:
+        subprocess.run(f"mkdir {opts} {'/'.join(repopath.split('/'))}".split(), check=True)
+    except subprocess.CalledProcessError:
+        print(
+            f"{COLORS['FAIL']}mkdir failed. This can happen if {COLORS['WARNING']}"
+            + f"{repopath}{COLORS['FAIL']} is not a directory, for example, if it "
+            + "is a regular file, a symlink, or some other type of file. Please check that "
+            + f"{COLORS['WARNING']}{repopath}{COLORS['FAIL']} is either a "
+            + f"directory, or does not exist, on a read-write filesystem.{COLORS['ENDC']}"
+        )
+        sys.exit(-1)    # lets decide, -1 is for all mkdir errors
 
     # step 3 : Configure a good known remote, if not already present
     repo = repopath.split('/')[-1]
@@ -607,9 +617,29 @@ def mode_run(repo, args):
         opts = '-pv'
     else:
         opts = '-p'
-    subprocess.run(f"mkdir {opts} {os.getenv('HOME')}/Public".split(), check=True)
+    try:
+        subprocess.run(f"mkdir {opts} {os.getenv('HOME')}/Public".split(), check=True)
+    except subprocess.CalledProcessError:
+        print(
+            f"{COLORS['FAIL']}mkdir failed. This can happen if {COLORS['WARNING']}"
+            + f"{os.getenv('HOME')}/Public{COLORS['FAIL']} is not a directory, for example, if it "
+            + "is a regular file, a symlink, or some other type of file. Please check that "
+            + f"{COLORS['WARNING']}{os.getenv('HOME')}/Public{COLORS['FAIL']} is either a "
+            + f"directory, or does not exist, on a read-write filesystem.{COLORS['ENDC']}"
+        )
+        sys.exit(-1)    # lets decide, -1 is for all mkdir errors
     if not os.path.isdir(f"{DATADIR}/rofs/home/runtime/Public"):
-        subprocess.run(f"mkdir {opts} {DATADIR}/rwfs/home/runtime/Public".split(), check=True)
+        try:
+            subprocess.run(f"mkdir {opts} {DATADIR}/rwfs/home/runtime/Public".split(), check=True)
+        except subprocess.CalledProcessError:
+            print(
+                f"{COLORS['FAIL']}mkdir failed. This can happen if {COLORS['WARNING']}"
+                + f"{os.getenv('HOME')}/Public{COLORS['FAIL']} is not a directory, for example, if "
+                + "it is a regular file, a symlink, or some other type of file. Please check that "
+                + f"{COLORS['WARNING']}{os.getenv('HOME')}/Public{COLORS['FAIL']} is either a "
+                + f"directory, or does not exist, on a read-write filesystem.{COLORS['ENDC']}"
+            )
+        sys.exit(-1)    # lets decide, -1 is for all mkdir errors
 
     # check for manifest file
     if os.path.isfile(f"{DATADIR}/rwfs/manifest.toml"):
@@ -787,7 +817,6 @@ def mode_update(repo, repopath, args, remote=""):
 def checkout(repo, remote, runtime):
     """Function to checkout an already fetched runtime from the OSTREE repository to filesystem."""
     DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps/{remote}/{runtime}"
-    PDATADIR = '/'.join(DATADIR.split('/')[0:-1])
     refhash = ""
     for sremote in repo.remote_list():
         if runtime in repo.remote_list_refs(sremote)[1]:
@@ -801,10 +830,18 @@ def checkout(repo, remote, runtime):
         opts1 = '-pv'
     else:
         opts1 = '-p'
-    subprocess.run(f"mkdir {opts1} {PDATADIR}".split(), check=True)
-    subprocess.run(f"mkdir {opts1} {DATADIR}", shell=True, check=True)
-    subprocess.run(f"mkdir {opts1} {DATADIR}/rwfs".split(), check=True)
-    subprocess.run(f"mkdir {opts1} {DATADIR}/tmpfs".split(), check=True)
+    try:
+        subprocess.run(f"mkdir {opts1} {DATADIR}".split(), check=True)
+        subprocess.run(f"mkdir {opts1} {DATADIR}/rwfs".split(), check=True)
+        subprocess.run(f"mkdir {opts1} {DATADIR}/tmpfs".split(), check=True)
+    except subprocess.CalledProcessError:
+        print(
+            f"{COLORS['FAIL']}mkdir failed. This can happen if {COLORS['WARNING']}"
+            + f"{DATADIR}{COLORS['FAIL']} is not a directory, for example, if it "
+            + "is a regular file, a symlink, or some other type of file. Please check that "
+            + f"{COLORS['WARNING']}{DATADIR}{COLORS['FAIL']} is either a "
+            + f"directory, or does not exist, on a read-write filesystem.{COLORS['ENDC']}"
+        )
 
     # checkout from local repo
     tfd = os.open(DATADIR, os.O_RDONLY)
