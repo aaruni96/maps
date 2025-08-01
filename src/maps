@@ -131,6 +131,8 @@ def addCLI():
                              default=False, help="Upload RUNTIME for publishing.")
     parser_pack.add_argument('--no-gui', dest="NOGUI", action='store_true',
                              default=False, help="Disable GUI")
+    parser_pack.add_argument('--gui', dest="GUI", action='store_true',
+                                default=False, help="Force enable GUI")
 
     return parser, parser_runtime, parser_remote, parser_pack
 
@@ -921,6 +923,7 @@ def blank_options():
 # Package Mode
 def mode_package(repo, repopath, args):
     """Function for package mode. Not intended to be used by "end users" """
+    # --initialize
     if args.DIR is not None:
         refhash = ''
         if 'Official:base/x86_64/debian' not in list(repo.list_refs()[1].keys()):
@@ -947,6 +950,8 @@ def mode_package(repo, repopath, args):
                 print(f"Successfully initialized a base debian tree at {args.DIR} !")
             else:
                 print(f"ERROR: Could not create {args.DIR}! Bailing!")
+
+    # --sandbox
     if args.LOCATION is not None:
         # location is a functional tree, we just have to sandbox in it
         # its the user's responsibility to ensure the tree is good
@@ -958,6 +963,8 @@ def mode_package(repo, repopath, args):
             print("Exiting sandbox...")
         if rstatus.returncode != 0:
             print(f"Sandbox exited with return code {rstatus.returncode}")
+
+    # --commit
     if args.COMMIT is not False:
         # we are given TREE and BRANCH. All we have to do is commit TREE to BRANCH
         # first validate that BRANCH follows a naming scheme we like
@@ -980,6 +987,7 @@ def mode_package(repo, repopath, args):
             print("Currently available refs: ")
             print(list(refs.keys()))
 
+    # --upload
     if args.UPLOAD:
         upload(repo, args.UPLOAD)
 

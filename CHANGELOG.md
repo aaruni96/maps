@@ -8,6 +8,7 @@ and this project tries to adhere to [Semantic Versioning](https://semver.org/spe
 ## [Upcoming]
 
 ### Added
+- Bugfix: Added `--gui` option to package mode.
 
 ### Changed
 
