@@ -940,16 +940,32 @@ def mode_package(repo, repopath, args):
             osopts.bareuseronly_dirs = True
             osopts.mode = OSTree.RepoCheckoutMode(1)
             repo.checkout_at(osopts, tfd, "ostree", refhash, None)
-            if VERBOSE:
-                print("Creating directory...")
-                opts = '-v'
+            # we want an empty dir to work with
+            # step1 check if dir exists
+            if os.path.isdir(args.DIR):
+                #step2 check if dir is empty
+                if VERBOSE:
+                    print(f"{args.DIR} exists..")
+                if len(os.listdir(args.DIR)) == 0:
+                    # dir is empty, we can continue
+                    if VERBOSE:
+                        print(f"{args.DIR} is empty. Initializing...")
+                else:
+                    
+                    print(f"{COLORS['FAIL']}Provided directory {args.DIR} is not empty...")
+                    print(f"Can not continue!{COLORS['ENDC']}")
+                    sys.exit(-2)
             else:
-                opts = ''
-            if os.system(f"mkdir {opts} {args.DIR}") == 0:
-                os.system(f"cp -r --reflink=auto {tmpdir}/ostree/* {args.DIR}/")
-                print(f"Successfully initialized a base debian tree at {args.DIR} !")
-            else:
-                print(f"ERROR: Could not create {args.DIR}! Bailing!")
+                if VERBOSE:
+                    print("Creating directory...")
+                    opts = '-v'
+                else:
+                    opts = ''
+                if not os.system(f"mkdir {opts} {args.DIR}") == 0:
+                    print(f"{COLORS['FAIL']}ERROR: Could not create {args.DIR}! Bailing!{COLORS['ENDC']}")
+                    sys.exit(-1)
+            os.system(f"cp -r --reflink=auto {tmpdir}/ostree/* {args.DIR}/")
+            print(f"Successfully initialized a base debian tree at {args.DIR} !")
 
     # --sandbox
     if args.LOCATION is not None:

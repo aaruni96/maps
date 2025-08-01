@@ -11,6 +11,7 @@ and this project tries to adhere to [Semantic Versioning](https://semver.org/spe
 - Bugfix: Added `--gui` option to package mode.
 
 ### Changed
+- Allow initialize into existing empty directory.
 
 ### Removed
 
@@ -23,8 +24,6 @@ and this project tries to adhere to [Semantic Versioning](https://semver.org/spe
 - Bugfix: Fix a regression where we stopped using overlays
 - Bugfix: Fix a regression where we stopped passing through `$HOME/Public`
 - Changed `mkdir` based crashes to report more graceful errors.
-
-### Removed
 
 ## [0.5]
 
