@@ -12,6 +12,7 @@ and this project tries to adhere to [Semantic Versioning](https://semver.org/spe
 
 ### Changed
 - Allow initialize into existing empty directory.
+- Update list mode to include date when runtime was published
 
 ### Removed
 

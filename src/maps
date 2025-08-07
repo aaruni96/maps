@@ -12,6 +12,7 @@ import tempfile
 import argparse
 import concurrent.futures
 from math import log10, floor
+from time import strftime, localtime
 from urllib import request
 from urllib.error import HTTPError
 from urllib.parse import urlparse, parse_qs, urlencode
@@ -19,6 +20,7 @@ from urllib.parse import urlparse, parse_qs, urlencode
 # third party imports
 import tomli
 import tomli_w
+import requests
 import gi
 from progress.bar import Bar
 from tusclient import client, exceptions
@@ -78,9 +80,9 @@ def addCLI():
     parser_runtime.add_argument('-d', '--deploy', dest='DEPLOY', action='store',
                                 default=False, help="deploy mode, for installing environments")
     parser_runtime.add_argument('-l', '--list', dest='LIST', action='store_true',
-                                default=False, help="List available environments")
+                                default=False, help="List all available environments")
     parser_runtime.add_argument('--list-local', dest='LIST_LOCAL', action='store_true',
-                                default=False, help="List available environments")
+                                default=False, help="List environments available offline")
     parser_runtime.add_argument('--repo', dest='REPO', help="Repository to use")
     parser_runtime.add_argument('--reset', dest='RESET', action='store',
                                 default=False, help="Reset the runtime.")
@@ -364,18 +366,32 @@ def make_remote_ref_list(repo, remote):
 def mode_list(repo):
     """Prints a list of available refs"""
     print("Available runtimes are :")
-    refs = list(repo.list_refs()[1].keys())
+    refsino = repo.list_refs()
+    refs = list(refsino[1].keys())
     if refs:
         print("Local")
         for ref in sorted(refs):
-            print(f"\t - {ref}")
+            commitref = repo.load_commit(refsino[1][ref])
+            timestamp = OSTree.commit_get_timestamp(commitref[1])
+            fmttime = strftime('%Y-%m-%d', localtime(timestamp))
+            print(f"\t - {fmttime}\t{ref}")
     remotes = repo.remote_list()
     for remote in remotes:
         remote_refs = make_remote_ref_list(repo, remote)
         if remote_refs:
             print(remote)
-            for ref in sorted(remote_refs):
-                print(f"\t - {ref}")
+            remote_url = repo.remote_get_url(remote)[1]
+            try:
+                r = requests.get(f"{remote_url}summary.json", timeout=5)
+                summary = json.loads(r.content.decode())
+                for ref in sorted(remote_refs):
+                    if ref in summary:
+                        print(f"\t - {summary[ref]}\t{ref}")
+                    else:
+                        print(f"\t - {ref}")
+            except HTTPError:
+                for ref in sorted(remote_refs):
+                    print(f"\t - {ref}")
 
 
 def list_remotes(repo):
