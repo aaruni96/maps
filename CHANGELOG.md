@@ -10,6 +10,7 @@ and this project tries to adhere to [Semantic Versioning](https://semver.org/spe
 ### Added
 
 ### Changed
+- Update list mode to include date when runtime was published
 
 ### Removed
 
