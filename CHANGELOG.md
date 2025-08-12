@@ -10,6 +10,8 @@ and this project tries to adhere to [Semantic Versioning](https://semver.org/spe
 ### Added
 
 ### Changed
+- `python3-tuspy` is now an optional dependency. Upload is disabled if it is not installed. This
+  makes the .deb package compatible with older releases of debian and other downstream distros.
 
 ### Removed
 
