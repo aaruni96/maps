@@ -1,0 +1,4 @@
+abi <abi/3.0>,
+
+"/usr/bin/maps" flags=(unconfined) {
+}
