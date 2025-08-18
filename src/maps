@@ -1365,7 +1365,9 @@ def upload(repo, runtime):
     Given a local runtime, tar it and upload it. (Try)
     """
     if not TUSPY_FOUND:
-        print("Upload functionality is disabled because the package tuspy was not found.")
+        print(f"{COLORS['FAIL']}Error: Upload functionality is disabled because the package tuspy "
+              "was not found.\n\n\tPlease install `tuspy` with pip, or `python3-tuspy` with your "
+              f"distribution\'s package manager (if available)\n{COLORS['ENDC']}")
         return -2
     if AUTH is None:
         raise AssertionError("MTDAUTH not set! Cannot upload without authentication!")
