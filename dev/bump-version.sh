@@ -22,7 +22,7 @@ if [[ ! $1 =~ "dev" ]]; then
     sed -i "${linenumber}i ${rpmentry}\n" pkg/rpm/maps.spec
 
     # step 2.2. debian/deb
-    debdate="""$(date +" -- Aaruni Kaushik <akaushik@mathematik.uni-kl.de> %a, %d %b %Y %H:%M:%S %z")"""
+    debdate="""$(date +" -- Aaruni Kaushik <akaushik@mathematik.uni-kl.de>  %a, %d %b %Y %H:%M:%S %z")"""
     debentry="""maps (${1}-1) UNRELEASED; urgency=medium\n\n  * Update to v${1}\n\n${debdate}"""
     sed -i "1i $debentry\n" pkg/debian/changelog
 fi
