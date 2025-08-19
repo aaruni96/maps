@@ -1,4 +1,7 @@
 abi <abi/3.0>,
+include <tunables/global>
 
-"/usr/bin/maps" flags=(unconfined) {
+profile maps /usr/bin/maps flags=(unconfined) {
+  include if exists <local/bwrap>
 }
+
