@@ -135,8 +135,9 @@ def addCLI():
     return parser, parser_runtime, parser_remote, parser_pack
 
 
-def sanity_checks(parsers):
-    """Some simple sanity checks, before the program proceeds"""
+def sanity_checks(parsers: tuple[argparse.ArgumentParser, argparse.ArgumentParser,
+                                 argparse.ArgumentParser, argparse.ArgumentParser]):
+    """Some simply sanity checks, before the program proceeds"""
     if len(sys.argv) == 1:
         parsers[0].print_help()
         sys.exit(1)
@@ -187,7 +188,7 @@ def create_config_file(config_path):
     return config
 
 
-def program_init(repopath):
+def program_init(repopath: str):
     """Init function verifies requirements, sets up the repo. Returns the OSTree Repo."""
     opt1 = "-q"
     opt2 = "1>/dev/null"
@@ -338,7 +339,7 @@ def program_init(repopath):
     return repo
 
 
-def make_remote_ref_list(repo, remote):
+def make_remote_ref_list(repo: OSTree.Repo, remote: str):
     """Given a repo and a remote, return a list of refs in the remote of that repo"""
     if remote is None:
         return []
@@ -359,7 +360,7 @@ def make_remote_ref_list(repo, remote):
     return remote_refs
 
 
-def mode_list(repo):
+def mode_list(repo: OSTree.Repo):
     """Prints a list of available refs"""
     print("Available runtimes are :")
     refs = list(repo.list_refs()[1].keys())
@@ -384,7 +385,7 @@ def list_remotes(repo):
     return retval
 
 
-def mode_remotes(repo, args):
+def mode_remotes(repo: OSTree.Repo, args):  # todo: type for args?
     """Administrative mode for remotes of the repo"""
     if args.LIST is not False:
         remotes = list_remotes(repo)
@@ -598,7 +599,7 @@ def make_bwrap_command(location, overlay, command, nogui, gui):
     return bwrapstring, senv
 
 
-def mode_run(repo, args):
+def mode_run(repo, args):   # TODO
     """Function to execute a deployed environment"""
 
     remote, runtime = disambiguate_runtime(repo, args.RUN, installed=True)
@@ -700,7 +701,7 @@ def download(repo, repopath, remote, target):
 
 
 # Uninstall
-def uninstall_runtime(repo, args):
+def uninstall_runtime(repo: OSTree.repo, args):  # todo: type for args?
     """Function to remove a runtime from both the local disk checkout, and the local repo"""
     # Check if runtime is checked out
     FLAG_DIREXISTS = False
@@ -762,7 +763,7 @@ def validate_runtime_name(runtime_id: str):
 
 
 # Update
-def mode_update(repo, repopath, args, remote=""):
+def mode_update(repo, repopath, args, remote=""):   # TODO
     """Function to update a runtime identifier to its recent version (if any)"""
     if not args.UPDATE:
         args.UPDATE = args.DEPLOY
@@ -855,7 +856,7 @@ def checkout(repo, remote, runtime):
 
 
 # Deploy Mode
-def mode_deploy(repo, repopath, args):
+def mode_deploy(repo: OSTree.Repo, repopath: str, args):  # todo: type for args?
     """Function to deploy from repo to local disk"""
 
     remote, runtime = disambiguate_runtime(repo, args.DEPLOY, installed=False)
@@ -919,7 +920,7 @@ def blank_options():
 
 
 # Package Mode
-def mode_package(repo, repopath, args):
+def mode_package(repo, repopath, args): #TODO
     """Function for package mode. Not intended to be used by "end users" """
     if args.DIR is not None:
         refhash = ''
@@ -984,7 +985,7 @@ def mode_package(repo, repopath, args):
         upload(repo, args.UPLOAD)
 
 
-def commit(zarglist):
+def commit(zarglist: list):
     """
     Function commits a tree to a repo in branch asynchronously,
     so spinner can be animated in the main thread to show activity.
@@ -1013,7 +1014,7 @@ def commit(zarglist):
     repo.commit_transaction(None)
 
 
-def reset(repo, runtime):
+def reset(repo, runtime):   #TODO
     """
     Function resets a runtime, simply by deleting the contents of the "rwfs" dir.
     """
@@ -1164,7 +1165,7 @@ def mode_export_url(repo: OSTree.Repo, args: argparse.Namespace):
 
 
 # runtime mode: the default path for execution
-def mode_runtime(repo, repopath, args):
+def mode_runtime(repo: OSTree.Repo, repopath: str, args):
     """
     Runtime mode, the default path for execution, and the "end user" mode.
     """
