@@ -541,7 +541,10 @@ def make_bwrap_command(location, overlay, command, nogui, gui):
     else:
         bwrapstring += f'--bind {location} /'
     bwrapstring += ' --proc /proc --dev /dev --ro-bind /sys /sys --tmpfs /tmp '
-    session = senv['XDG_SESSION_TYPE']
+    try:
+        session = senv['XDG_SESSION_TYPE']
+    except KeyError:
+        session = None
     if nogui:
         if VERBOSE:
             print("Disabling gui...")
