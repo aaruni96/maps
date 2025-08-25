@@ -16,6 +16,7 @@ and this project tries to adhere to [Semantic Versioning](https://semver.org/spe
 - `python3-tuspy` is now an optional dependency. Upload is disabled if it is not installed. This
   makes the .deb package compatible with older releases of debian and other downstream distros.
 - Bugfix: Gracefully handle a repository not providing date information instead of crashing
+- Bugfix: Handle the case when XDG_SESSION_TYPE is not set
 
 ### Removed
 
