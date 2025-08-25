@@ -1,6 +1,6 @@
 # MaPS - MaRDI Packaging System
 
-![](https://img.shields.io/badge/version-0.7--dev-blue)
+![](https://img.shields.io/badge/version-0.7-blue)
 
 ## Introduction
 

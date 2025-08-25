@@ -1,5 +1,5 @@
 Name:           maps
-Version:        0.6
+Version:        0.7
 Release:        1%{?dist}
 Summary:        Mathematical Packaging System
 BuildArch:      noarch
@@ -37,6 +37,9 @@ xdg-mime default maps.desktop x-scheme-handler/maps
 
 
 %changelog
+
+* Mon Aug 25 2025 Aaruni Kaushik <akaushik@mathamtik.uni-kl.de> 0.7.0.1
+- Update to version 0.7
 
 * Sat Jul 26 2025 Aaruni Kaushik <akaushik@mathamtik.uni-kl.de> 0.6.0.1
 - Update to version 0.6
