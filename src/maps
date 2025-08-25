@@ -23,8 +23,6 @@ import tomli_w
 import requests
 import gi
 from progress.bar import Bar
-from tusclient import client, exceptions
-from tusclient.storage import filestorage
 gi.require_version("OSTree", "1.0")
 from gi.repository import OSTree, GLib
 
@@ -56,6 +54,14 @@ COLORS = {
     "FAIL": '\033[91m',
     "ENDC": '\033[0m'
 }
+TUSPY_FOUND = False
+try:
+    from tusclient import client, exceptions
+    from tusclient.storage import filestorage
+    TUSPY_FOUND = True
+except ModuleNotFoundError:
+    print(f"{COLORS['WARNING']}Warning: Upload client not found! MaPS can still be used. However, "
+          f"upload functionality is disabled.{COLORS['ENDC']}")
 
 
 # Define a CLI
@@ -1358,6 +1364,11 @@ def upload(repo, runtime):
     """
     Given a local runtime, tar it and upload it. (Try)
     """
+    if not TUSPY_FOUND:
+        print(f"{COLORS['FAIL']}Error: Upload functionality is disabled because the package tuspy "
+              "was not found.\n\n\tPlease install `tuspy` with pip, or `python3-tuspy` with your "
+              f"distribution\'s package manager (if available)\n{COLORS['ENDC']}")
+        return -2
     if AUTH is None:
         raise AssertionError("MTDAUTH not set! Cannot upload without authentication!")
     # just to be sure
