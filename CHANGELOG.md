@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project tries to adhere to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Upcoming]
+## [0.7]
 
 ### Added
 - Bugfix: Added `--gui` option to package mode.
@@ -17,8 +17,6 @@ and this project tries to adhere to [Semantic Versioning](https://semver.org/spe
   makes the .deb package compatible with older releases of debian and other downstream distros.
 - Bugfix: Gracefully handle a repository not providing date information instead of crashing
 - Bugfix: Handle the case when XDG_SESSION_TYPE is not set
-
-### Removed
 
 ## [0.6]
 
