@@ -15,6 +15,7 @@ and this project tries to adhere to [Semantic Versioning](https://semver.org/spe
 - Update list mode to include date when runtime was published
 - `python3-tuspy` is now an optional dependency. Upload is disabled if it is not installed. This
   makes the .deb package compatible with older releases of debian and other downstream distros.
+- Bugfix: Gracefully handle a repository not providing date information instead of crashing
 
 ### Removed
 
