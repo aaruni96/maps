@@ -389,6 +389,10 @@ def mode_list(repo):
             remote_url = repo.remote_get_url(remote)[1]
             try:
                 r = requests.get(f"{remote_url}summary.json", timeout=5)
+                if r.status_code != 200:
+                    raise HTTPError(url=f"{remote_url}summary.json",
+                                    code=r.status_code, msg=r.content.decode(),
+                                    hdrs=r.headers, fp=None)
                 summary = json.loads(r.content.decode())
                 for ref in sorted(remote_refs):
                     if ref in summary:
@@ -396,6 +400,9 @@ def mode_list(repo):
                     else:
                         print(f"\t - {ref}")
             except HTTPError:
+                if VERBOSE:
+                    print(f"{COLORS['WARNING']}Summary file not found on remote server. Printing "
+                          f"list without dates!{COLORS['ENDC']}")
                 for ref in sorted(remote_refs):
                     print(f"\t - {ref}")
 
