@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>MaRDI Packaging System on MaPS</title>
+    <link>/</link>
+    <description>Recent content in MaRDI Packaging System on MaPS</description>
+    <generator>Hugo</generator>
+    <language>en</language>
+    <copyright>Copyright (c) 2020-2024 Thulite</copyright>
+    <lastBuildDate>Tue, 27 Feb 2024 09:30:56 +0100</lastBuildDate>
+    <atom:link href="/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Example Post</title>
+      <link>/blog/example-post/</link>
+      <pubDate>Thu, 07 Sep 2023 16:27:22 +0200</pubDate>
+      <guid>/blog/example-post/</guid>
+      <description>You can use blog posts for announcing product updates and features.</description>
+    </item>
+    <item>
+      <title>Deploy and Run OSCAR</title>
+      <link>/docs/guides/deploy-and-run-oscar/</link>
+      <pubDate>Thu, 07 Sep 2023 16:04:48 +0200</pubDate>
+      <guid>/docs/guides/deploy-and-run-oscar/</guid>
+      <description>&lt;h2 id=&#34;maps-installation&#34;&gt;MaPS Installation&lt;/h2&gt;&#xA;&lt;h3 id=&#34;required-software&#34;&gt;Required Software&lt;/h3&gt;&#xA;&lt;p&gt;First install the pre requisite software.&lt;/p&gt;&#xA;&lt;h4 id=&#34;apt-based-systems-debianubuntumintetc&#34;&gt;APT based systems (Debian/Ubuntu/Mint/etc)&lt;/h4&gt;&#xA;&#xD;&#xA;&#xD;&#xA;&#xD;&#xA;&lt;div class=&#34;expressive-code&#34;&gt;&#xD;&#xA;  &lt;figure class=&#34;frame is-terminal not-content&#34;&gt;&#xD;&#xA;  &lt;figcaption class=&#34;header&#34;&gt;&#xD;&#xA;    &lt;span class=&#34;title&#34;&gt;&lt;/span&gt;&#xD;&#xA;  &lt;/figcaption&gt;&#xD;&#xA;  &lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;sudo apt install git libcairo2-dev gcc python3-dev libgirepository1.0-dev libostree-dev python3-venv libcap-dev autoconf meson ostree&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&#xD;&#xA;  &lt;/figure&gt;&#xD;&#xA;&lt;/div&gt;&#xD;&#xA;&lt;h4 id=&#34;dnf-based-systems-fedorarhelcentosetc&#34;&gt;DNF based systems (Fedora/RHEL/CentOS/etc)&lt;/h4&gt;&#xA;&#xD;&#xA;&#xD;&#xA;&#xD;&#xA;&lt;div class=&#34;expressive-code&#34;&gt;&#xD;&#xA;  &lt;figure class=&#34;frame is-terminal not-content&#34;&gt;&#xD;&#xA;  &lt;figcaption class=&#34;header&#34;&gt;&#xD;&#xA;    &lt;span class=&#34;title&#34;&gt;&lt;/span&gt;&#xD;&#xA;  &lt;/figcaption&gt;&#xD;&#xA;  &lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;sudo dnf install git cairo-devel gcc python3-devel gobject-introspection-devel ostree-devel libcap-devel autoconf cairo-gobject-devel meson ostree&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&#xD;&#xA;  &lt;/figure&gt;&#xD;&#xA;&lt;/div&gt;&#xD;&#xA;&lt;h4 id=&#34;pacman-based-systems-arch-linuxendeavour-osmanjaroetc&#34;&gt;pacman based systems (Arch Linux/Endeavour OS/Manjaro/etc)&lt;/h4&gt;&#xA;&#xD;&#xA;&#xD;&#xA;&#xD;&#xA;&lt;div class=&#34;expressive-code&#34;&gt;&#xD;&#xA;  &lt;figure class=&#34;frame is-terminal not-content&#34;&gt;&#xD;&#xA;  &lt;figcaption class=&#34;header&#34;&gt;&#xD;&#xA;    &lt;span class=&#34;title&#34;&gt;&lt;/span&gt;&#xD;&#xA;  &lt;/figcaption&gt;&#xD;&#xA;  &lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;sudo pacman -Sy base-devel cairo git gobject-introspection-runtime python3 ostree meson&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&#xD;&#xA;  &lt;/figure&gt;&#xD;&#xA;&lt;/div&gt;&#xD;&#xA;&lt;h2 id=&#34;maps&#34;&gt;MaPS&lt;/h2&gt;&#xA;&lt;p&gt;Clone maps to somewhere convenient.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Accurate Arithmetic.jl</title>
+      <link>/docs/guides/accurate-arithmetic.jl/</link>
+      <pubDate>Thu, 07 Sep 2023 16:04:48 +0200</pubDate>
+      <guid>/docs/guides/accurate-arithmetic.jl/</guid>
+      <description>&lt;p&gt;The &lt;a href=&#34;https://github.com/JuliaMath/AccurateArithmetic.jl/tree/paper-correctness-2019&#34;&gt;AccurateArithmetic.jl Julia&#xA;package&lt;/a&gt;&#xA;implements all algorithms described in &lt;a href=&#34;https://hal.science/hal-02265534&#34;&gt;Accurate and Efficiently Vectorized Sums&#xA;and Dot Products in Julia (2019)&lt;/a&gt;. It also&#xA;contains everything needed to reproduce the results shown in the paper. Below is&#xA;a full list of the actions to be taken by anyone wanting to try and reproduce&#xA;the results on their own Linux system (adapted for MaPS from Appendix of the&#xA;linked paper)&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Installation</title>
+      <link>/docs/guides/installation/</link>
+      <pubDate>Thu, 07 Sep 2023 16:04:48 +0200</pubDate>
+      <guid>/docs/guides/installation/</guid>
+      <description>&lt;p&gt;MaPS requires python 3.9 or above. Please make sure your OS, and python&#xA;environment accommodate this need. Almost all Linux distros still supported by&#xA;their vendors meet this requirement.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>lorem ipsum</title>
+      <link>/docs/guides/lorem-ipsum/</link>
+      <pubDate>Thu, 07 Sep 2023 16:04:48 +0200</pubDate>
+      <guid>/docs/guides/lorem-ipsum/</guid>
+      <description>&lt;p&gt;tomato Guides lead a user through a specific task they want to accomplish, often with a sequence of steps. Writing a good guide requires thinking about what your users are trying to do.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Example Reference</title>
+      <link>/docs/reference/example-reference/</link>
+      <pubDate>Thu, 07 Sep 2023 16:13:18 +0200</pubDate>
+      <guid>/docs/reference/example-reference/</guid>
+      <description>&lt;p&gt;Reference pages are ideal for outlining how things work in terse and clear terms. Less concerned with telling a story or addressing a specific use case, they should give a comprehensive outline of what your documenting.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Runtime Mode</title>
+      <link>/docs/reference/runtime-mode/</link>
+      <pubDate>Thu, 07 Sep 2023 16:13:18 +0200</pubDate>
+      <guid>/docs/reference/runtime-mode/</guid>
+      <description>&lt;p&gt;This is the default mode of the application, and is automatically selected when&#xA;no other mode is specified. In this mode, runtimes can be deployed, run,&#xA;updated, and uninstalled.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Resources</title>
+      <link>/docs/resources/</link>
+      <pubDate>Tue, 27 Feb 2024 09:30:56 +0100</pubDate>
+      <guid>/docs/resources/</guid>
+      <description>&lt;p&gt;Link to valuable, relevant resources.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Privacy Policy</title>
+      <link>/privacy/</link>
+      <pubDate>Thu, 07 Sep 2023 17:19:07 +0200</pubDate>
+      <guid>/privacy/</guid>
+      <description></description>
+    </item>
+  </channel>
+</rss>

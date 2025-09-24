@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Reference on MaPS</title>
+    <link>/docs/reference/</link>
+    <description>Recent content in Reference on MaPS</description>
+    <generator>Hugo</generator>
+    <language>en</language>
+    <copyright>Copyright (c) 2020-2024 Thulite</copyright>
+    <lastBuildDate>Thu, 07 Sep 2023 16:13:18 +0200</lastBuildDate>
+    <atom:link href="/docs/reference/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Example Reference</title>
+      <link>/docs/reference/example-reference/</link>
+      <pubDate>Thu, 07 Sep 2023 16:13:18 +0200</pubDate>
+      <guid>/docs/reference/example-reference/</guid>
+      <description>&lt;p&gt;Reference pages are ideal for outlining how things work in terse and clear terms. Less concerned with telling a story or addressing a specific use case, they should give a comprehensive outline of what your documenting.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Runtime Mode</title>
+      <link>/docs/reference/runtime-mode/</link>
+      <pubDate>Thu, 07 Sep 2023 16:13:18 +0200</pubDate>
+      <guid>/docs/reference/runtime-mode/</guid>
+      <description>&lt;p&gt;This is the default mode of the application, and is automatically selected when&#xA;no other mode is specified. In this mode, runtimes can be deployed, run,&#xA;updated, and uninstalled.&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

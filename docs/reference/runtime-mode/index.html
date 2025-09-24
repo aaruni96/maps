@@ -1,0 +1,791 @@
+<!doctype html>
+<html lang="en" data-bs-theme="auto">
+  <head>
+  <meta charset="utf-8">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1"><link rel="preload" href="/fonts/vendor/jost/jost-v4-latin-regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/vendor/jost/jost-v4-latin-500.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/vendor/jost/jost-v4-latin-700.woff2" as="font" type="font/woff2" crossorigin>
+<script 
+  src="/js/color-mode.86a91f050a481d0a3f0c72ac26543cb6228c770875981c58dcbc008fd3f875c8.js"
+  integrity="sha256-hqkfBQpIHQo/DHKsJlQ8tiKMdwh1mBxY3LwAj9P4dcg=">
+</script>
+
+
+<link rel="stylesheet" href="/main.c513dbc26eb7181da6d49749b21a97d08a1c2ac9e25a25caf2dd39b591f3bd94684a2549d9d38bb26e10869dc7d6be11794a9aacb3a18ddacd95152ac32c5e30.css" integrity="sha512-xRPbwm63GB2m1JdJshqX0IocKsniWiXK8t05tZHzvZRoSiVJ2dOLsm4Qhp3H1r4ReUqarLOhjdrNlRUqwyxeMA==" crossorigin="anonymous">
+
+<noscript><style>img.lazyload { display: none; }</style></noscript><base href="/docs/reference/runtime-mode/">
+
+  <link rel="canonical" href="/docs/reference/runtime-mode/">
+
+
+<title>Runtime Mode  |  MaPS</title>
+<meta name="description" content="Reference pages are ideal for outlining how things work in terse and clear terms.">
+
+    
+    <link rel="icon" href="/favicon.ico" sizes="32x32">
+    
+      <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    
+      <link
+        rel="apple-touch-icon"
+        href="/apple-touch-icon.png"
+        sizes="180x180"
+        type="image/png"
+      >
+      <link
+        rel="icon"
+        href="/favicon-192x192.png"
+        sizes="192x192"
+        type="image/png"
+      >
+      <link
+        rel="icon"
+        href="/favicon-512x512.png"
+        sizes="512x512"
+        type="image/png"
+      >
+<link rel="manifest" href="/manifest.webmanifest">
+
+<meta property="og:url" content="/docs/reference/runtime-mode/">
+  <meta property="og:site_name" content="MaPS">
+  <meta property="og:title" content="Runtime Mode">
+  <meta property="og:description" content="Reference pages are ideal for outlining how things work in terse and clear terms.">
+  <meta property="og:locale" content="en">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="docs">
+    <meta property="article:published_time" content="2023-09-07T16:13:18+02:00">
+    <meta property="article:modified_time" content="2023-09-07T16:13:18+02:00">
+    <meta property="og:image" content="/cover.png">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="/cover.png">
+  <meta name="twitter:title" content="Runtime Mode">
+  <meta name="twitter:description" content="Reference pages are ideal for outlining how things work in terse and clear terms.">
+      <meta name="twitter:site" content="@getdoks">
+
+    
+    
+    <script type="application/ld+json">
+  {
+   "@context": "https://schema.org",
+   "@type": "BreadcrumbList",
+   "itemListElement": [
+     {
+       "@type": "ListItem",
+       "item": "/",
+       "name": "Ma Rdi Packaging System",
+       "position": 1
+     },
+     {
+       "@type": "ListItem",
+       "item": "/docs/",
+       "name": "Docs",
+       "position": 2
+     },
+     {
+       "@type": "ListItem",
+       "item": "/docs/reference/",
+       "name": "Reference",
+       "position": 3
+     },
+     {
+       "@type": "ListItem",
+       "name": "Runtime Mode",
+       "position": 4
+     }
+   ]
+ }
+</script>
+
+
+
+
+
+</head>
+
+  
+  <body class="single section docs" data-bs-spy="scroll" data-bs-target="#toc" data-bs-root-margin="0px 0px -60%" data-bs-smooth-scroll="true" tabindex="0">
+    <div class="sticky-top">
+<header class="navbar navbar-expand-lg">
+  <div class="container-lg">
+  
+    <a class="navbar-brand me-auto me-lg-3" href="/">MaPS</a>
+
+    
+    
+    <button type="button" id="searchToggleMobile" class="btn btn-link nav-link mx-2 d-lg-none" aria-label="Search website">
+      <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-search" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+        <circle cx="10" cy="10" r="7"></circle>
+        <line x1="21" y1="21" x2="15" y2="15"></line>
+      </svg>
+    </button>
+    
+    <button class="btn btn-link d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavSection" aria-controls="offcanvasNavSection" aria-label="Open section navigation menu">
+      <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-dots-vertical" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+        <path d="M12 12m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
+        <path d="M12 19m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
+        <path d="M12 5m-1 0a1 1 0 1 0 2 0a1 1 0 1 0 -2 0"></path>
+      </svg>
+    </button>
+    <div class="offcanvas offcanvas-start d-lg-none" tabindex="-1" id="offcanvasNavSection" aria-labelledby="offcanvasNavSectionLabel">
+      <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="offcanvasNavSectionLabel">Docs</h5>
+        <button type="button" class="btn btn-link nav-link p-0 ms-auto" data-bs-dismiss="offcanvas" aria-label="Close">
+          <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-x" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+            <path d="M18 6l-12 12"></path>
+            <path d="M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+      <div class="offcanvas-body">
+        <aside class="doks-sidebar mt-n3">
+          <nav id="doks-docs-nav" aria-label="Tertiary navigation">
+            
+  
+    
+<nav class="section-nav docs-links">
+  <ul class="list-unstyled">
+
+  <li>
+    <details open>
+      <summary>Guides</summary>
+      <ul class="list-unstyled list-nested">
+
+  <li>
+      <a href="/docs/guides/deploy-and-run-oscar/">Deploy and Run OSCAR</a>
+  </li>
+
+  <li>
+      <a href="/docs/guides/accurate-arithmetic.jl/">Accurate Arithmetic.jl</a>
+  </li>
+
+  <li>
+      <a href="/docs/guides/installation/">Installation</a>
+  </li>
+
+  <li>
+      <a href="/docs/guides/lorem-ipsum/">lorem ipsum</a>
+  </li>
+      </ul>
+    </details>
+  </li>
+
+  <li>
+    <details open>
+      <summary>Reference</summary>
+      <ul class="list-unstyled list-nested">
+
+  <li>
+      <a href="/docs/reference/example-reference/">Example Reference</a>
+  </li>
+
+  <li class="active" >
+      <a aria-current="page" href="/docs/reference/runtime-mode/">Runtime Mode</a>
+  </li>
+      </ul>
+    </details>
+  </li>
+  </ul>
+</nav>
+
+  
+
+          </nav>
+        </aside>
+      </div>
+    </div>
+    
+    <button class="btn btn-link nav-link mx-2 order-3 d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavMain" aria-controls="offcanvasNavMain" aria-label="Open main navigation menu">
+      <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-menu" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+        <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+        <line x1="4" y1="8" x2="20" y2="8"></line>
+        <line x1="4" y1="16" x2="20" y2="16"></line>
+      </svg>
+    </button>
+
+    
+    <div class="offcanvas offcanvas-end h-auto" tabindex="-1" id="offcanvasNavMain" aria-labelledby="offcanvasNavMainLabel">
+      <div class="offcanvas-header">
+        <h5 class="offcanvas-title" id="offcanvasNavMainLabel">MaPS</h5>
+        <button type="button" class="btn btn-link nav-link p-0 ms-auto" data-bs-dismiss="offcanvas" aria-label="Close">
+          <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-x" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+            <path d="M18 6l-12 12"></path>
+            <path d="M6 6l12 12"></path>
+         </svg>
+        </button>
+      </div>
+      
+      <div class="offcanvas-body d-flex flex-column flex-lg-row justify-content-between">
+        <ul class="navbar-nav flex-grow-1"><li class="nav-item">
+                <a class="nav-link active" href="/docs/" aria-current="true">Docs</a>
+              </li>
+            <li class="nav-item">
+                <a class="nav-link" href="/blog/">Blog</a>
+              </li>
+            </ul>
+
+        
+        
+        <button type="button" id="searchToggleDesktop" class="btn btn-link nav-link p-2 d-none d-lg-block" aria-label="Search website">
+          <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-search" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+            <circle cx="10" cy="10" r="7"></circle>
+            <line x1="21" y1="21" x2="15" y2="15"></line>
+          </svg>
+        </button>
+        
+        
+        
+        <button id="buttonColorMode" class="btn btn-link mx-auto nav-link p-0 ms-lg-2 me-lg-1" type="button" aria-label="Toggle theme">
+          <svg data-bs-theme-value="dark" xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-moon" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+            <path d="M12 3c.132 0 .263 0 .393 0a7.5 7.5 0 0 0 7.92 12.446a9 9 0 1 1 -8.313 -12.454z"></path>
+          </svg>
+          <svg data-bs-theme-value="light" xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-sun" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+            <path d="M12 12m-4 0a4 4 0 1 0 8 0a4 4 0 1 0 -8 0m-5 0h1m8 -9v1m8 8h1m-9 8v1m-6.4 -15.4l.7 .7m12.1 -.7l-.7 .7m0 11.4l.7 .7m-12.1 -.7l-.7 .7"></path>
+          </svg>
+        </button>
+        
+        <ul id="socialMenu" class="nav mx-auto flex-row order-lg-4">
+          <li class="nav-item">
+              <a class="nav-link social-link" href="https://github.com/MaRDI4NFDI/maps"><svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-brand-github" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"></path><path d="M9 19c-4.3 1.4 -4.3 -2.5 -6 -3m12 5v-3.5c0 -1 .1 -1.4 -.5 -2c2.8 -.3 5.5 -1.4 5.5 -6a4.6 4.6 0 0 0 -1.3 -3.2a4.2 4.2 0 0 0 -.1 -3.2s-1.1 -.3 -3.5 1.3a12.3 12.3 0 0 0 -6.2 0c-2.4 -1.6 -3.5 -1.3 -3.5 -1.3a4.2 4.2 0 0 0 -.1 3.2a4.6 4.6 0 0 0 -1.3 3.2c0 4.6 2.7 5.7 5.5 6c-.6 .6 -.6 1.2 -.5 2v3.5"></path></svg><small class="ms-2 visually-hidden">GitHub</small></a>
+            </li>
+          </ul>
+        
+        </div>
+    </div>
+
+    
+    </div>
+</header>
+</div>
+
+<div class="modal" id="searchModal" tabindex="-1" aria-labelledby="searchModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-scrollable modal-fullscreen-md-down">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5 visually-hidden" id="searchModalLabel">Search</h1>
+        <button type="button" class="btn-close visually-hidden" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="search-input flex-grow-1 d-none">
+          <form id="search-form" class="search-form" action="#" method="post" accept-charset="UTF-8" role="search">
+            <label for="query" class="visually-hidden">Search</label>
+            <div class="d-flex">
+              <input type="search" id="query" name="query" class="search-text form-control form-control-lg" placeholder="Search" aria-label="Search" maxlength="128" autocomplete="off">
+              <button type="button" class="btn btn-link text-decoration-none px-0 ms-3 d-md-none" data-bs-dismiss="modal" aria-label="Close">Cancel</button>
+            </div>
+          </form>
+        </div>
+      </div>
+      <div class="modal-body">
+        <p class="search-loading status message d-none mt-3 text-center">Loading search index…</p>
+        <p class="search-no-recent message d-none mt-3 text-center">No recent searches</p>
+        <p class="search-no-results message d-none mt-3 text-center">No results for "<strong><span class="query-no-results">Query here</span></strong>"</p>
+        <div id="searchResults" class="search-results"></div>
+        <template>
+          <article class="search-result list-view">
+            <div class="card my-3">
+              <div class="card-body">
+                <header>
+                  <h2 class="h5 title title-submitted mb-0"><a class="stretched-link text-decoration-none text-reset" href="#">Title here</a></h2>
+                  <div class="submitted d-none"><time class="created-date">Date here</time></div>
+                </header>
+                <div class="content">Summary here</div>
+              </div>
+            </div>
+          </article>
+        </template>
+      </div>
+      <div class="modal-footer">
+        <ul class="list-inline me-auto d-none d-md-block">
+          <li class="list-inline-item"><kbd class="me-2"><svg width="15" height="15" aria-label="Enter key" role="img"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.2"><path d="M12 3.53088v3c0 1-1 2-2 2H4M7 11.53088l-3-3 3-3"></path></g></svg></kbd><span class="DocSearch-Label">to select</span></li>
+          <li class="list-inline-item"><kbd class="me-2"><svg width="15" height="15" aria-label="Arrow down" role="img"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.2"><path d="M7.5 3.5v8M10.5 8.5l-3 3-3-3"></path></g></svg></kbd><kbd class="me-2"><svg width="15" height="15" aria-label="Arrow up" role="img"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.2"><path d="M7.5 11.5v-8M10.5 6.5l-3-3-3 3"></path></g></svg></kbd><span class="DocSearch-Label">to navigate</span></li>
+          <li class="list-inline-item"><kbd class="me-2"><svg width="15" height="15" aria-label="Escape key" role="img"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.2"><path d="M13.6167 8.936c-.1065.3583-.6883.962-1.4875.962-.7993 0-1.653-.9165-1.653-2.1258v-.5678c0-1.2548.7896-2.1016 1.653-2.1016.8634 0 1.3601.4778 1.4875 1.0724M9 6c-.1352-.4735-.7506-.9219-1.46-.8972-.7092.0246-1.344.57-1.344 1.2166s.4198.8812 1.3445.9805C8.465 7.3992 8.968 7.9337 9 8.5c.032.5663-.454 1.398-1.4595 1.398C6.6593 9.898 6 9 5.963 8.4851m-1.4748.5368c-.2635.5941-.8099.876-1.5443.876s-1.7073-.6248-1.7073-2.204v-.4603c0-1.0416.721-2.131 1.7073-2.131.9864 0 1.6425 1.031 1.5443 2.2492h-2.956"></path></g></svg></kbd><span class="DocSearch-Label">to close</span></li>
+        </ul>
+        <p class="d-md-none">Search by <a class="text-decoration-none" href="https://github.com/nextapps-de/flexsearch">FlexSearch</a></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+    <div class="wrap container-lg" role="document">
+      <div class="content">
+      
+        
+	<div class="row flex-xl-nowrap">
+		<div class="col-lg-5 col-xl-4 docs-sidebar d-none d-lg-block">
+			
+  
+    
+<nav class="section-nav docs-links">
+  <ul class="list-unstyled">
+
+  <li>
+    <details open>
+      <summary>Guides</summary>
+      <ul class="list-unstyled list-nested">
+
+  <li>
+      <a href="/docs/guides/deploy-and-run-oscar/">Deploy and Run OSCAR</a>
+  </li>
+
+  <li>
+      <a href="/docs/guides/accurate-arithmetic.jl/">Accurate Arithmetic.jl</a>
+  </li>
+
+  <li>
+      <a href="/docs/guides/installation/">Installation</a>
+  </li>
+
+  <li>
+      <a href="/docs/guides/lorem-ipsum/">lorem ipsum</a>
+  </li>
+      </ul>
+    </details>
+  </li>
+
+  <li>
+    <details open>
+      <summary>Reference</summary>
+      <ul class="list-unstyled list-nested">
+
+  <li>
+      <a href="/docs/reference/example-reference/">Example Reference</a>
+  </li>
+
+  <li class="active" >
+      <a aria-current="page" href="/docs/reference/runtime-mode/">Runtime Mode</a>
+  </li>
+      </ul>
+    </details>
+  </li>
+  </ul>
+</nav>
+
+  
+
+		</div>
+		
+		<nav class="docs-toc d-none d-xl-block col-xl-3" aria-label="Secondary navigation">
+			<div class="page-links">
+  <h3>On this page</h3>
+    <nav id="toc">
+  <ul>
+    <li><a href="#a-note-on-the-runtime-specifier">A note on the runtime specifier</a></li>
+    <li><a href="#--verbose"><code>--verbose</code></a></li>
+    <li><a href="#--list"><code>--list</code></a></li>
+    <li><a href="#--deploy"><code>--deploy</code></a>
+      <ul>
+        <li><a href="#telemetry">Telemetry</a></li>
+      </ul>
+    </li>
+    <li><a href="#--run"><code>--run</code></a></li>
+    <li><a href="#--reset"><code>--reset</code></a></li>
+    <li><a href="#--update"><code>--update</code></a></li>
+    <li><a href="#--uninstall"><code>--uninstall</code></a></li>
+    <li><a href="#--export-url"><code>--export-url</code></a></li>
+  </ul>
+</nav>
+</div>
+
+		</nav>
+		<main class="docs-content col-lg-11 col-xl-9">
+		
+			<h1>Runtime Mode</h1>
+			
+			<nav class="toc-mobile d-xl-none" aria-label="Quaternary navigation">
+				<details>
+    <summary>On this page</summary>
+    <div class="page-links">
+      <nav id="TableOfContents">
+  <ul>
+    <li><a href="#a-note-on-the-runtime-specifier">A note on the runtime specifier</a></li>
+    <li><a href="#--verbose"><code>--verbose</code></a></li>
+    <li><a href="#--list"><code>--list</code></a></li>
+    <li><a href="#--deploy"><code>--deploy</code></a>
+      <ul>
+        <li><a href="#telemetry">Telemetry</a></li>
+      </ul>
+    </li>
+    <li><a href="#--run"><code>--run</code></a></li>
+    <li><a href="#--reset"><code>--reset</code></a></li>
+    <li><a href="#--update"><code>--update</code></a></li>
+    <li><a href="#--uninstall"><code>--uninstall</code></a></li>
+    <li><a href="#--export-url"><code>--export-url</code></a></li>
+  </ul>
+</nav>
+    </div>
+  </details>
+
+			</nav>
+			<p>This is the default mode of the application, and is automatically selected when
+no other mode is specified. In this mode, runtimes can be deployed, run,
+updated, and uninstalled.</p>
+<p>As of version 0.7, the following options are available :</p>
+
+
+
+<div class="expressive-code">
+  <figure class="frame not-content">
+  <figcaption class="header">
+    <span class="title"></span>
+  </figcaption>
+  <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-text" data-lang="text"><span class="line"><span class="cl">  --command COMMAND     Override for the command to run
+</span></span><span class="line"><span class="cl">  -d DEPLOY, --deploy DEPLOY
+</span></span><span class="line"><span class="cl">                        deploy mode, for installing environments
+</span></span><span class="line"><span class="cl">  -l, --list            List available environments
+</span></span><span class="line"><span class="cl">  --list-local          List available environments
+</span></span><span class="line"><span class="cl">  --repo REPO           Repository to use
+</span></span><span class="line"><span class="cl">  --reset RESET         Reset the runtime.
+</span></span><span class="line"><span class="cl">  -r RUN, --run RUN     Which runtime to play.
+</span></span><span class="line"><span class="cl">  -u UNINSTALL, --uninstall UNINSTALL
+</span></span><span class="line"><span class="cl">                        Uninstall a runtime
+</span></span><span class="line"><span class="cl">  --update UPDATE       Update a runtime
+</span></span><span class="line"><span class="cl">  --url URL             Deploy and launch a runtime from URL
+</span></span><span class="line"><span class="cl">  -v, --verbose         enable verbose output
+</span></span><span class="line"><span class="cl">  --no-gui              Disable GUI
+</span></span><span class="line"><span class="cl">  --gui                 Force enable GUI
+</span></span><span class="line"><span class="cl">  -e EXPORTURL, --export-url EXPORTURL
+</span></span><span class="line"><span class="cl">                        Export a runtime as a URL which maps can open</span></span></code></pre></div>
+  </figure>
+</div>
+<h2 id="a-note-on-the-runtime-specifier">A note on the runtime specifier<a href="#a-note-on-the-runtime-specifier" class="anchor" aria-hidden="true">#</a> </h2>
+<p>The <strong>runtime specifier</strong> uniquely identifies a runtime to MaPS. It is of the
+form <code>&lt;software&gt;/&lt;platform&gt;/&lt;version&gt;</code>. The <code>&lt;software&gt;</code> part of the identifier
+needs to be in the <a href="https://en.wikipedia.org/wiki/Reverse_domain_name_notation">reverse domain name
+notation</a>. As an
+example, a valid specifier is <code>org.oscar_system.oscar/x86_64/1.0.0</code>.</p>
+<p>A runtime specifier can be given in a &ldquo;fully qualified&rdquo; form, by including the
+name of the remote repository in front of it. This helps disambiguate a runtime
+if two runtimes of the same name are present in different repository. As an
+example, a valid fully qualified specifier is
+<code>Official:org.oscar_system.oscar/x86_64/1.0.0</code>.</p>
+<p>If a fully qualified specifier is not provided, MaPS attempts to disambiguate
+the runtime based on known information. If the runtime name is unique among all
+known runtimes and all known remotes, the right remote is deduced. If this
+disambiguation process fails, an error is reported and execution is halted.</p>
+<h2 id="--verbose"><code>--verbose</code><a href="#--verbose" class="anchor" aria-hidden="true">#</a> </h2>
+<p>Adding <code>-v</code> or <code>--verbose</code> to any command will run MaPS in verbose mode. This
+prints a lot of extra information which might be helpful to investigate in case
+things go wrong. Please include output in verbose mode whenever submitting a bug
+report.</p>
+<h2 id="--list"><code>--list</code><a href="#--list" class="anchor" aria-hidden="true">#</a> </h2>
+
+
+
+<div class="expressive-code">
+  <figure class="frame is-terminal not-content">
+  <figcaption class="header">
+    <span class="title"></span>
+  </figcaption>
+  <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">maps -l</span></span></code></pre></div>
+  </figure>
+</div>
+
+
+
+<div class="expressive-code">
+  <figure class="frame is-terminal not-content">
+  <figcaption class="header">
+    <span class="title"></span>
+  </figcaption>
+  <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">maps --list</span></span></code></pre></div>
+  </figure>
+</div>
+<p>This option lists all available runtimes. The <code>Local</code> section lists runtimes
+which have been packaged on the system, as well as runtimes which have been
+installed on the system. The runtimes available from each remote repository are
+listed in their individual systems.</p>
+<h2 id="--deploy"><code>--deploy</code><a href="#--deploy" class="anchor" aria-hidden="true">#</a> </h2>
+
+
+
+<div class="expressive-code">
+  <figure class="frame is-terminal not-content">
+  <figcaption class="header">
+    <span class="title"></span>
+  </figcaption>
+  <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">maps -d &lt;runtime-specifier&gt;</span></span></code></pre></div>
+  </figure>
+</div>
+
+
+
+<div class="expressive-code">
+  <figure class="frame is-terminal not-content">
+  <figcaption class="header">
+    <span class="title"></span>
+  </figcaption>
+  <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">maps --deploy &lt;runtime-specifier&gt;</span></span></code></pre></div>
+  </figure>
+</div>
+<p>This option deploys a runtime provided by the specifier. This will download the
+the runtime from its remote to the system&rsquo;s repository, and deploy it to the
+filesystem from where MaPS can use it. The download process is incremental. That
+is, it can be aborted and resumed. In case of updates, only the files which are
+updated on the remote need to be fetched.</p>
+<h3 id="telemetry">Telemetry<a href="#telemetry" class="anchor" aria-hidden="true">#</a> </h3>
+<p>In case you enable the opt in telemetry, this is the only time MaPS will connect
+to an external server to report telemetry. Only the following information is
+transmitted :</p>
+<ul>
+<li>The name of the runtime being downloaded</li>
+<li>The name of the remote the runtime is being downloaded from</li>
+<li>The URL of the remote the runtime is being downloaded from In particular, no
+personally identifiable information is collected. Username and password, if any,
+are stripped from the remote runtime URL before transmission. IP addresses are
+not logged.</li>
+</ul>
+<h2 id="--run"><code>--run</code><a href="#--run" class="anchor" aria-hidden="true">#</a> </h2>
+
+
+
+<div class="expressive-code">
+  <figure class="frame is-terminal not-content">
+  <figcaption class="header">
+    <span class="title"></span>
+  </figcaption>
+  <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">maps -r &lt;runtime-specifier&gt;</span></span></code></pre></div>
+  </figure>
+</div>
+
+
+
+<div class="expressive-code">
+  <figure class="frame is-terminal not-content">
+  <figcaption class="header">
+    <span class="title"></span>
+  </figcaption>
+  <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">maps --run &lt;runtime-specifier&gt;</span></span></code></pre></div>
+  </figure>
+</div>
+<p>This option executes a specified runtime. The runtime must already be deployed
+before it can be run. As an overview, the following actions are performed :</p>
+<ol>
+<li>
+<p>A working directory for the runtime is setup, based on the read-only data
+published as the runtime, and any local changes saved onto a read-write layer
+above it.</p>
+</li>
+<li>
+<p>The <code>$HOME/Public</code> directory from the host system is passed through to
+<code>/home/runtime/Public</code> inside the runtime.</p>
+</li>
+<li>
+<p>The specified command from the manifest file is executed inside the runtime
+namespace.</p>
+<ol>
+<li>If there is no manifest file, or it does not specify a command, <code>bash</code> is
+executed.</li>
+<li>The command to launch can be overridden using the <code>--command</code> option.</li>
+</ol>
+</li>
+</ol>
+<h2 id="--reset"><code>--reset</code><a href="#--reset" class="anchor" aria-hidden="true">#</a> </h2>
+
+
+
+<div class="expressive-code">
+  <figure class="frame is-terminal not-content">
+  <figcaption class="header">
+    <span class="title"></span>
+  </figcaption>
+  <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">maps --reset &lt;runtime-specifier&gt;</span></span></code></pre></div>
+  </figure>
+</div>
+<p>This option removes any local changes from a deployed runtime. This &ldquo;resets&rdquo; the
+runtime to only have content in it which was published in the remote repository.</p>
+<h2 id="--update"><code>--update</code><a href="#--update" class="anchor" aria-hidden="true">#</a> </h2>
+
+
+
+<div class="expressive-code">
+  <figure class="frame is-terminal not-content">
+  <figcaption class="header">
+    <span class="title"></span>
+  </figcaption>
+  <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">maps -u &lt;runtime-specifier&gt;</span></span></code></pre></div>
+  </figure>
+</div>
+
+
+
+<div class="expressive-code">
+  <figure class="frame is-terminal not-content">
+  <figcaption class="header">
+    <span class="title"></span>
+  </figcaption>
+  <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">maps --update &lt;runtime-specifier&gt;</span></span></code></pre></div>
+  </figure>
+</div>
+<p>This option updates a specified runtime. The runtime must already be deployed
+before it can be updated. If no updates are available, this option will refresh
+your deployed runtime, as if it has been deployed for the first time. This is
+not the same as the above <code>--reset</code>, as this refresh operation will first remove
+the deployed runtime, then freshly deploy it from the repository again.</p>
+<h2 id="--uninstall"><code>--uninstall</code><a href="#--uninstall" class="anchor" aria-hidden="true">#</a> </h2>
+
+
+
+<div class="expressive-code">
+  <figure class="frame is-terminal not-content">
+  <figcaption class="header">
+    <span class="title"></span>
+  </figcaption>
+  <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">maps -u &lt;runtime-specifier&gt;</span></span></code></pre></div>
+  </figure>
+</div>
+
+
+
+<div class="expressive-code">
+  <figure class="frame is-terminal not-content">
+  <figcaption class="header">
+    <span class="title"></span>
+  </figcaption>
+  <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">maps --uninstall &lt;runtime-specifier&gt;</span></span></code></pre></div>
+  </figure>
+</div>
+<p>This option uninstalls a specified runtime from your computer. It will first
+remove the deployed copy of the runtime, and then proceed to delete the runtime
+from your local repository. Trying to <code>--deploy</code> the runtime after this
+operation will require you to re-download the runtime from a remote repository.</p>
+<h2 id="--export-url"><code>--export-url</code><a href="#--export-url" class="anchor" aria-hidden="true">#</a> </h2>
+
+
+
+<div class="expressive-code">
+  <figure class="frame is-terminal not-content">
+  <figcaption class="header">
+    <span class="title"></span>
+  </figcaption>
+  <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">maps -e &lt;runtime-specifier&gt;</span></span></code></pre></div>
+  </figure>
+</div>
+
+
+
+<div class="expressive-code">
+  <figure class="frame is-terminal not-content">
+  <figcaption class="header">
+    <span class="title"></span>
+  </figcaption>
+  <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">maps --export-url &lt;runtime-specifier&gt;</span></span></code></pre></div>
+  </figure>
+</div>
+<p>This option will generate a valid shareable URL of a MaPS runtime. This URL
+allows a one-click workflow for deploying and running a runtime, if MaPS was
+installed via your package manager. As an example, for OSCAR 1.0</p>
+
+
+
+<div class="expressive-code">
+  <figure class="frame is-terminal not-content">
+  <figcaption class="header">
+    <span class="title"></span>
+  </figcaption>
+  <div class="highlight"><pre tabindex="0" class="chroma"><code class="language-bash" data-lang="bash"><span class="line"><span class="cl">maps --export-url org.oscar_system.oscar/x86_64/1.0.0
+</span></span><span class="line"><span class="cl">Generating a URL with the following info. Please check!
+</span></span><span class="line"><span class="cl">- Remote name is  Official
+</span></span><span class="line"><span class="cl">- Remote URL is   https://repo.oscar-system.org/
+</span></span><span class="line"><span class="cl">- Runtime is      org.oscar_system.oscar/x86_64/1.0.0
+</span></span><span class="line"><span class="cl">
+</span></span><span class="line"><span class="cl">  maps://runtime?remotename<span class="o">=</span>Official<span class="p">&amp;</span><span class="nv">remoteurl</span><span class="o">=</span>https://repo.oscar-system.org/<span class="p">&amp;</span><span class="nv">runtime</span><span class="o">=</span>org.oscar_system.oscar/x86_64/1.0.0</span></span></code></pre></div>
+  </figure>
+</div>
+
+			<div class="page-footer-meta d-flex flex-column flex-md-row justify-content-between">
+				</div>
+			<div class="page-nav d-flex flex-column flex-sm-row">
+	
+	<div class="card w-100">
+			<div class="card-body d-flex">
+				<div class="d-flex flex-column justify-content-center">
+					<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-arrow-left" width="20" height="20" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+						<path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+						<path d="M5 12l14 0"></path>
+						<path d="M5 12l6 6"></path>
+						<path d="M5 12l6 -6"></path>
+				 	</svg>
+				</div>
+				<div class="d-flex flex-column">
+					<div class="text-body-secondary">Prev</div>
+					<a href="/docs/reference/example-reference/" class="stretched-link text-reset text-decoration-none">Example Reference</a>
+				</div>
+			</div>
+		</div>
+	<div class="m-2"></div>
+	<div class="card text-end w-100">
+			<div class="card-body d-flex justify-content-end">
+				<div class="d-flex flex-column">
+					<div class="text-body-secondary">Next</div>
+					<a href="/docs/resources/" class="stretched-link text-reset text-decoration-none">Resources</a>
+				</div>
+				<div class="d-flex flex-column justify-content-center">
+					<svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-arrow-right" width="20" height="20" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+						<path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
+						<path d="M5 12l14 0"></path>
+						<path d="M13 18l6 -6"></path>
+						<path d="M13 6l6 6"></path>
+					</svg>
+				</div>
+			</div>
+		</div>
+	</div>
+
+			
+		</main>
+		
+	</div>
+
+      
+      </div>
+    </div>
+    
+    
+    <footer class="footer text-muted">
+  <div class="container-lg">
+    <div class="row">
+      <div class="col-lg-8 text-center text-lg-start">
+        <ul class="list-inline">
+          
+        </ul>
+      </div>
+      <div class="col-lg-8 text-center text-lg-end">
+        <ul class="list-inline">
+          <li class="list-inline-item"></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</footer>
+
+    
+
+<script async
+  src="/js/app.19b73e0182301dd61c9211c2f6890104740e2eb9eb12fe4ba8d4f31435b22ed6.js"
+  integrity="sha256-Gbc&#43;AYIwHdYckhHC9okBBHQOLrnrEv5LqNTzFDWyLtY=">
+</script>
+
+
+
+
+
+<script async
+  src="/js/flexsearch.5dd6433c29c3e043627f046054aed58ff3790f58fdb8423f45125bbafdcad335.js"
+  integrity="sha256-XdZDPCnD4ENifwRgVK7Vj/N5D1j9uEI/RRJbuv3K0zU=">
+</script>
+<script async
+  src="/js/search-modal.96e662d8f691fe25c859a3437074b485f2d7bed0bca612725028c6cf4322e2f2.js"
+  integrity="sha256-luZi2PaR/iXIWaNDcHS0hfLXvtC8phJyUCjGz0Mi4vI=">
+</script>
+
+    
+  </body>
+</html>
