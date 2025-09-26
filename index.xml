@@ -1,7 +1,7 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>MaRDI Packaging System on MaPS</title><link>https://aaruni96.github.io/maps/</link><description>Recent content in MaRDI Packaging System on MaPS</description><generator>Hugo</generator><language>en</language><copyright>Copyright (c) 2020-2024 Thulite</copyright><lastBuildDate>Tue, 27 Feb 2024 09:30:56 +0100</lastBuildDate><atom:link href="https://aaruni96.github.io/maps/index.xml" rel="self" type="application/rss+xml"/><item><title>Example Post</title><link>https://aaruni96.github.io/maps/blog/example-post/</link><pubDate>Thu, 07 Sep 2023 16:27:22 +0200</pubDate><guid>https://aaruni96.github.io/maps/blog/example-post/</guid><description>You can use blog posts for announcing product updates and features.</description></item><item><title>Deploy and Run OSCAR</title><link>https://aaruni96.github.io/maps/docs/guides/deploy-and-run-oscar/</link><pubDate>Thu, 07 Sep 2023 16:04:48 +0200</pubDate><guid>https://aaruni96.github.io/maps/docs/guides/deploy-and-run-oscar/</guid><description>&lt;h2 id="maps-installation"&gt;MaPS Installation&lt;/h2&gt;
-&lt;h3 id="required-software"&gt;Required Software&lt;/h3&gt;
-&lt;p&gt;First install the pre requisite software.&lt;/p&gt;
-&lt;h4 id="apt-based-systems-debianubuntumintetc"&gt;APT based systems (Debian/Ubuntu/Mint/etc)&lt;/h4&gt;
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>MaRDI Packaging System on MaPS</title><link>https://aaruni96.github.io/maps/</link><description>Recent content in MaRDI Packaging System on MaPS</description><generator>Hugo</generator><language>en</language><copyright>Copyright (c) 2020-2024 Thulite</copyright><lastBuildDate>Tue, 27 Feb 2024 09:30:56 +0100</lastBuildDate><atom:link href="https://aaruni96.github.io/maps/index.xml" rel="self" type="application/rss+xml"/><item><title>Example Post</title><link>https://aaruni96.github.io/maps/blog/example-post/</link><pubDate>Thu, 07 Sep 2023 16:27:22 +0200</pubDate><guid>https://aaruni96.github.io/maps/blog/example-post/</guid><description>You can use blog posts for announcing product updates and features.</description></item><item><title>Installation</title><link>https://aaruni96.github.io/maps/docs/guides/installation/</link><pubDate>Thu, 07 Sep 2023 16:04:48 +0200</pubDate><guid>https://aaruni96.github.io/maps/docs/guides/installation/</guid><description>&lt;p&gt;MaPS requires python 3.9 or above. Please make sure your OS, and python
+environment accommodate this need. Almost all Linux distros still supported by
+their vendors meet this requirement.&lt;/p&gt;</description></item><item><title>Deploy and Run OSCAR</title><link>https://aaruni96.github.io/maps/docs/guides/deploy-and-run-oscar/</link><pubDate>Thu, 07 Sep 2023 16:04:48 +0200</pubDate><guid>https://aaruni96.github.io/maps/docs/guides/deploy-and-run-oscar/</guid><description>&lt;h2 id="deploy-oscar"&gt;Deploy OSCAR&lt;/h2&gt;
+&lt;p&gt;Once MaPS is running deploy and run OSCAR.&lt;/p&gt;
 
 
 
@@ -10,43 +10,18 @@
  &lt;figcaption class="header"&gt;
  &lt;span class="title"&gt;&lt;/span&gt;
  &lt;/figcaption&gt;
- &lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo apt install git libcairo2-dev gcc python3-dev libgirepository1.0-dev libostree-dev python3-venv libcap-dev autoconf meson ostree&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+ &lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;$ python src/maps -d org.oscar_system.oscar/x86_64/latest
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;$ python src/maps -r org.oscar_system.oscar/x86_64/latest&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
  &lt;/figure&gt;
 &lt;/div&gt;
-&lt;h4 id="dnf-based-systems-fedorarhelcentosetc"&gt;DNF based systems (Fedora/RHEL/CentOS/etc)&lt;/h4&gt;
-
-
-
-&lt;div class="expressive-code"&gt;
- &lt;figure class="frame is-terminal not-content"&gt;
- &lt;figcaption class="header"&gt;
- &lt;span class="title"&gt;&lt;/span&gt;
- &lt;/figcaption&gt;
- &lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo dnf install git cairo-devel gcc python3-devel gobject-introspection-devel ostree-devel libcap-devel autoconf cairo-gobject-devel meson ostree&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
- &lt;/figure&gt;
-&lt;/div&gt;
-&lt;h4 id="pacman-based-systems-arch-linuxendeavour-osmanjaroetc"&gt;pacman based systems (Arch Linux/Endeavour OS/Manjaro/etc)&lt;/h4&gt;
-
-
-
-&lt;div class="expressive-code"&gt;
- &lt;figure class="frame is-terminal not-content"&gt;
- &lt;figcaption class="header"&gt;
- &lt;span class="title"&gt;&lt;/span&gt;
- &lt;/figcaption&gt;
- &lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;sudo pacman -Sy base-devel cairo git gobject-introspection-runtime python3 ostree meson&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
- &lt;/figure&gt;
-&lt;/div&gt;
-&lt;h2 id="maps"&gt;MaPS&lt;/h2&gt;
-&lt;p&gt;Clone maps to somewhere convenient.&lt;/p&gt;</description></item><item><title>Accurate Arithmetic.jl</title><link>https://aaruni96.github.io/maps/docs/guides/accurate-arithmetic.jl/</link><pubDate>Thu, 07 Sep 2023 16:04:48 +0200</pubDate><guid>https://aaruni96.github.io/maps/docs/guides/accurate-arithmetic.jl/</guid><description>&lt;p&gt;The &lt;a href="https://github.com/JuliaMath/AccurateArithmetic.jl/tree/paper-correctness-2019"&gt;AccurateArithmetic.jl Julia
+&lt;p&gt;This will launch a shell inside the OSCAR runtime, and automatically launch
+OSCAR from a pre built system image.&lt;/p&gt;</description></item><item><title>Accurate Arithmetic.jl</title><link>https://aaruni96.github.io/maps/docs/guides/accurate-arithmetic.jl/</link><pubDate>Thu, 07 Sep 2023 16:04:48 +0200</pubDate><guid>https://aaruni96.github.io/maps/docs/guides/accurate-arithmetic.jl/</guid><description>&lt;p&gt;The &lt;a href="https://github.com/JuliaMath/AccurateArithmetic.jl/tree/paper-correctness-2019"&gt;AccurateArithmetic.jl Julia
 package&lt;/a&gt;
 implements all algorithms described in &lt;a href="https://hal.science/hal-02265534"&gt;Accurate and Efficiently Vectorized Sums
 and Dot Products in Julia (2019)&lt;/a&gt;. It also
 contains everything needed to reproduce the results shown in the paper. Below is
 a full list of the actions to be taken by anyone wanting to try and reproduce
 the results on their own Linux system (adapted for MaPS from Appendix of the
-linked paper)&lt;/p&gt;</description></item><item><title>Installation</title><link>https://aaruni96.github.io/maps/docs/guides/installation/</link><pubDate>Thu, 07 Sep 2023 16:04:48 +0200</pubDate><guid>https://aaruni96.github.io/maps/docs/guides/installation/</guid><description>&lt;p&gt;MaPS requires python 3.9 or above. Please make sure your OS, and python
-environment accommodate this need. Almost all Linux distros still supported by
-their vendors meet this requirement.&lt;/p&gt;</description></item><item><title>lorem ipsum</title><link>https://aaruni96.github.io/maps/docs/guides/lorem-ipsum/</link><pubDate>Thu, 07 Sep 2023 16:04:48 +0200</pubDate><guid>https://aaruni96.github.io/maps/docs/guides/lorem-ipsum/</guid><description>&lt;p&gt;tomato Guides lead a user through a specific task they want to accomplish, often with a sequence of steps. Writing a good guide requires thinking about what your users are trying to do.&lt;/p&gt;</description></item><item><title>Example Reference</title><link>https://aaruni96.github.io/maps/docs/reference/example-reference/</link><pubDate>Thu, 07 Sep 2023 16:13:18 +0200</pubDate><guid>https://aaruni96.github.io/maps/docs/reference/example-reference/</guid><description>&lt;p&gt;Reference pages are ideal for outlining how things work in terse and clear terms. Less concerned with telling a story or addressing a specific use case, they should give a comprehensive outline of what your documenting.&lt;/p&gt;</description></item><item><title>Runtime Mode</title><link>https://aaruni96.github.io/maps/docs/reference/runtime-mode/</link><pubDate>Thu, 07 Sep 2023 16:13:18 +0200</pubDate><guid>https://aaruni96.github.io/maps/docs/reference/runtime-mode/</guid><description>&lt;p&gt;This is the default mode of the application, and is automatically selected when
+linked paper)&lt;/p&gt;</description></item><item><title>Runtime Mode</title><link>https://aaruni96.github.io/maps/docs/reference/runtime-mode/</link><pubDate>Thu, 07 Sep 2023 16:13:18 +0200</pubDate><guid>https://aaruni96.github.io/maps/docs/reference/runtime-mode/</guid><description>&lt;p&gt;This is the default mode of the application, and is automatically selected when
 no other mode is specified. In this mode, runtimes can be deployed, run,
 updated, and uninstalled.&lt;/p&gt;</description></item><item><title>Resources</title><link>https://aaruni96.github.io/maps/docs/resources/</link><pubDate>Tue, 27 Feb 2024 09:30:56 +0100</pubDate><guid>https://aaruni96.github.io/maps/docs/resources/</guid><description>&lt;p&gt;Link to valuable, relevant resources.&lt;/p&gt;</description></item><item><title>Privacy Policy</title><link>https://aaruni96.github.io/maps/privacy/</link><pubDate>Thu, 07 Sep 2023 17:19:07 +0200</pubDate><guid>https://aaruni96.github.io/maps/privacy/</guid><description/></item></channel></rss>
