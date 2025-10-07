@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Guides on MaPS</title><link>https://aaruni96.github.io/maps/docs/guides/</link><description>Recent content in Guides on MaPS</description><generator>Hugo</generator><language>en</language><copyright>Copyright (c) 2020-2024 Thulite</copyright><lastBuildDate>Thu, 07 Sep 2023 16:04:48 +0200</lastBuildDate><atom:link href="https://aaruni96.github.io/maps/docs/guides/index.xml" rel="self" type="application/rss+xml"/><item><title>Installation</title><link>https://aaruni96.github.io/maps/docs/guides/installation/</link><pubDate>Thu, 07 Sep 2023 16:04:48 +0200</pubDate><guid>https://aaruni96.github.io/maps/docs/guides/installation/</guid><description>&lt;p&gt;MaPS requires python 3.9 or above. Please make sure your OS, and python
 environment accommodate this need. Almost all Linux distros still supported by
 their vendors meet this requirement.&lt;/p&gt;</description></item><item><title>Deploy and Run OSCAR</title><link>https://aaruni96.github.io/maps/docs/guides/deploy-and-run-oscar/</link><pubDate>Thu, 07 Sep 2023 16:04:48 +0200</pubDate><guid>https://aaruni96.github.io/maps/docs/guides/deploy-and-run-oscar/</guid><description>&lt;h2 id="deploy-oscar"&gt;Deploy OSCAR&lt;/h2&gt;
-&lt;p&gt;Once MaPS is running deploy and run OSCAR.&lt;/p&gt;
+&lt;p&gt;Once MaPS is installed, deploying and running OSCAR is only two lines:&lt;/p&gt;
 
 
 
@@ -10,16 +10,22 @@ their vendors meet this requirement.&lt;/p&gt;</description></item><item><title>
  &lt;figcaption class="header"&gt;
  &lt;span class="title"&gt;&lt;/span&gt;
  &lt;/figcaption&gt;
- &lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;$ python src/maps -d org.oscar_system.oscar/x86_64/latest
-&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;$ python src/maps -r org.oscar_system.oscar/x86_64/latest&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+ &lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;$ maps -d org.oscar_system.oscar/x86_64/latest
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;$ maps -r org.oscar_system.oscar/x86_64/latest&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
  &lt;/figure&gt;
 &lt;/div&gt;
 &lt;p&gt;This will launch a shell inside the OSCAR runtime, and automatically launch
-OSCAR from a pre built system image.&lt;/p&gt;</description></item><item><title>Accurate Arithmetic.jl</title><link>https://aaruni96.github.io/maps/docs/guides/accurate-arithmetic.jl/</link><pubDate>Thu, 07 Sep 2023 16:04:48 +0200</pubDate><guid>https://aaruni96.github.io/maps/docs/guides/accurate-arithmetic.jl/</guid><description>&lt;p&gt;The &lt;a href="https://github.com/JuliaMath/AccurateArithmetic.jl/tree/paper-correctness-2019"&gt;AccurateArithmetic.jl Julia
+OSCAR from a pre built system image.&lt;/p&gt;</description></item><item><title>Reproduce results from AccurateArithmetic.jl</title><link>https://aaruni96.github.io/maps/docs/guides/reproduce-results-from-accuratearithmetic.jl/</link><pubDate>Thu, 07 Sep 2023 16:04:48 +0200</pubDate><guid>https://aaruni96.github.io/maps/docs/guides/reproduce-results-from-accuratearithmetic.jl/</guid><description>&lt;p&gt;The &lt;a href="https://github.com/JuliaMath/AccurateArithmetic.jl/tree/paper-correctness-2019"&gt;AccurateArithmetic.jl Julia
 package&lt;/a&gt;
 implements all algorithms described in &lt;a href="https://hal.science/hal-02265534"&gt;Accurate and Efficiently Vectorized Sums
 and Dot Products in Julia (2019)&lt;/a&gt;. It also
 contains everything needed to reproduce the results shown in the paper. Below is
 a full list of the actions to be taken by anyone wanting to try and reproduce
 the results on their own Linux system (adapted for MaPS from Appendix of the
-linked paper)&lt;/p&gt;</description></item></channel></rss>
+linked paper)&lt;/p&gt;</description></item><item><title>Build runtime for Synthetic Parametric Model benchmark</title><link>https://aaruni96.github.io/maps/docs/guides/build-runtime-for-synthetic-parametric-model-benchmark/</link><pubDate>Thu, 07 Sep 2023 16:04:48 +0200</pubDate><guid>https://aaruni96.github.io/maps/docs/guides/build-runtime-for-synthetic-parametric-model-benchmark/</guid><description>&lt;p&gt;In this guide, we will explore how to build a MaPS runtime by detailing step by
+step instructions to build a runtime for the benchmark &lt;a href="https://modelreduction.org/morwiki/Synthetic_parametric_model"&gt;Synthetic parametric
+model - MOR
+Wiki&lt;/a&gt;. If you
+follow this guide exactly, as the end result, you should have a runtime
+identical in all but name to
+&lt;code&gt;org.modelreductino.synthetic-parametric-mode/x86_64/3984&lt;/code&gt;.&lt;/p&gt;</description></item></channel></rss>
