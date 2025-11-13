@@ -9,6 +9,8 @@ and this project tries to adhere to [Semantic Versioning](https://semver.org/spe
 
 ### Added
 - Add `--export-tar` option to export a runtime to a tarball.
+- Add generation of a Software Bill of Materials (SBOM) while generating a tarball, if `syft` is
+  already installed.
 
 ### Changed
 
