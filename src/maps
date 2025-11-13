@@ -11,6 +11,7 @@ import subprocess
 import tempfile
 import argparse
 import concurrent.futures
+from shutil import which
 from math import log10, floor
 from time import strftime, localtime
 from urllib import request
@@ -1393,6 +1394,17 @@ def runtime_to_tar(repo, runtime, remote=None):
 
     # if the refhash matches tar hash, don't re-tar
     if needs_tar(REFHASH, TARPATH, DATADIR):
+        if which("syft") is not None:
+            if VERBOSE:
+                print("Adding Software Bill of Materials")
+            sbom = subprocess.run(
+                f"syft scan {RUNTIMEDIR} -o spdx-json --source-name={runtime}".split(),
+                capture_output=True,
+                check=True
+            )
+            sbom = json.loads(sbom.stdout.decode())
+            with open(f"{RUNTIMEDIR}/sbom.spdx", 'w', encoding="UTF-8") as sbomfile:
+                json.dump(sbom, sbomfile)
         if VERBOSE:
             print("Making tarball...")
             opts = "-cv --use-compress-program=pigz"
@@ -1402,6 +1414,8 @@ def runtime_to_tar(repo, runtime, remote=None):
         subprocess.run(f"tar {opts} -C {RUNTIMEDIR[0:-4]} -f {TARPATH} {RUNTIMEDIR[-4:]}".split(),
                        check=True)
         add_hash_to_db(REFHASH, TARPATH, DATADIR)
+        if which("syft") is not None:
+            os.remove(f"{RUNTIMEDIR}/sbom.spdx")
 
     return TARPATH
 
