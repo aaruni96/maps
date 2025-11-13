@@ -1406,6 +1406,12 @@ def runtime_to_tar(repo, runtime, remote=None):
             sbom = json.loads(sbom.stdout.decode())
             with open(f"{RUNTIMEDIR}/sbom.spdx", 'w', encoding="UTF-8") as sbomfile:
                 json.dump(sbom, sbomfile)
+        else:
+            if VERBOSE:
+                print(
+                    f"{COLORS['WARNING']}syft was not found. SBOM will not be generated"
+                    f"{COLORS['ENDC']}"
+                )
         if VERBOSE:
             print("Making tarball...")
             opts = "-cv --use-compress-program=pigz"
