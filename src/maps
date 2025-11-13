@@ -473,7 +473,8 @@ def disambiguate_runtime(repo: OSTree.Repo, rrstring: str, installed: bool = Tru
 
         if found:
             # found something with the same name installed, assume we want that, with a warning
-            print(f"{COLORS['WARNING']}Warning, possibly ambigious name. Assuming {remote}:{runtime}{COLORS['ENDC']}")
+            print(f"{COLORS['WARNING']}Warning, possibly ambigious name. Assuming "
+                  f"{remote}:{runtime}{COLORS['ENDC']}")
             return remote, runtime
 
         # all known remotes
