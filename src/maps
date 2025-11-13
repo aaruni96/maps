@@ -1386,7 +1386,6 @@ def runtime_to_tar(repo, runtime, remote=None):
     RUNTIMEDIR = f"{DATADIR}/{remote}/{runtime}/rofs"
     REFHASH = repo.list_refs()[1][runtime]
     TARPATH = f"{DATADIR}/{remote}/{':'.join(runtime.split('/'))}.tar.gz"
-
     # if runtime is not checked out, do it
     if not os.path.isdir(RUNTIMEDIR):
         checkout(repo, remote, runtime)
