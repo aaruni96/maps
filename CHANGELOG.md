@@ -8,6 +8,7 @@ and this project tries to adhere to [Semantic Versioning](https://semver.org/spe
 ## [Upcoming]
 
 ### Added
+- Add `--export-tar` option to export a runtime to a tarball.
 
 ### Changed
 
