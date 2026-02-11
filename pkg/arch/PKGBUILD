@@ -20,6 +20,7 @@ depends=('base-devel'
          'python-gobject'
          'python-progress'
          'python-tuspy'
+         'syft'
          'xdg-utils'
          )
 conflicts=('maps')
