@@ -13,6 +13,7 @@ and this project tries to adhere to [Semantic Versioning](https://semver.org/spe
   already installed.
 
 ### Changed
+- Debugfix: Added some debugging info and mildly rework uninstall.
 
 ### Removed
 
