@@ -752,10 +752,20 @@ def uninstall_runtime(repo, args):
             opts = '-rvf'
         else:
             opts = '-rf'
-        subprocess.run(f"rm {opts} {DATADIR}".split(), check=True)
+
+        try:
+            subprocess.run(f"rm {opts} {DATADIR}".split(), check=True)
+        except subprocess.CalledProcessError as e:
+            print(
+                "Removing files failed... This can sometimes happen if maps was killed instead of "
+                "graceful termination. Check the error message for which directory failed removal. "
+                f"\n\n{e}"
+            )
 
     for sruntime in repo.list_refs()[1].keys():
         if runtime in sruntime:
+            if remote == '_local':
+                remote = None
             FLAG_REFEXISTS = True
             if VERBOSE:
                 print("Marking branch for deletion from repo...")
@@ -766,8 +776,20 @@ def uninstall_runtime(repo, args):
             break
 
     if not (FLAG_DIREXISTS and FLAG_REFEXISTS):
-        print(f"Error, {remote}:{runtime} isn't deployed and thus cannot be uninstalled!")
-        sys.exit(2)
+        if VERBOSE:
+            print(f"FLAG_DIREXISTS: {FLAG_DIREXISTS}")
+            print(f"FLAG_REFEXISTS: {FLAG_REFEXISTS}")
+        if not remote:
+            remote = '_local'
+        if not FLAG_DIREXISTS and not FLAG_REFEXISTS:
+            print(f"Error, {remote}:{runtime} isn't deployed and thus cannot be uninstalled!")
+            sys.exit(2)
+        elif FLAG_DIREXISTS:
+            print(f"{remote}:{runtime} was not present in the local runtime, but was deployed on "
+                  "the filesystem. Files were removed!")
+        elif FLAG_REFEXISTS:
+            print(f"{remote}:{runtime} was not deployed on the filesystem. Pruned from the local "
+                  "repository!")
     else:
         print(f"Uninstalled {runtime} !")
 
