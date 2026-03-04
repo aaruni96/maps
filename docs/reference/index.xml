@@ -142,4 +142,16 @@ mode, runtimes can be created, commited, and uploaded.&lt;/p&gt;</description></
  &lt;td&gt;Alias to &lt;code&gt;org.polymake.polymake/x86_64/4.14&lt;/code&gt;&lt;/td&gt;
  &lt;/tr&gt;
  &lt;/tbody&gt;
-&lt;/table&gt;</description></item></channel></rss>
+&lt;/table&gt;</description></item><item><title>List of Publications</title><link>https://aaruni96.github.io/maps/docs/reference/list-of-publications/</link><pubDate>Tue, 03 Mar 2026 16:13:18 +0200</pubDate><guid>https://aaruni96.github.io/maps/docs/reference/list-of-publications/</guid><description>&lt;h2 id="2025"&gt;2025&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href="https://zenodo.org/records/14203982"&gt;[Zenodo] Battle Testing MaPS: Real World Usage of the MaRDI Packaging
+System&lt;/a&gt; : Poster reporting on real world usage of MaPS in the
+LMFDB, Computation, and Number Theory (LuCaNT) 2025 at Conference on Research Data Infrastructure
+(CoRDI) 2025&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h2 id="2024"&gt;2024&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;a href="https://arxiv.org/abs/2404.05563"&gt;[Arxiv] Predefined Software Environment Runtimes As A Measure For
+Reproducibility&lt;/a&gt; : Description of MaPS v0.2 as submitted to
+International Conference on Mathematical Software (ICMS) 2024&lt;/p&gt;</description></item></channel></rss>
