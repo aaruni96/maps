@@ -11,8 +11,11 @@ and this project tries to adhere to [Semantic Versioning](https://semver.org/spe
 - Add `--export-tar` option to export a runtime to a tarball.
 - Add generation of a Software Bill of Materials (SBOM) while generating a tarball, if `syft` is
   already installed.
+- Add passing through resolv.conf from host for DNS resolution.
+- Set env var `FAKEROOTDONTTRYCHOWN` to 1 by default.
 
 ### Changed
+- Bugfix: Consistent rewriting of prompt within the runtime.
 
 ### Removed
 
