@@ -543,7 +543,7 @@ def make_bwrap_command(location, overlay, command, nogui, gui):
     else:
         bwrapstring += f'--bind {location} /'
     bwrapstring += ' --proc /proc --dev /dev --ro-bind /sys /sys --tmpfs /tmp '
-    ## add the resolv.conf file
+    # add the resolv.conf file
     bwrapstring += '--ro-bind-try /etc/resolv.conf /etc/resolv.conf '
 
     try:
@@ -554,7 +554,10 @@ def make_bwrap_command(location, overlay, command, nogui, gui):
     senv['FAKEROOTDONTTRYCHOWN'] = '1'
     senv['HOST'] = 'runtime'
     senv['HOSTNAME'] = 'runtime'
-    senv['PS1'] = '\\[\\e]0;\\u@\\h: \\w\\a\\]${debian_chroot:+($debian_chroot)}\\[\\033[01;32m\\]\\u@\\h\\[\\033[00m\\]:\\[\\033[01;34m\\]\\w\\[\\033[00m\\]\\$ '
+    senv['PS1'] = (
+        '\\[\\e]0;\\u@\\h: \\w\\a\\]${debian_chroot:+($debian_chroot)}\\[\\033[01;32m\\]\\u@\\h\\'
+        '[\\033[00m\\]:\\[\\033[01;34m\\]\\w\\[\\033[00m\\]\\$ '
+    )
     senv['SUDO_USER'] = "."
     senv['SUDO_PS1'] = "."
     if nogui:
