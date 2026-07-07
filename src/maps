@@ -550,6 +550,12 @@ def make_bwrap_command(location, overlay, command, nogui, gui):
         session = senv['XDG_SESSION_TYPE']
     except KeyError:
         session = None
+    # Dirty hack to get the prompt right on debian-minimal
+    senv['HOST'] = 'runtime'
+    senv['HOSTNAME'] = 'runtime'
+    senv['PS1'] = '\\[\\e]0;\\u@\\h: \\w\\a\\]${debian_chroot:+($debian_chroot)}\\[\\033[01;32m\\]\\u@\\h\\[\\033[00m\\]:\\[\\033[01;34m\\]\\w\\[\\033[00m\\]\\$ '
+    senv['SUDO_USER'] = "."
+    senv['SUDO_PS1'] = "."
     if nogui:
         if VERBOSE:
             print("Disabling gui...")
@@ -570,12 +576,6 @@ def make_bwrap_command(location, overlay, command, nogui, gui):
             else:
                 bwrapstring += '--ro-bind-try /tmp/.X11-unix/ /tmp/.X11-unix/ '
             senv['XAUTHORITY'] = '/home/runtime/.Xauthority'
-            # Dirty hack to get the prompt right on debian-minimal
-            senv['HOST'] = 'runtime'
-            senv['HOSTNAME'] = 'runtime'
-            senv['PS1'] = '${debian_chroot:+($debian_chroot)}\\u@runtime:\\w\\$ '
-            senv['SUDO_USER'] = "."
-            senv['SUDO_PS1'] = "."
         else:
             if gui:
                 print("GUI was forcefully requested, but neither wayland nor X11 were found!")
