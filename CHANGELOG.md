@@ -15,6 +15,7 @@ and this project tries to adhere to [Semantic Versioning](https://semver.org/spe
 - Set env var `FAKEROOTDONTTRYCHOWN` to 1 by default.
 
 ### Changed
+- Debugfix: Added some debugging info and mildly rework uninstall.
 - Bugfix: Consistent rewriting of prompt within the runtime.
 
 ### Removed
