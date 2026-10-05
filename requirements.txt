@@ -4,4 +4,4 @@ tuspy==1.0.3
 progress==1.6
 pytest==9.0.3
 tomli_w==1.2.0
-requests==2.32.4
+requests==2.33.0
