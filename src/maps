@@ -538,7 +538,7 @@ def get_magma_root(magmapath):
     and the inferred magma root path.
     """
     magmarootpath = ""
-    with open(magmapath,'r') as magmafile:
+    with open(magmapath, 'r', encoding='UTF-8') as magmafile:
         for line in magmafile:
             line = line.strip()
             if line.startswith("ROOT"):
@@ -546,7 +546,9 @@ def get_magma_root(magmapath):
                 break
     if not magmarootpath:
         if VERBOSE:
-            print("Unable to find ROOT directive in magma driver file. Is magma correctly installed?")
+            print(
+                "Unable to find ROOT directive in magma driver file. Is magma correctly installed?"
+            )
             print("Trying to infer maga root from path, but this might fail.....")
 
     if not magmarootpath or magmarootpath == "....":
@@ -566,7 +568,7 @@ def find_magma_path(magmapath=""):
         # check if magma is installed in "the right place"
         magmapath = '/usr/local/magma'
         provided_path = False
-    
+
     found = False
     if os.path.exists(magmapath):
         if VERBOSE:
@@ -584,7 +586,7 @@ def find_magma_path(magmapath=""):
             print(magmapath)
             print("Alternatively, do not provide a path to try to discover a magma installation")
             sys.exit(-9)
-    
+
         # try to discover magma in the usual suspected places
         if VERBOSE:
             print(f"magma was not found at the standard path of {magmapath}")
@@ -608,7 +610,7 @@ def find_magma_path(magmapath=""):
     if not found:
         print("Unable to discover magma. This is a fatal error in magma mode. Crashing...")
         sys.exit(-11)
-    
+
     # get the magma root
     magmarootpath = get_magma_root(magmapath)
     if not magmarootpath:
@@ -640,8 +642,8 @@ def make_bwrap_command(location, overlay, command, nogui, gui, magma=False):
 
     if magma:
         magmapath, magmarootpath = find_magma_path()
-        bwrapstring += f"--ro-bind {magmapath} {magmapath} --ro-bind {magmarootpath} {magmarootpath}"
-
+        bwrapstring += f"--ro-bind {magmapath} {magmapath} --ro-bind {magmarootpath} " + \
+                       "{magmarootpath}"
 
     try:
         session = senv['XDG_SESSION_TYPE']
@@ -782,27 +784,22 @@ def mode_run(repo, args):
             sys.exit(-1)    # lets decide, -1 is for all mkdir errors
 
     # check for manifest file
+    manifestpath = ""
     if os.path.isfile(f"{DATADIR}/rwfs/manifest.toml"):
-        with open(f"{DATADIR}/rwfs/manifest.toml", 'rb') as manifest_file:
-            manifest = tomli.load(manifest_file)
-            command = manifest['Core']["command"]
-            if manifest['Core'].get('magma'):
-                magma = True
-            else:
-                magma = False
+        manifestpath = f"{DATADIR}/rwfs/manifest.toml"
     elif os.path.isfile(f"{DATADIR}/rofs/manifest.toml"):
-        with open(f"{DATADIR}/rofs/manifest.toml", 'rb') as manifest_file:
+        manifestpath = f"{DATADIR}/rofs/manifest.toml"
+
+    if manifestpath:
+        with open(manifestpath, 'rb') as manifest_file:
             manifest = tomli.load(manifest_file)
             command = manifest['Core']["command"]
-            if manifest['Core'].get('magma'):
-                magma = True
-            else:
-                magma = False
+            magma = bool(manifest['Core'].get('magma'))
     else:
         command = "bash"
         magma = False
     if args.MAGMA:
-            magma = True
+        magma = True
     if args.COMMAND:
         command = args.COMMAND
     if command == '':
