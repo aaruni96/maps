@@ -11,6 +11,7 @@ import subprocess
 import tempfile
 import argparse
 import concurrent.futures
+from shutil import which
 from math import log10, floor
 from time import strftime, localtime
 from urllib import request
@@ -26,7 +27,7 @@ from progress.bar import Bar
 gi.require_version("OSTree", "1.0")
 from gi.repository import OSTree, GLib
 
-VERSION = '0.7'
+VERSION = '0.8-dev'
 BWRAP_DEFAULT = f"{os.getenv('HOME')}/.var/org.mardi.maps/deps/bubblewrap/_builddir/bwrap"
 if os.getenv('BWRAP_CMD') is not None:
     BWRAP = str(os.getenv('BWRAP_CMD'))
@@ -108,6 +109,8 @@ def addCLI():
                                 default=False, help="Force enable GUI")
     parser_runtime.add_argument('-e', '--export-url', dest='EXPORTURL', action='store',
                                 default=False, help="Export a runtime as a URL which maps can open")
+    parser_runtime.add_argument('--export-tar', dest='EXPORTTAR', action='store',
+                                default=False, help="Export a runtime as a compressed tarball")
 
     # arguments for remote management
     parser_remote = subparser.add_parser("remote",
@@ -170,8 +173,7 @@ def create_config_file(config_path):
     if os.getenv("MAPS_NOTELE") is not None and os.getenv("MAPS_NOTELE") != "":
         telemetry_consent = 'n'
     elif (
-        os.getenv("MAPS_TELEMETRY_CONSENT") is not None
-        and os.getenv("MAPS_TELEMETRY_CONSENT") != ""
+        os.getenv("MAPS_TELEMETRY_CONSENT", "") != ""
     ):
         telemetry_consent = 'y'
     else:
@@ -250,10 +252,10 @@ def program_init(repopath):
     except subprocess.CalledProcessError:
         print(
             f"{COLORS['FAIL']}mkdir failed. This can happen if {COLORS['WARNING']}"
-            + f"{repopath}{COLORS['FAIL']} is not a directory, for example, if it "
-            + "is a regular file, a symlink, or some other type of file. Please check that "
-            + f"{COLORS['WARNING']}{repopath}{COLORS['FAIL']} is either a "
-            + f"directory, or does not exist, on a read-write filesystem.{COLORS['ENDC']}"
+            f"{repopath}{COLORS['FAIL']} is not a directory, for example, if it "
+            "is a regular file, a symlink, or some other type of file. Please check that "
+            f"{COLORS['WARNING']}{repopath}{COLORS['FAIL']} is either a "
+            f"directory, or does not exist, on a read-write filesystem.{COLORS['ENDC']}"
         )
         sys.exit(-1)    # lets decide, -1 is for all mkdir errors
 
@@ -299,9 +301,10 @@ def program_init(repopath):
         # check that the things we want exist
         if "Core" not in MAPS_CONFIG or "telemetry" not in MAPS_CONFIG["Core"]:
             if VERBOSE:
-                print(COLORS["FAIL"]
-                      + "Malformed config file! Printing for verification:"
-                      + COLORS["ENDC"])
+                print(f"{COLORS['FAIL']}"
+                      "Malformed config file! Printing for verification:"
+                      f"{COLORS['ENDC']}"
+                      )
                 print("---" + COLORS["WARNING"])
                 print(tomli_w.dumps(MAPS_CONFIG).strip() + COLORS["ENDC"])
                 print("---")
@@ -317,9 +320,7 @@ def program_init(repopath):
     telemetry_consent = TELECONSENT
     # check if env vars override config file
     if (
-        os.getenv("MAPS_TELEMETRY_CONSENT") is not None
-        and os.getenv("MAPS_TELEMETRY_CONSENT") != ""
-        and not TELECONSENT
+        os.getenv("MAPS_TELEMETRY_CONSENT", "") != "" and not TELECONSENT
     ):
         inputmessage = "MAPS_TELEMETRY_CONSENT is set, but telemetry was previously disabled!\n"\
             "Would you like to enable telemetry? (Y/N) > "
@@ -472,7 +473,8 @@ def disambiguate_runtime(repo: OSTree.Repo, rrstring: str, installed: bool = Tru
 
         if found:
             # found something with the same name installed, assume we want that, with a warning
-            print(f"warning, possibly ambigious name. Assuming {remote}:{runtime}")
+            print(f"{COLORS['WARNING']}Warning, possibly ambigious name. Assuming "
+                  f"{remote}:{runtime}{COLORS['ENDC']}")
             return remote, runtime
 
         # all known remotes
@@ -541,10 +543,23 @@ def make_bwrap_command(location, overlay, command, nogui, gui):
     else:
         bwrapstring += f'--bind {location} /'
     bwrapstring += ' --proc /proc --dev /dev --ro-bind /sys /sys --tmpfs /tmp '
+    # add the resolv.conf file
+    bwrapstring += '--ro-bind-try /etc/resolv.conf /etc/resolv.conf '
+
     try:
         session = senv['XDG_SESSION_TYPE']
     except KeyError:
         session = None
+    # Dirty hack to get the prompt right on debian-minimal
+    senv['FAKEROOTDONTTRYCHOWN'] = '1'
+    senv['HOST'] = 'runtime'
+    senv['HOSTNAME'] = 'runtime'
+    senv['PS1'] = (
+        '\\[\\e]0;\\u@\\h: \\w\\a\\]${debian_chroot:+($debian_chroot)}\\[\\033[01;32m\\]\\u@'
+        '$HOSTNAME\\[\\033[00m\\]:\\[\\033[01;34m\\]\\w\\[\\033[00m\\]\\$ '
+    )
+    senv['SUDO_USER'] = "."
+    senv['SUDO_PS1'] = "."
     if nogui:
         if VERBOSE:
             print("Disabling gui...")
@@ -565,12 +580,6 @@ def make_bwrap_command(location, overlay, command, nogui, gui):
             else:
                 bwrapstring += '--ro-bind-try /tmp/.X11-unix/ /tmp/.X11-unix/ '
             senv['XAUTHORITY'] = '/home/runtime/.Xauthority'
-            # Dirty hack to get the prompt right on debian-minimal
-            senv['HOST'] = 'runtime'
-            senv['HOSTNAME'] = 'runtime'
-            senv['PS1'] = '${debian_chroot:+($debian_chroot)}\\u@runtime:\\w\\$ '
-            senv['SUDO_USER'] = "."
-            senv['SUDO_PS1'] = "."
         else:
             if gui:
                 print("GUI was forcefully requested, but neither wayland nor X11 were found!")
@@ -656,10 +665,10 @@ def mode_run(repo, args):
     except subprocess.CalledProcessError:
         print(
             f"{COLORS['FAIL']}mkdir failed. This can happen if {COLORS['WARNING']}"
-            + f"{os.getenv('HOME')}/Public{COLORS['FAIL']} is not a directory, for example, if it "
-            + "is a regular file, a symlink, or some other type of file. Please check that "
-            + f"{COLORS['WARNING']}{os.getenv('HOME')}/Public{COLORS['FAIL']} is either a "
-            + f"directory, or does not exist, on a read-write filesystem.{COLORS['ENDC']}"
+            f"{os.getenv('HOME')}/Public{COLORS['FAIL']} is not a directory, for example, if it "
+            "is a regular file, a symlink, or some other type of file. Please check that "
+            f"{COLORS['WARNING']}{os.getenv('HOME')}/Public{COLORS['FAIL']} is either a "
+            f"directory, or does not exist, on a read-write filesystem.{COLORS['ENDC']}"
         )
         sys.exit(-1)    # lets decide, -1 is for all mkdir errors
     if not os.path.isdir(f"{DATADIR}/rofs/home/runtime/Public"):
@@ -668,10 +677,10 @@ def mode_run(repo, args):
         except subprocess.CalledProcessError:
             print(
                 f"{COLORS['FAIL']}mkdir failed. This can happen if {COLORS['WARNING']}"
-                + f"{os.getenv('HOME')}/Public{COLORS['FAIL']} is not a directory, for example, if "
-                + "it is a regular file, a symlink, or some other type of file. Please check that "
-                + f"{COLORS['WARNING']}{os.getenv('HOME')}/Public{COLORS['FAIL']} is either a "
-                + f"directory, or does not exist, on a read-write filesystem.{COLORS['ENDC']}"
+                f"{os.getenv('HOME')}/Public{COLORS['FAIL']} is not a directory, for example, if "
+                "it is a regular file, a symlink, or some other type of file. Please check that "
+                f"{COLORS['WARNING']}{os.getenv('HOME')}/Public{COLORS['FAIL']} is either a "
+                f"directory, or does not exist, on a read-write filesystem.{COLORS['ENDC']}"
             )
             sys.exit(-1)    # lets decide, -1 is for all mkdir errors
 
@@ -871,10 +880,10 @@ def checkout(repo, remote, runtime):
     except subprocess.CalledProcessError:
         print(
             f"{COLORS['FAIL']}mkdir failed. This can happen if {COLORS['WARNING']}"
-            + f"{DATADIR}{COLORS['FAIL']} is not a directory, for example, if it "
-            + "is a regular file, a symlink, or some other type of file. Please check that "
-            + f"{COLORS['WARNING']}{DATADIR}{COLORS['FAIL']} is either a "
-            + f"directory, or does not exist, on a read-write filesystem.{COLORS['ENDC']}"
+            f"{DATADIR}{COLORS['FAIL']} is not a directory, for example, if it "
+            "is a regular file, a symlink, or some other type of file. Please check that "
+            f"{COLORS['WARNING']}{DATADIR}{COLORS['FAIL']} is either a "
+            f"directory, or does not exist, on a read-write filesystem.{COLORS['ENDC']}"
         )
         sys.exit(-1)
 
@@ -1168,7 +1177,7 @@ def mode_url(repo, repopath, args):
     if not check1 and not check3:
         # here check2 is always false
         assert not check2   # failing this assert will crash without an error
-                            # this is fine because this is an impossible case ?
+        # this is fine because this is an impossible case ?
         # neither the name, nor the remote URL was known
         # add those to the local repo
         args.REMOTE = [remote_name, remote_url]
@@ -1205,16 +1214,16 @@ def mode_export_url(repo: OSTree.Repo, args: argparse.Namespace):
     if '@' in remote_url:
         print(
             f"{COLORS['WARNING']} Warning: sharing a password protected remote, with the password. "
-            + f"Please double check! {COLORS['ENDC']}"
+            f"Please double check! {COLORS['ENDC']}"
         )
     print(f"- Remote name is\t{remote_name}")
     print(f"- Remote URL is\t\t{remote_url}")
     print(f"- Runtime is\t\t{runtime}")
     urlstring = (
         "maps://runtime?"
-        + f"remotename={remote_name}&"
-        + f"remoteurl={remote_url}&"
-        + f"runtime={runtime}"
+        f"remotename={remote_name}&"
+        f"remoteurl={remote_url}&"
+        f"runtime={runtime}"
     )
     print(f"\n  {urlstring}\n")
 
@@ -1243,6 +1252,8 @@ def mode_runtime(repo, repopath, args):
         mode_url(repo, repopath, args)
     elif args.EXPORTURL:
         mode_export_url(repo, args)
+    elif args.EXPORTTAR:
+        mode_export_tar(repo, args.EXPORTTAR)
 
 
 def byteSI(inbytes):
@@ -1329,6 +1340,8 @@ def needs_tar(refhash, tarpath, datadir):
     Otherwise, it returns true.
     """
     tardbpath = f"{datadir}/tardb.toml"
+    if VERBOSE:
+        print(f"tardb path is {tardbpath}")
     if not os.path.isfile(tarpath):
         if VERBOSE:
             print("Tarfile doesn't already exist. Needs tar-ing!")
@@ -1370,6 +1383,67 @@ def add_hash_to_db(refhash, tarpath, datadir):
         tardbfile.write(f'"{refhash}"="{tarhash}"\n')
 
 
+def runtime_to_tar(repo, runtime, remote=None):
+    """
+    Given a runtime, local or remote, and export its fs tree to a tarball.
+    """
+
+    if remote is None:
+        remote, runtime = disambiguate_runtime(repo, runtime, installed=False)
+
+    DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps"
+    RUNTIMEDIR = f"{DATADIR}/{remote}/{runtime}/rofs"
+    REFHASH = repo.list_refs()[1][runtime]
+    TARPATH = f"{DATADIR}/{remote}/{':'.join(runtime.split('/'))}.tar.gz"
+
+    # if runtime is not checked out, do it
+    if not os.path.isdir(RUNTIMEDIR):
+        checkout(repo, remote, runtime)
+
+    # if the refhash matches tar hash, don't re-tar
+    if needs_tar(REFHASH, TARPATH, DATADIR):
+        if which("syft") is not None:
+            if VERBOSE:
+                print("Adding Software Bill of Materials")
+            sbom = subprocess.run(
+                f"syft scan {RUNTIMEDIR} -o spdx-json --source-name={runtime}".split(),
+                capture_output=True,
+                check=True
+            )
+            sbom = json.loads(sbom.stdout.decode())
+            with open(f"{RUNTIMEDIR}/sbom.spdx", 'w', encoding="UTF-8") as sbomfile:
+                json.dump(sbom, sbomfile)
+        else:
+            if VERBOSE:
+                print(
+                    f"{COLORS['WARNING']}syft was not found. SBOM will not be generated"
+                    f"{COLORS['ENDC']}"
+                )
+        if VERBOSE:
+            print("Making tarball...")
+            opts = "-cv --use-compress-program=pigz"
+        else:
+            opts = "-c --use-compress-program=pigz"
+
+        subprocess.run(f"tar {opts} -C {RUNTIMEDIR[0:-4]} -f {TARPATH} {RUNTIMEDIR[-4:]}".split(),
+                       check=True)
+        add_hash_to_db(REFHASH, TARPATH, DATADIR)
+        if which("syft") is not None:
+            os.remove(f"{RUNTIMEDIR}/sbom.spdx")
+
+    return TARPATH
+
+
+def mode_export_tar(repo, runtime):
+    """
+    User interface for runtime_to_tar
+    """
+    print(f"Exporting {runtime} to tar...")
+    tarpath = runtime_to_tar(repo, runtime)
+    print(f"Runtime exported to {tarpath}")
+    return 0
+
+
 def upload(repo, runtime):
     """
     Given a local runtime, tar it and upload it. (Try)
@@ -1393,27 +1467,11 @@ def upload(repo, runtime):
         print("We only allow publishing locally made runtimes!")
         sys.exit(1)
 
-    remote = "Local"
+    remote = "_local"
     DATADIR = f"{os.getenv('HOME')}/.var/org.mardi.maps"
-    RUNTIMEDIR = f"{DATADIR}/{remote}/{runtime}"
-    TARPATH = f"{DATADIR}/{remote}/{runtime}.tar.gz"
     STORAGEFILE = f"{DATADIR}/tustorage"
-    REFHASH = repo.list_refs()[1][runtime]
 
-    # if runtime is not checked out, do it
-    if not os.path.isdir(RUNTIMEDIR):
-        checkout(repo, remote, runtime)
-
-    # if the refhash matches tar hash, don't re-tar
-    if needs_tar(REFHASH, TARPATH, DATADIR):
-        if VERBOSE:
-            print("Making tarball...")
-            opts = "-cv --use-compress-program=pigz -f"
-        else:
-            opts = "-c --use-compress-program=pigz -f"
-
-        subprocess.run(f"tar {opts} {TARPATH} {RUNTIMEDIR}".split(), check=True)
-        add_hash_to_db(REFHASH, TARPATH, DATADIR)
+    tarpath = runtime_to_tar(repo, runtime, remote)
 
     # check storagefile
     good = 0
@@ -1437,7 +1495,7 @@ def upload(repo, runtime):
     elif good == 2:
         os.rename(STORAGEFILE, f"{STORAGEFILE}.bak")
 
-    if tus_upload(TARPATH, STORAGEFILE, runtime) != 0:
+    if tus_upload(tarpath, STORAGEFILE, runtime) != 0:
         print("something very bad happened")
         return -1
     return 0
