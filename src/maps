@@ -146,6 +146,8 @@ def addCLI():
                              default=False, help="Disable GUI")
     parser_pack.add_argument('--gui', dest="GUI", action='store_true',
                              default=False, help="Force enable GUI")
+    parser_pack.add_argument('--magma', dest="MAGMA", action='store_true',
+                             default=False, help="Enable magma mode")
 
     return parser, parser_runtime, parser_remote, parser_pack
 
@@ -1122,7 +1124,7 @@ def mode_package(repo, repopath, args):
         # its the user's responsibility to ensure the tree is good
         print(f"Launching a sandbox in {args.LOCATION}...")
         bwrapstring, senv = make_bwrap_command(args.LOCATION, False, "/usr/bin/bash", args.NOGUI,
-                                               args.GUI)
+                                               args.GUI, args.MAGMA)
         rstatus = subprocess.run(bwrapstring.split(), env=senv, check=False)
         if VERBOSE:
             print("Exiting sandbox...")
