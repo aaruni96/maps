@@ -606,7 +606,8 @@ def find_magma_path(magmapath=""):
                 print(f"Checking {path} for magma...")
             magmapath = f"{path}/magma"
             if os.path.isfile(magmapath):
-                print("found magma!")
+                if VERBOSE:
+                    print("found magma!")
                 found = True
                 break
     if not found:
