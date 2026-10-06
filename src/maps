@@ -798,7 +798,7 @@ def mode_run(repo, args):
     if manifestpath:
         with open(manifestpath, 'rb') as manifest_file:
             manifest = tomli.load(manifest_file)
-            command = manifest['Core']["command"]
+            command = manifest['Core']["command"] if manifest['Core'].get("command") else "bash"
             magma = bool(manifest['Core'].get('magma'))
     else:
         command = "bash"
