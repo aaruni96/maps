@@ -640,10 +640,11 @@ def make_bwrap_command(location, overlay, command, nogui, gui, magma=False):
     # add the resolv.conf file
     bwrapstring += '--ro-bind-try /etc/resolv.conf /etc/resolv.conf '
 
+    magmapath = ""
     if magma:
         magmapath, magmarootpath = find_magma_path()
         bwrapstring += f"--ro-bind {magmapath} {magmapath} --ro-bind {magmarootpath} " + \
-                       "{magmarootpath}"
+                       f"{magmarootpath} "
 
     try:
         session = senv['XDG_SESSION_TYPE']
@@ -693,6 +694,8 @@ def make_bwrap_command(location, overlay, command, nogui, gui, magma=False):
     senv['SHELL'] = '/usr/bin/bash'
     senv['PATH'] = '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:'\
                    '/usr/local/games'
+    if magmapath:
+        senv['PATH'] += f":{'/'.join(magmapath.split('/')[0:-1])}"
     if TERM is not None:
         senv['TERM'] = TERM
     else:
