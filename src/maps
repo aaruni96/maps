@@ -111,6 +111,8 @@ def addCLI():
                                 default=False, help="Export a runtime as a URL which maps can open")
     parser_runtime.add_argument('--export-tar', dest='EXPORTTAR', action='store',
                                 default=False, help="Export a runtime as a compressed tarball")
+    parser_runtime.add_argument('--magma', dest='MAGMA', action='store_true',
+                                default=False, help="Enable magma mode")
 
     # arguments for remote management
     parser_remote = subparser.add_parser("remote",
@@ -144,6 +146,8 @@ def addCLI():
                              default=False, help="Disable GUI")
     parser_pack.add_argument('--gui', dest="GUI", action='store_true',
                              default=False, help="Force enable GUI")
+    parser_pack.add_argument('--magma', dest="MAGMA", action='store_true',
+                             default=False, help="Enable magma mode")
 
     return parser, parser_runtime, parser_remote, parser_pack
 
@@ -530,7 +534,100 @@ def disambiguate_runtime(repo: OSTree.Repo, rrstring: str, installed: bool = Tru
     return ["notfound", "notfound"]
 
 
-def make_bwrap_command(location, overlay, command, nogui, gui):
+def get_magma_root(magmapath):
+    """
+    This subroutine takes path to the magma driver script, and then returns both the driver script,
+    and the inferred magma root path.
+    """
+    magmarootpath = ""
+    with open(magmapath, 'r', encoding='UTF-8') as magmafile:
+        for line in magmafile:
+            line = line.strip()
+            if line.startswith("ROOT"):
+                magmarootpath = line.split('=')[-1].strip('"').strip("'")
+                break
+    if not magmarootpath:
+        if VERBOSE:
+            print(
+                "Unable to find ROOT directive in magma driver file. Is magma correctly installed?"
+            )
+            print("Trying to infer maga root from path, but this might fail.....")
+
+    if not magmarootpath or magmarootpath == "....":
+        # do the magma logic to infer magma root
+        magmarootpath = '/'.join(magmapath.split('/')[0:-1])
+
+    return magmarootpath
+
+
+def find_magma_path(magmapath=""):
+    """
+    This subroutine tries to discover an installation of magma, and returns with the paths of the
+    magma driver script, and the magma root.
+    """
+    provided_path = True
+    if not magmapath:
+        # check if magma is installed in "the right place"
+        magmapath = '/usr/local/magma'
+        provided_path = False
+
+    found = False
+    if os.path.exists(magmapath):
+        if VERBOSE:
+            if provided_path:
+                print("Found magma at the provided path")
+            else:
+                print("Found the standard magma path")
+            print(magmapath)
+        found = True
+
+    if not found:
+        if provided_path:
+            print("The magma driver script was not found at the provided path!")
+            print("Please double check the provided path")
+            print(magmapath)
+            print("Alternatively, do not provide a path to try to discover a magma installation")
+            sys.exit(-9)
+
+        # try to discover magma in the usual suspected places
+        if VERBOSE:
+            print(f"magma was not found at the standard path of {magmapath}")
+            print("Trying to discover via $PATH")
+        mypath = os.getenv("PATH")
+        if not mypath:
+            print("Could not read the PATH variable! This is a fatal error! Please contact support")
+            sys.exit(-10)
+        mypath = mypath.split(':')
+        if VERBOSE:
+            print("The discovered PATH is")
+            print(mypath)
+        for path in mypath:
+            if VERBOSE:
+                print(f"Checking {path} for magma...")
+            magmapath = f"{path}/magma"
+            if os.path.isfile(magmapath):
+                if VERBOSE:
+                    print("found magma!")
+                found = True
+                break
+    if not found:
+        print("Unable to discover magma. This is a fatal error in magma mode. Crashing...")
+        sys.exit(-11)
+
+    # get the magma root
+    magmarootpath = get_magma_root(magmapath)
+    if not magmarootpath:
+        print("Unable to find magma root! Crashing...")
+        sys.exit(-12)
+    if not os.path.isdir(magmarootpath):
+        print("Discovered magma root was not a directory!")
+        print(magmarootpath)
+        sys.exit(-13)
+
+    return magmapath, magmarootpath
+
+
+def make_bwrap_command(location, overlay, command, nogui, gui, magma=False):
     """
     Subroutine builds the bubblewrap command to execute
     """
@@ -545,6 +642,12 @@ def make_bwrap_command(location, overlay, command, nogui, gui):
     bwrapstring += ' --proc /proc --dev /dev --ro-bind /sys /sys --tmpfs /tmp '
     # add the resolv.conf file
     bwrapstring += '--ro-bind-try /etc/resolv.conf /etc/resolv.conf '
+
+    magmapath = ""
+    if magma:
+        magmapath, magmarootpath = find_magma_path()
+        bwrapstring += f"--ro-bind {magmapath} {magmapath} --ro-bind {magmarootpath} " + \
+                       f"{magmarootpath} "
 
     try:
         session = senv['XDG_SESSION_TYPE']
@@ -594,6 +697,8 @@ def make_bwrap_command(location, overlay, command, nogui, gui):
     senv['SHELL'] = '/usr/bin/bash'
     senv['PATH'] = '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:'\
                    '/usr/local/games'
+    if magmapath:
+        senv['PATH'] += f":{'/'.join(magmapath.split('/')[0:-1])}"
     if TERM is not None:
         senv['TERM'] = TERM
     else:
@@ -685,16 +790,22 @@ def mode_run(repo, args):
             sys.exit(-1)    # lets decide, -1 is for all mkdir errors
 
     # check for manifest file
+    manifestpath = ""
     if os.path.isfile(f"{DATADIR}/rwfs/manifest.toml"):
-        with open(f"{DATADIR}/rwfs/manifest.toml", 'rb') as manifest_file:
-            command = tomli.load(manifest_file)
-            command = command['Core']["command"]
+        manifestpath = f"{DATADIR}/rwfs/manifest.toml"
     elif os.path.isfile(f"{DATADIR}/rofs/manifest.toml"):
-        with open(f"{DATADIR}/rofs/manifest.toml", 'rb') as manifest_file:
-            command = tomli.load(manifest_file)
-            command = command['Core']["command"]
+        manifestpath = f"{DATADIR}/rofs/manifest.toml"
+
+    if manifestpath:
+        with open(manifestpath, 'rb') as manifest_file:
+            manifest = tomli.load(manifest_file)
+            command = manifest['Core']["command"] if manifest['Core'].get("command") else "bash"
+            magma = bool(manifest['Core'].get('magma'))
     else:
         command = "bash"
+        magma = False
+    if args.MAGMA:
+        magma = True
     if args.COMMAND:
         command = args.COMMAND
     if command == '':
@@ -702,7 +813,7 @@ def mode_run(repo, args):
     # launch sandbox
     print(f"Launching {remote}:{runtime}...")
     # construct bwrapstring
-    bwrapstring, senv = make_bwrap_command(f"{DATADIR}", True, command, args.NOGUI, args.GUI)
+    bwrapstring, senv = make_bwrap_command(f"{DATADIR}", True, command, args.NOGUI, args.GUI, magma)
     rstatus = subprocess.run(bwrapstring.split(),
                              env=senv, check=False)
     if rstatus.returncode != 0:
@@ -1036,7 +1147,7 @@ def mode_package(repo, repopath, args):
         # its the user's responsibility to ensure the tree is good
         print(f"Launching a sandbox in {args.LOCATION}...")
         bwrapstring, senv = make_bwrap_command(args.LOCATION, False, "/usr/bin/bash", args.NOGUI,
-                                               args.GUI)
+                                               args.GUI, args.MAGMA)
         rstatus = subprocess.run(bwrapstring.split(), env=senv, check=False)
         if VERBOSE:
             print("Exiting sandbox...")
