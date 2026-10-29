@@ -534,6 +534,40 @@ def disambiguate_runtime(repo: OSTree.Repo, rrstring: str, installed: bool = Tru
     return ["notfound", "notfound"]
 
 
+def resolve_bash_var(bvar:str, fpath:str) -> str:
+    if not '$' in bvar:
+        return bvar
+    lvar = bvar.split('=')[0]
+    cvars = bvar.split('=')[-1].strip().strip('"').strip("'").split('/')
+    dvar = ''
+    for v in cvars:
+        if '$' in v:
+            dvar = v[1:]
+            break
+    if dvar:
+    # a variable was used, but we don't really know where it came from...
+        evar = ""
+        if os.getenv(dvar):
+        # try the env vars first
+            evar = os.getenv(dvar)
+        else:
+        # try reading the file for variable assignment
+            with open(fpath, 'r') as bfile:
+                for line in bfile:
+                    if line.strip().startswith(f"{dvar}="):
+                        evar = line.split('=')[1].strip().strip('"').strip("'")
+                        break
+        # even more else: what if the driver file is evil, and sources some other bash files first?
+        # could try to scan through the driver file for source keywords, but will attempt that if
+        # we actually run into that problem.
+        if evar:
+            cvars[cvars.index(f"${dvar}")] = evar
+    bvar = '/'.join(cvars)
+    if '$' in bvar:
+        return resolve_bash_var(f"{lvar}='{bvar}'", fpath)
+    return f"{lvar}='{bvar}'"
+
+
 def get_magma_root(magmapath):
     """
     This subroutine takes path to the magma driver script, and then returns both the driver script,
@@ -556,6 +590,10 @@ def get_magma_root(magmapath):
     if not magmarootpath or magmarootpath == "....":
         # do the magma logic to infer magma root
         magmarootpath = '/'.join(magmapath.split('/')[0:-1])
+
+    # in case magmaroothpath has bash variables in it, attempt to resolve them
+    # if not, the function is basically a no-op.
+    magmarootpath = resolve_bash_var(magmarootpath, magmapath)
 
     return magmarootpath
 
