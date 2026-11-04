@@ -113,6 +113,8 @@ def addCLI():
                                 default=False, help="Export a runtime as a compressed tarball")
     parser_runtime.add_argument('--magma', dest='MAGMA', action='store_true',
                                 default=False, help="Enable magma mode")
+    parser_runtime.add_argument('--magma-path', dest='MAGMA_PATH', action="store",
+                                default=False, help="Paths to mount in as magma")
 
     # arguments for remote management
     parser_remote = subparser.add_parser("remote",
@@ -148,6 +150,8 @@ def addCLI():
                              default=False, help="Force enable GUI")
     parser_pack.add_argument('--magma', dest="MAGMA", action='store_true',
                              default=False, help="Enable magma mode")
+    parser_pack.add_argument('--magma-path', dest='MAGMA_PATH', action="store",
+                             default=False, help="Paths to mount in as magma")
 
     return parser, parser_runtime, parser_remote, parser_pack
 
@@ -665,7 +669,7 @@ def find_magma_path(magmapath=""):
     return magmapath, magmarootpath
 
 
-def make_bwrap_command(location, overlay, command, nogui, gui, magma=False):
+def make_bwrap_command(location, overlay, command, nogui, gui, magma=False, inmagmapath=""):
     """
     Subroutine builds the bubblewrap command to execute
     """
@@ -683,9 +687,13 @@ def make_bwrap_command(location, overlay, command, nogui, gui, magma=False):
 
     magmapath = ""
     if magma:
-        magmapath, magmarootpath = find_magma_path()
-        bwrapstring += f"--ro-bind {magmapath} {magmapath} --ro-bind {magmarootpath} " + \
-                       f"{magmarootpath} "
+        if inmagmapath:
+            for path in inmagmapath.split(':'):
+                bwrapstring += f"--ro-bind {path} {path} "
+        else:
+            magmapath, magmarootpath = find_magma_path()
+            bwrapstring += f"--ro-bind {magmapath} {magmapath} --ro-bind {magmarootpath} " + \
+                        f"{magmarootpath} "
 
     try:
         session = senv['XDG_SESSION_TYPE']
@@ -851,7 +859,8 @@ def mode_run(repo, args):
     # launch sandbox
     print(f"Launching {remote}:{runtime}...")
     # construct bwrapstring
-    bwrapstring, senv = make_bwrap_command(f"{DATADIR}", True, command, args.NOGUI, args.GUI, magma)
+    bwrapstring, senv = make_bwrap_command(f"{DATADIR}", True, command, args.NOGUI, args.GUI, magma,
+                                           args.MAGMA_PATH)
     rstatus = subprocess.run(bwrapstring.split(),
                              env=senv, check=False)
     if rstatus.returncode != 0:
@@ -1185,7 +1194,7 @@ def mode_package(repo, repopath, args):
         # its the user's responsibility to ensure the tree is good
         print(f"Launching a sandbox in {args.LOCATION}...")
         bwrapstring, senv = make_bwrap_command(args.LOCATION, False, "/usr/bin/bash", args.NOGUI,
-                                               args.GUI, args.MAGMA)
+                                               args.GUI, args.MAGMA, args.MAGMA_PATH)
         rstatus = subprocess.run(bwrapstring.split(), env=senv, check=False)
         if VERBOSE:
             print("Exiting sandbox...")
